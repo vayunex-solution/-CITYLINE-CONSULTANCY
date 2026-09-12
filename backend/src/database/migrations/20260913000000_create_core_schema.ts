@@ -192,7 +192,7 @@ export async function up(knex: Knex): Promise<void> {
     table.timestamp('deleted_at').nullable(); // Soft delete preserves application links
 
     table.index(['status', 'is_featured', 'created_at'], 'idx_jobs_public_filter');
-    table.index(['category_id'], 'idx_jobs_category');
+    table.index(['category_id', 'status', 'created_at'], 'idx_jobs_category_status');
   });
 
   // 12. Job Candidate Applications Table

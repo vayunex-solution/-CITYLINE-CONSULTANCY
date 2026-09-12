@@ -46,7 +46,8 @@ Foreign key columns and index constraints must follow deterministic prefixes:
    - `created_at`: `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`
    - `updated_at`: `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` (for mutable entities).
    - `deleted_at`: `TIMESTAMP NULL DEFAULT NULL` (strictly for soft-deletable entities).
-3. **No Mixed Formats**: UNIX epoch integers and local-time datetimes are strictly prohibited.
+3. **MariaDB 10.11 Engine Behavior**: MariaDB internally converts `TIMESTAMP` values from the connection timezone to UTC for storage and converts back from UTC to the connection timezone on retrieval. Because the application connection pool specifies `timezone: 'Z'` and SQL initialization executes `SET time_zone = '+00:00'`, all date-time exchanges occur with zero timezone offset, guaranteeing pristine UTC storage and retrieval without drift.
+4. **No Mixed Formats**: UNIX epoch integers and local-time datetimes are strictly prohibited.
 
 ---
 

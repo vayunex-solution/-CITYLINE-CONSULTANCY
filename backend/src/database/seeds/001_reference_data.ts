@@ -57,7 +57,7 @@ export async function seed(knex: Knex): Promise<void> {
     {
       id: 1,
       service_code: 'freelance_2yr',
-      title: '2-Year Freelance Visa Dubai Assistance',
+      title: '2-Year Freelance Visa Dubai',
       slug: '2-year-freelance-visa',
       description: 'Comprehensive assistance for the 2-Year UAE Freelance Residency Visa.',
       display_order: 1,

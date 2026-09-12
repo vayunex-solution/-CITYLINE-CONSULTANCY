@@ -42,6 +42,7 @@ export const databaseConfig: DatabaseConfig = {
   charset: 'utf8mb4',
   timezone: 'Z', // Persist all timestamps in UTC
   engineStatus: 'UNVERIFIED',
+  ssl: env.DB_SSL ? { rejectUnauthorized: false } : undefined,
   pool: {
     min: 0, // Allow pool to scale to 0 when idle to conserve cPanel resources
     max: 5, // Conservative limit per process for cPanel environments

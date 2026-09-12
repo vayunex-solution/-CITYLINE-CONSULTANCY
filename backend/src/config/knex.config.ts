@@ -17,6 +17,7 @@ const knexConfig: Knex.Config = {
     password: databaseConfig.password,
     charset: databaseConfig.charset,
     timezone: databaseConfig.timezone,
+    ssl: databaseConfig.ssl,
   },
   pool: {
     min: databaseConfig.pool.min,

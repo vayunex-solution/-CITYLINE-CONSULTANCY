@@ -231,7 +231,7 @@ CREATE TABLE `jobs` (
   `deleted_at` TIMESTAMP NULL DEFAULT NULL,
   UNIQUE KEY `uk_jobs_slug` (`slug`),
   KEY `idx_jobs_public_filter` (`status`, `is_featured`, `created_at`),
-  KEY `idx_jobs_category` (`category_id`),
+  KEY `idx_jobs_category_status` (`category_id`, `status`, `created_at`),
   CONSTRAINT `fk_jobs_category` FOREIGN KEY (`category_id`) REFERENCES `job_categories` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -415,7 +415,7 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `display_order` = VALUES(`displ
 
 -- Visa Services (3 Confirmed Services — Zero Pricing)
 INSERT INTO `visa_services` (`id`, `service_code`, `title`, `slug`, `description`, `display_order`) VALUES
-(1, 'freelance_2yr', '2-Year Freelance Visa Dubai Assistance', '2-year-freelance-visa', 'Comprehensive assistance for the 2-Year UAE Freelance Residency Visa.', 1),
+(1, 'freelance_2yr', '2-Year Freelance Visa Dubai', '2-year-freelance-visa', 'Comprehensive assistance for the 2-Year UAE Freelance Residency Visa.', 1),
 (2, 'visit_30d', '30-Day Visit Visa', '30-day-visit-visa', 'Short-term UAE single entry tourist and visit visa assistance.', 2),
 (3, 'visit_60d', '60-Day Visit Visa', '60-day-visit-visa', 'Extended UAE tourist and visit visa assistance.', 3)
 ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `description` = VALUES(`description`), `display_order` = VALUES(`display_order`);

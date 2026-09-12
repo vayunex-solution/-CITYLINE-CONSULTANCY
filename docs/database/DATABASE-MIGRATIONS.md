@@ -1,7 +1,7 @@
 # CITYLINE CONSULTANCY — Database Migration & Runbook Guide
 
-**Document Version:** 1.0.0  
-**Phase Status:** Phase 2 Implementation  
+**Document Version:** 2.0.0  
+**Phase Status:** Phase 2 Consolidated Implementation & Audit  
 **Public Brand Name:** `CITYLINE CONSULTANCY`
 
 ---
@@ -10,6 +10,7 @@
 
 Database schema lifecycle is orchestrated using **Knex.js** with the pure JavaScript **`mysql2`** driver.
 
+- **Verified Production Engine**: **`10.11.16-MariaDB-cll-lve`** (MariaDB 10.11 LTS on CloudLinux / cPanel).
 - **Migration Directory**: `backend/src/database/migrations/`
 - **Seeds Directory**: `backend/src/database/seeds/`
 - **Standalone DDL Export**: `docs/database/schema.sql` (for direct cPanel phpMyAdmin import)
@@ -19,13 +20,18 @@ Database schema lifecycle is orchestrated using **Knex.js** with the pure JavaSc
 
 ---
 
-## 2. Naming Conventions
+## 2. Database Creation Boundary & Prerequisites
 
-Migration files follow timestamped ISO prefixes:
-```
-<YYYYMMDDHHMMSS>_<descriptive_name>.ts
-```
-Example: `20260913000000_create_core_schema.ts`
+1. **Pre-Existing Target Database**: The migration runner (`npm run db:migrate`) and diagnostic tool (`npm run db:test`) **never create databases**.
+2. **cPanel Creation Step**: The target database (`cityline_db`) must be created beforehand in cPanel:
+   - Go to **cPanel -> MySQL® Databases -> Create New Database**.
+   - Note the exact database name (including any cPanel account username prefix, e.g. `<prefix>_cityline_db`).
+3. **Least-Privilege User Assignment**:
+   - In cPanel -> **Add User to Database**, assign the migration user.
+   - Select required DDL + DML privileges:
+     - DML: `SELECT`, `INSERT`, `UPDATE`, `DELETE`
+     - DDL: `CREATE`, `ALTER`, `DROP`, `INDEX`, `REFERENCES`
+   - **Do NOT grant administrative privileges**: Never grant `SUPER`, `FILE`, `CREATE DATABASE`, or `GRANT OPTION`.
 
 ---
 
@@ -35,8 +41,9 @@ All database commands are executable from the repository root:
 
 | Command | Description |
 | :--- | :--- |
-| `npm run db:migrate` | Runs all pending database migrations against the configured database. |
-| `npm run db:rollback` | Reverts the most recent migration batch using the `down()` methods. |
+| `npm run db:test` | Safely diagnoses remote/local database authentication, engine version, charset, collation, max connections, and authorization status without exposing secrets or creating databases. |
+| `npm run db:migrate` | Runs all pending database migrations against the configured database. Operates on an already-created target database. |
+| `npm run db:rollback` | Reverts the most recent migration batch using the `down()` methods in reverse-dependency order. |
 | `npm run db:seed` | Executes deterministic reference data seeding (Roles, Job Categories, Visa Services). |
 | `npm run db:validate` | Runs offline deterministic syntax, constraint, and relationship validation suite without requiring an active database server. |
 
@@ -48,16 +55,20 @@ Depending on host access permissions, deployment follows one of two verified run
 
 ### Strategy A: Automated Node.js Migration (SSH / Terminal Access)
 1. Ensure `.env` is populated with production database credentials (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`).
-2. Run:
+2. Run connectivity diagnostic:
+   ```bash
+   npm run db:test
+   ```
+3. Once database authorization is confirmed, execute:
    ```bash
    npm run db:migrate
    npm run db:seed
    ```
-3. Knex creates `knex_migrations` and applies all schema tables atomically.
+4. Knex creates `knex_migrations` and applies all 18 schema tables and reference seeds atomically.
 
-### Strategy B: Direct phpMyAdmin Execution (Restricted cPanel)
+### Strategy B: Direct phpMyAdmin Execution (Restricted cPanel / UI Access)
 1. Log into cPanel -> **phpMyAdmin**.
-2. Select the target production database.
+2. Select the target production database (`cityline_db` or prefixed equivalent).
 3. Click the **Import** tab.
 4. Select [`docs/database/schema.sql`](file:///d:/VAYUNEX/vayu-backup/CLC-Website/docs/database/schema.sql) and click **Import**.
 5. All 18 tables and idempotent reference seeds are created with `utf8mb4_unicode_ci` and `InnoDB`.
@@ -72,3 +83,14 @@ Depending on host access permissions, deployment follows one of two verified run
    ```sql
    UPDATE knex_migrations_lock SET is_locked = 0 WHERE index = 1;
    ```
+
+---
+
+## 6. Live Execution Status Disclosure
+
+- **Current Production Status**:
+  - Host TCP reachability: `SUCCESS` (`135.181.217.49:3306`).
+  - Server Authentication: `SUCCESS` (`cityline_admin`).
+  - Database Authorization: `RESTRICTED (ER_DBACCESS_DENIED_ERROR)`.
+  - Schema Execution Against Live DB: **BLOCKED — DATABASE PRIVILEGE REQUIRED**.
+- **Resolution**: Assign user `cityline_admin` to database `cityline_db` in cPanel as outlined in Section 2.

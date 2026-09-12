@@ -126,6 +126,7 @@ describe('Database Architecture & Schema Integrity', () => {
     const requiredIndexes = [
       'idx_enquiries_triage',
       'idx_jobs_public_filter',
+      'idx_jobs_category_status',
       'idx_job_applications_triage',
       'idx_documents_entity',
       'idx_documents_retention',

@@ -8,9 +8,10 @@ import path from 'path';
 import os from 'os';
 import { z } from 'zod';
 
-// Load environment variables from .env file if present
+// Load environment variables from .env file relative to config file and cwd
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
-// Also fallback to root .env if running from workspace package
 dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
 
 function resolveStorageRoot(raw?: string): string {
@@ -41,6 +42,7 @@ const envSchema = z.object({
   DB_NAME: z.string().default('clc_db'),
   DB_USER: z.string().default('clc_user'),
   DB_PASSWORD: z.string().default(''),
+  DB_SSL: z.coerce.boolean().default(false),
 
   // Logging
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
