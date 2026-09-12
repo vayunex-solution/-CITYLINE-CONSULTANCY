@@ -36,11 +36,6 @@ export interface PaginatedData<T> {
 }
 
 export interface HealthResponse {
-  status: 'ok' | 'degraded';
-  timestamp: string;
-  uptimeSeconds: number;
-  environment: string;
-  version: string;
-  database: 'unverified' | 'connected' | 'disconnected';
-  storage: 'operational' | 'degraded';
+  status: 'ok';
 }
+

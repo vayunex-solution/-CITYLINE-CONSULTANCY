@@ -5,6 +5,7 @@
 
 import dotenv from 'dotenv';
 import path from 'path';
+import os from 'os';
 import { z } from 'zod';
 
 // Load environment variables from .env file if present
@@ -12,14 +13,27 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 // Also fallback to root .env if running from workspace package
 dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
 
+function resolveStorageRoot(raw?: string): string {
+  if (!raw || raw.trim().length === 0) {
+    return path.join(os.homedir(), 'clc_storage');
+  }
+  if (raw.startsWith('~')) {
+    return path.join(os.homedir(), raw.slice(1));
+  }
+  return path.resolve(raw);
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(5000),
   API_PREFIX: z.string().default('/api/v1'),
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
 
-  // Private storage directory (strictly outside public web root)
-  STORAGE_ROOT: z.string().default(path.resolve(process.cwd(), '../storage')),
+  // Private storage directory — defaults to ~/clc_storage/ (strictly outside webroot)
+  STORAGE_ROOT: z
+    .string()
+    .default(() => resolveStorageRoot(process.env.STORAGE_ROOT))
+    .transform((val) => resolveStorageRoot(val)),
 
   // Database Connection Configuration (Phase 2 Ownership — Engine UNVERIFIED)
   DB_HOST: z.string().default('127.0.0.1'),
@@ -52,7 +66,28 @@ function parseEnv(): EnvConfig {
     process.exit(1);
   }
 
-  return result.data;
+  const data = result.data;
+
+  // Security Gate: Ensure private storage is NOT placed inside public webroot or repo-local storage
+  const cwd = process.cwd();
+  const repoRoot = path.resolve(cwd, cwd.endsWith('backend') ? '..' : '.');
+  const forbiddenRoots = [
+    path.join(repoRoot, 'frontend', 'public'),
+    path.join(repoRoot, 'public_html'),
+    path.join(repoRoot, 'backend', 'public'),
+    path.join(repoRoot, 'storage'),
+  ];
+
+  for (const forbidden of forbiddenRoots) {
+    if (data.STORAGE_ROOT.toLowerCase().startsWith(forbidden.toLowerCase())) {
+      console.error(
+        `CRITICAL SECURITY VIOLATION: STORAGE_ROOT (${data.STORAGE_ROOT}) resolves inside forbidden location (${forbidden}). Storage must reside outside webroot.`
+      );
+      process.exit(1);
+    }
+  }
+
+  return data;
 }
 
 export const env = parseEnv();

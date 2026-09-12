@@ -3,7 +3,9 @@
  *
  * CRITICAL SECURITY ARCHITECTURE:
  * - Private files (resumes, passports, identity documents) MUST NEVER be placed in public directories.
- * - This path is located strictly outside frontend/public and web server document roots.
+ * - Canonical Development Location: ~/clc_storage/ (e.g. C:\Users\<user>\clc_storage or /home/<user>/clc_storage)
+ * - Canonical Production Location: /home/<cpanel-user>/clc_storage/ (strictly outside public_html)
+ * - Repository-local storage directories (e.g., ./storage/) are strictly prohibited as application storage roots.
  * - Upload handlers and document streaming are deferred to Phase 6.
  */
 
@@ -34,7 +36,7 @@ export const storageConfig: StorageConfig = {
 };
 
 /**
- * Initializes local development storage directories if they do not already exist.
+ * Initializes private storage directories if they do not already exist.
  * Verifies write permissions safely without exposing any upload endpoints.
  */
 export function initializeStorageFoundation(): boolean {
