@@ -23,7 +23,8 @@
     "db:migrate": "npm run db:migrate --workspace=@cityline/backend",
     "db:rollback": "npm run db:rollback --workspace=@cityline/backend",
     "db:seed": "npm run db:seed --workspace=@cityline/backend",
-    "db:validate": "npm run db:validate --workspace=@cityline/backend"
+    "db:validate": "npm run db:validate --workspace=@cityline/backend",
+    "db:test": "node scripts/test-db-connection.js"
   },
   "engines": {
     "node": ">=18.0.0",

@@ -13,7 +13,8 @@
     "db:migrate": "knex --knexfile src/config/knex.config.ts migrate:latest",
     "db:rollback": "knex --knexfile src/config/knex.config.ts migrate:rollback",
     "db:seed": "knex --knexfile src/config/knex.config.ts seed:run",
-    "db:validate": "tsx --test tests/database.test.ts"
+    "db:validate": "tsx --test tests/database.test.ts",
+    "db:test": "node ../scripts/test-db-connection.js"
   },
   "dependencies": {
     "@cityline/shared": "*",
