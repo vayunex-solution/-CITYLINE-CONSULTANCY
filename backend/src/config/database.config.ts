@@ -44,9 +44,9 @@ export const databaseConfig: DatabaseConfig = {
   engineStatus: 'UNVERIFIED',
   ssl: env.DB_SSL ? { rejectUnauthorized: false } : undefined,
   pool: {
-    min: 0, // Allow pool to scale to 0 when idle to conserve cPanel resources
-    max: 5, // Conservative limit per process for cPanel environments
-    acquireTimeoutMillis: 30000,
+    min: env.DB_POOL_MIN, // Configurable via DB_POOL_MIN (default: 0 for cPanel)
+    max: env.DB_POOL_MAX, // Configurable via DB_POOL_MAX (default: 5 for cPanel)
+    acquireTimeoutMillis: env.DB_TIMEOUT_MS, // Configurable via DB_TIMEOUT_MS (default: 10000)
     idleTimeoutMillis: 30000,
     createTimeoutMillis: 10000,
   },

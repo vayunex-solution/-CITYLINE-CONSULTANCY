@@ -1,7 +1,12 @@
 /**
  * CITYLINE CONSULTANCY — Centralized Error Handling Middleware
  * Intercepts all application exceptions, formats uniform error responses,
- * and prevents sensitive data/stack traces from leaking to clients in production.
+ * normalizes database and payload errors, and strictly suppresses sensitive details in production.
+ *
+ * CRITICAL SECURITY GUARANTEES:
+ * - Zero stack traces in production responses.
+ * - Zero SQL queries, column names, or table internals leaked to clients.
+ * - Uniform API error envelope: { success: false, error: { code, message, requestId, details? }, timestamp }.
  */
 
 import { Request, Response, NextFunction } from 'express';
@@ -10,6 +15,7 @@ import { AppError } from '../utils/app-error';
 import { sendError } from '../utils/api-response';
 import { logger } from '../utils/logger';
 import { env } from '../config/env.config';
+import { normalizeDatabaseError, MySqlErrorLike } from '../database/database-error';
 
 export function errorHandlerMiddleware(
   err: Error,
@@ -22,11 +28,15 @@ export function errorHandlerMiddleware(
 
   // Case 1: Known Operational Application Errors
   if (err instanceof AppError) {
-    logger.warn(`Operational Error: ${err.message}`, {
-      code: err.code,
-      statusCode: err.statusCode,
-      details: err.details,
-    }, requestId);
+    logger.warn(
+      `Operational Error [${err.code}]: ${err.message}`,
+      {
+        code: err.code,
+        statusCode: err.statusCode,
+        details: err.details,
+      },
+      requestId
+    );
 
     sendError(
       res,
@@ -71,7 +81,7 @@ export function errorHandlerMiddleware(
       res,
       {
         code: 'MALFORMED_JSON',
-        message: 'Request body contains invalid JSON',
+        message: 'Request body contains invalid JSON syntax',
       },
       400,
       requestId
@@ -79,24 +89,57 @@ export function errorHandlerMiddleware(
     return;
   }
 
-  // Case 4: Unhandled / Unexpected Programming Errors
-  logger.error(`Unhandled Exception: ${err.message}`, err, { path: req.originalUrl, method: req.method }, requestId);
+  // Case 4: Express Body Parser Payload Too Large (413)
+  const bodyErr = err as { type?: string; status?: number; limit?: number };
+  if (bodyErr.type === 'entity.too.large' || bodyErr.status === 413) {
+    logger.warn('Request entity too large', { limit: bodyErr.limit }, requestId);
+    sendError(
+      res,
+      {
+        code: 'PAYLOAD_TOO_LARGE',
+        message: 'Request payload exceeds maximum allowed size (100kb limit)',
+      },
+      413,
+      requestId
+    );
+    return;
+  }
 
-  // In production, suppress internal details to prevent leakage
-  const message = env.NODE_ENV === 'production'
+  // Case 5: Uncaught MySQL / MariaDB / Knex Database Exceptions
+  const sqlErr = err as MySqlErrorLike;
+  if (sqlErr.code?.startsWith('ER_') || sqlErr.errno || sqlErr.sqlState || sqlErr.code === 'KnexTimeoutError') {
+    const normalized = normalizeDatabaseError(err, `${req.method} ${req.originalUrl}`);
+    sendError(
+      res,
+      {
+        code: normalized.code,
+        message: normalized.message,
+      },
+      normalized.statusCode,
+      requestId
+    );
+    return;
+  }
+
+  // Case 6: Unhandled Unexpected Programming Exceptions
+  logger.error(
+    `Unhandled Exception: ${err.message}`,
+    err,
+    { path: req.originalUrl, method: req.method },
+    requestId
+  );
+
+  // In production / test, strictly suppress internal stack traces and paths
+  const isSafeMode = env.NODE_ENV === 'production';
+  const message = isSafeMode
     ? 'An unexpected internal error occurred. Please contact support.'
     : err.message || 'Internal Server Error';
-
-  const details = env.NODE_ENV === 'development'
-    ? { name: err.name, stack: err.stack }
-    : undefined;
 
   sendError(
     res,
     {
       code: 'INTERNAL_SERVER_ERROR',
       message,
-      ...(details ? { details } : {}),
     },
     500,
     requestId
