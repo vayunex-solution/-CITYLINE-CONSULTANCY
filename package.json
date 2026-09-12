@@ -1,0 +1,30 @@
+{
+  "name": "cityline-consultancy-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CITYLINE CONSULTANCY — Production Web Platform & API Monorepo",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:backend": "npm run dev --workspace=@cityline/backend",
+    "dev:frontend": "npm run dev --workspace=@cityline/frontend",
+    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
+    "build:shared": "npm run build --workspace=@cityline/shared",
+    "build:backend": "npm run build --workspace=@cityline/backend",
+    "build:frontend": "npm run build --workspace=@cityline/frontend",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspace=@cityline/backend",
+    "verify:env": "node scripts/verify-dev-env.js"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "author": "CITYLINE CONSULTANCY",
+  "license": "UNLICENSED"
+}
