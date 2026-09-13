@@ -102,7 +102,14 @@ export const envSchema = z.object({
   SMTP_SOCKET_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
   NOTIFICATION_ENABLED: booleanCoerce(true),
   NOTIFICATION_MOCK_TRANSPORT: booleanCoerce(false),
-  NOTIFICATION_ADMIN_EMAIL: z.string().email().default('no-reply@citylineconsultancy.com'),
+  // Explicitly configurable admin alert recipient; isolated dev fallback only in non-production
+  NOTIFICATION_ADMIN_EMAIL: z
+    .string()
+    .trim()
+    .refine((val) => val === '' || z.string().email().safeParse(val).success, {
+      message: 'NOTIFICATION_ADMIN_EMAIL must be a valid email address',
+    })
+    .default(() => (process.env.NODE_ENV === 'production' ? '' : 'dev-admin@example.test')),
   NOTIFICATION_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
   NOTIFICATION_RETRY_BASE_DELAY_MS: z.coerce.number().int().positive().default(30000),
   NOTIFICATION_RETRY_MAX_DELAY_MS: z.coerce.number().int().positive().default(3600000),
@@ -195,7 +202,11 @@ export function validateEnvConfig(rawEnv: Record<string, unknown> = process.env)
           extraErrors.push('  - SMTP_FROM: Required in production mode when notifications are enabled');
         }
         if (!data.NOTIFICATION_ADMIN_EMAIL || data.NOTIFICATION_ADMIN_EMAIL.trim().length === 0) {
-          extraErrors.push('  - NOTIFICATION_ADMIN_EMAIL: Required in production mode');
+          extraErrors.push('  - NOTIFICATION_ADMIN_EMAIL: Required in production mode (must be explicitly configured to an administrative mailbox)');
+        } else if (!z.string().email().safeParse(data.NOTIFICATION_ADMIN_EMAIL).success) {
+          extraErrors.push('  - NOTIFICATION_ADMIN_EMAIL: Must be a valid email address format');
+        } else if (data.NOTIFICATION_ADMIN_EMAIL.trim().toLowerCase() === 'no-reply@citylineconsultancy.com') {
+          extraErrors.push('  - NOTIFICATION_ADMIN_EMAIL: Cannot use unmonitored sender (no-reply@citylineconsultancy.com) as production admin recipient');
         }
       }
     }

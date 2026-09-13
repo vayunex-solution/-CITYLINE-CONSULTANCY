@@ -33,6 +33,8 @@ export interface SendMailResult {
 export interface SmtpErrorClassification {
   isTransient: boolean;
   isPermanent: boolean;
+  isAuthFailure: boolean;
+  isConfigFailure: boolean;
   sanitizedMessage: string;
   code?: string;
   responseCode?: number;
@@ -226,17 +228,34 @@ export class SmtpTransportManager {
         ? parseInt(errObj.response.slice(0, 3), 10) || undefined
         : undefined;
 
-    // Permanent errors:
-    // - 5xx SMTP response (e.g. 550 User unknown, 553 Mailbox name invalid)
-    // - Invalid recipient syntax
-    // - Recipient rejected permanently
+    const isAuthFailure =
+      code === 'EAUTH' ||
+      responseCode === 535 ||
+      sanitized.toLowerCase().includes('authentication failed') ||
+      sanitized.toLowerCase().includes('invalid login') ||
+      sanitized.toLowerCase().includes('bad credentials') ||
+      sanitized.toLowerCase().includes('username and password not accepted');
+
+    const isConfigFailure =
+      sanitized.toLowerCase().includes('missing smtp') ||
+      sanitized.toLowerCase().includes('configuration') ||
+      code === 'ECONFIG';
+
+    // Permanent errors (immediate exhaustion, do not consume retry loops):
+    // - SMTP authentication / credentials rejection (e.g. 535 / EAUTH)
+    // - Missing or invalid configuration (ECONFIG)
+    // - Permanent 5xx SMTP rejection (e.g. 550 User unknown, 553 Mailbox invalid)
+    // - Invalid recipient syntax / envelope failure (EENVELOPE)
+    // - Recipient syntax error
     const isPermanent =
+      isAuthFailure ||
+      isConfigFailure ||
       (responseCode !== undefined && responseCode >= 500 && responseCode < 600) ||
       code === 'EENVELOPE' ||
       sanitized.includes('Invalid recipient email') ||
       sanitized.includes('syntax error');
 
-    // Transient errors:
+    // Transient errors (retry with exponential backoff):
     // - 4xx SMTP response (e.g. 421 Service not available, 450 Mailbox busy)
     // - Connection timeouts, greeting timeouts, socket timeouts
     // - Network resets, connection refused, DNS temporary lookup failure
@@ -256,6 +275,8 @@ export class SmtpTransportManager {
     return {
       isTransient,
       isPermanent,
+      isAuthFailure,
+      isConfigFailure,
       sanitizedMessage: sanitized,
       code,
       responseCode,

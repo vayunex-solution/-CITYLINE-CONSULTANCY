@@ -77,7 +77,7 @@ All SMTP configurations are read strictly from environment variables via `@cityl
 | `SMTP_SOCKET_TIMEOUT_MS` | number | `15000` | Socket inactivity timeout (15s)|
 | `NOTIFICATION_ENABLED` | boolean | `true` | Subsystem master switch |
 | `NOTIFICATION_MOCK_TRANSPORT` | boolean | `false` | Development / test mock flag |
-| `NOTIFICATION_ADMIN_EMAIL` | string | `no-reply@citylineconsultancy.com` | Internal alert recipient |
+| `NOTIFICATION_ADMIN_EMAIL` | string | REQUIRED in production (Dev: `dev-admin@example.test`) | Internal alert recipient. Cannot equal unmonitored sender `no-reply@citylineconsultancy.com` in production |
 | `NOTIFICATION_MAX_ATTEMPTS` | number | `5` | Maximum retry attempts |
 | `NOTIFICATION_RETRY_BASE_DELAY_MS` | number | `30000` | Base retry delay (30 seconds) |
 | `NOTIFICATION_RETRY_MAX_DELAY_MS` | number | `3600000` | Maximum backoff cap (1 hour) |
@@ -126,8 +126,11 @@ The database table `notification_queue` acts as the authoritative outbox queue.
 1. **`pending`**: Record inserted during transaction. Ready for worker pickup.
 2. **`processing`**: Atomically claimed by an active worker via `FOR UPDATE`.
 3. **`sent`**: Successfully accepted by SMTP server. `sent_at` timestamp recorded.
-4. **`failed`**: Delivery failed due to transient network or 4xx error. `retry_count` incremented, `next_retry_at` scheduled with exponential backoff.
-5. **`exhausted`**: Dead-letter state. Triggered when `retry_count >= 5` or when the mail server returns a permanent unrecoverable failure (e.g., SMTP 550 mailbox not found). Record is preserved indefinitely or until retention cleanup for operational inspection.
+4. **`failed`**: Delivery failed due to transient network timeout, socket reset, or temporary SMTP 4xx response. `retry_count` incremented, `next_retry_at` scheduled with exponential backoff.
+5. **`exhausted`**: Dead-letter state. Triggered when:
+   - `retry_count >= 5` max retry attempts reached.
+   - Permanent SMTP failure occurs (e.g., SMTP 550 recipient rejected, syntax failure, invalid recipient format).
+   - Permanent SMTP authentication failure (`EAUTH`, SMTP 535) or configuration failure (`ECONFIG`) occurs: transitions immediately to `exhausted` without wasting retries, preventing repeated failed authentication attempts that could lock out the mail account or trigger IP throttling.
 
 ---
 
@@ -143,10 +146,19 @@ Transactional emails must never be sent multiple times due to retries or redunda
 
 ---
 
-## 6. Retry Strategy & Exponential Backoff
+## 6. Retry Strategy & Error Classification
 
-Failed messages are re-evaluated using exponential backoff with random jitter to prevent "thundering herd" spikes against the mail server:
+Error classification strictly separates retryable transient failures from immediate permanent failures:
 
+| Category | Indicators / Error Codes | Action |
+| :--- | :--- | :--- |
+| **Transient Network** | `ETIMEDOUT`, `ECONNRESET`, `ECONNREFUSED`, `ESOCKETTIMEDOUT` | Retry with exponential backoff + jitter |
+| **Temporary SMTP (4xx)**| SMTP Status `4xx` (e.g. 421, 450, 451, 452) | Retry with exponential backoff + jitter |
+| **Permanent Rejection** | SMTP Status `5xx` (e.g. 550, 551, 553), RFC syntax errors | Immediately `exhausted` (no retry) |
+| **Authentication Failure**| Code `EAUTH`, SMTP Status 535, "invalid login" | Immediately `exhausted` (no retry; prevents lockout) |
+| **Configuration Missing**| Code `ECONFIG`, missing host/credentials | Immediately `exhausted` (no retry; controlled error) |
+
+Retry backoff calculation for transient errors:
 $$\text{delay} = \min(\text{maxDelay}, \text{baseDelay} \times 2^{\text{retry\_count}}) + \text{random\_jitter}(0 \dots 1000\text{ms})$$
 
 - **Attempt 1:** 30s delay + jitter
@@ -170,8 +182,12 @@ The production environment is hosted on cPanel with CloudLinux/Passenger where c
 ### Recommended cPanel Cron Setup:
 To execute the worker every 2 minutes via cPanel Cron:
 ```bash
-*/2 * * * * cd /home/<cpanel_user>/repositories/CLC-Website/backend && /usr/local/bin/node -r tsx/register src/scripts/process-notification-queue.ts >> /home/<cpanel_user>/logs/notification_worker.log 2>&1
+*/2 * * * * cd /home/<cpanel_user>/repositories/CLC-Website/backend && npm run queue:process >> /home/<cpanel_user>/logs/notification_worker.log 2>&1
 ```
+
+> [!IMPORTANT]
+> **Phase 17 Deployment Verification Notice:**
+> Do NOT assume `/usr/local/bin/node` or `tsx/register` exists on the target production cPanel environment. Exact production binary paths (`node`, `npm`) vary across cPanel / CloudLinux installations and will be verified and bound in Phase 17 (Deployment & Production Setup). The cron command above represents the standardized repository script invocation.
 
 ---
 
@@ -200,10 +216,23 @@ Branded templates represent the visual identity of **Cityline Consultancy** (Nav
 
 ---
 
-## 10. Production Checklist
-
-1. [ ] Configure `SMTP_PASSWORD` in cPanel environment or private `.env` file.
-2. [ ] Ensure `NOTIFICATION_ADMIN_EMAIL` is set to the authorized receiving inbox.
-3. [ ] Set up cPanel cron job for `npm run queue:process`.
-4. [ ] Verify outbound SMTP connection over port 465 implicit TLS.
-5. [ ] Inspect `notification_worker.log` for successful batch runs.
+## 10. Production Deployment Checklist
+ 
+ 1. [ ] Configure `SMTP_PASSWORD` in cPanel environment or private `.env` file.
+ 2. [ ] Ensure `NOTIFICATION_ADMIN_EMAIL` is explicitly set to the authorized administrative receiving inbox (never defaulted to `no-reply@citylineconsultancy.com`).
+ 3. [ ] Configure cPanel cron job executing `npm run queue:process` using the cPanel Node.js Selector resolved path.
+ 4. [ ] Verify outbound SMTP connection over port 465 implicit TLS.
+ 5. [ ] Inspect `notification_worker.log` for successful batch runs.
+ 
+ ---
+ 
+ ## 11. Verification Environment & Protocol Accuracy
+ 
+ | Verification Item | Environment | Verified? | Notes |
+ | :--- | :--- | :--- | :--- |
+ | **SMTP TCP Connectivity** | Local Development | **YES** | TCP socket connection to `mail.citylineconsultancy.com:465` succeeds. |
+ | **TLS Handshake** | Local Development | **YES** | Implicit TLS negotiated over port 465 with server certificates accepted. |
+ | **SMTP AUTH Protocol Handshake** | Local Development | **YES** | Direct socket AUTH handshake authenticated with `235 Authentication succeeded`. |
+ | **Actual Email Delivery to Inboxes** | Production Mailbox | **UNVERIFIED (Phase 17 Item)** | Live message dispatch was intentionally **NOT** executed to avoid polluting live recipient inboxes with test emails. Actual end-to-end delivery is deferred to Phase 17 staging/deployment verification. |
+ | **Worker Cron Invocation** | cPanel Production | **UNVERIFIED (Phase 17 Item)** | Cron path and execution schedule will be installed and verified in Phase 17. |
+ | **Transactional Outbox Decoupling**| Local Test Suite | **YES (Mocked)** | 179 automated tests confirm atomicity, retry backoff, error classification, and dead-letter handling. |

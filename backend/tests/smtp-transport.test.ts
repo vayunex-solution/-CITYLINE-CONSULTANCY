@@ -63,6 +63,50 @@ describe('SMTP Transport & Security Architecture', () => {
       assert.ok(result.errors.some((e) => e.includes('SMTP_PASSWORD: Required in production mode')));
     });
 
+    it('fails fast in production mode when NOTIFICATION_ADMIN_EMAIL is missing', () => {
+      const result = validateEnvConfig({
+        NODE_ENV: 'production',
+        PORT: '5000',
+        DB_HOST: '127.0.0.1',
+        DB_NAME: 'clc_db',
+        DB_USER: 'clc_user',
+        DB_PASSWORD: 'ValidProductionDbPassword2026!',
+        CORS_ORIGIN: 'https://admin.citylineconsultancy.ae',
+        AUTH_TOKEN_SECRET: 'e4b2d56a7981f3490cb8d4e721a35bf8e4b2d56a7981f3490cb8d4e721a35bf8',
+        SMTP_HOST: 'mail.citylineconsultancy.com',
+        SMTP_USER: 'no-reply@citylineconsultancy.com',
+        SMTP_PASSWORD: 'ValidProductionSmtpPassword123!',
+        NOTIFICATION_ADMIN_EMAIL: '', // Missing admin email in production
+        NOTIFICATION_MOCK_TRANSPORT: 'false',
+      });
+
+      assert.equal(result.success, false);
+      assert.ok(result.errors);
+      assert.ok(result.errors.some((e) => e.includes('NOTIFICATION_ADMIN_EMAIL: Required in production mode')));
+    });
+
+    it('fails fast in production mode when NOTIFICATION_ADMIN_EMAIL uses unmonitored no-reply sender address', () => {
+      const result = validateEnvConfig({
+        NODE_ENV: 'production',
+        PORT: '5000',
+        DB_HOST: '127.0.0.1',
+        DB_NAME: 'clc_db',
+        DB_USER: 'clc_user',
+        DB_PASSWORD: 'ValidProductionDbPassword2026!',
+        CORS_ORIGIN: 'https://admin.citylineconsultancy.ae',
+        AUTH_TOKEN_SECRET: 'e4b2d56a7981f3490cb8d4e721a35bf8e4b2d56a7981f3490cb8d4e721a35bf8',
+        SMTP_HOST: 'mail.citylineconsultancy.com',
+        SMTP_USER: 'no-reply@citylineconsultancy.com',
+        SMTP_PASSWORD: 'ValidProductionSmtpPassword123!',
+        NOTIFICATION_ADMIN_EMAIL: 'no-reply@citylineconsultancy.com', // Prohibited in production
+        NOTIFICATION_MOCK_TRANSPORT: 'false',
+      });
+
+      assert.equal(result.success, false);
+      assert.ok(result.errors);
+      assert.ok(result.errors.some((e) => e.includes('Cannot use unmonitored sender')));
+    });
+
     it('fails when NOTIFICATION_ADMIN_EMAIL is malformed', () => {
       const result = validateEnvConfig({
         NODE_ENV: 'development',
@@ -174,6 +218,29 @@ describe('SMTP Transport & Security Architecture', () => {
       const classificationSyntax = transportManager.classifyError(permErrorSyntax);
       assert.equal(classificationSyntax.isPermanent, true);
       assert.equal(classificationSyntax.isTransient, false);
+    });
+
+    it('classifies SMTP authentication failures (535 / EAUTH) as permanent non-retryable configuration errors', () => {
+      const authErrorEAUTH = {
+        message: 'Invalid login: 535 Incorrect authentication data',
+        code: 'EAUTH',
+        responseCode: 535,
+      };
+      const classification = transportManager.classifyError(authErrorEAUTH);
+      assert.equal(classification.isPermanent, true);
+      assert.equal(classification.isTransient, false);
+      assert.equal(classification.isAuthFailure, true);
+    });
+
+    it('classifies missing or invalid SMTP configuration as a permanent operational failure', () => {
+      const configError = {
+        message: 'Missing SMTP credentials or invalid host configuration',
+        code: 'ECONFIG',
+      };
+      const classification = transportManager.classifyError(configError);
+      assert.equal(classification.isPermanent, true);
+      assert.equal(classification.isTransient, false);
+      assert.equal(classification.isConfigFailure, true);
     });
 
     it('classifies SMTP timeouts, connection refusals, and 4xx as transient (retryable)', () => {

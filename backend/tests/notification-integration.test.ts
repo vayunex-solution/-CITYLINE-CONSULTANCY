@@ -264,7 +264,7 @@ describe('Phase 7: SMTP Notification System Integration', () => {
     const sentMails = smtpTransportManager.getMockSentMessages();
     assert.equal(sentMails.length, 2);
 
-    const adminMail = sentMails.find((m) => m.to.includes('no-reply@citylineconsultancy.com'));
+    const adminMail = sentMails.find((m) => m.to.includes('dev-admin@example.test') || m.to.includes('admin'));
     const applicantMail = sentMails.find((m) => m.to === 'sarah.j@example.com');
 
     assert.ok(adminMail);
@@ -338,6 +338,41 @@ describe('Phase 7: SMTP Notification System Integration', () => {
       for (const notif of notifs) {
         assert.equal(notif.status, 'exhausted');
         assert.ok(notif.last_error?.includes('550'));
+      }
+    } finally {
+      smtpTransportManager.sendMail = originalSend;
+    }
+  });
+
+  it('immediately marks SMTP authentication failure (535 / EAUTH) as exhausted without wasteful retry loops', async () => {
+    // 1. Populate an enquiry
+    const result = await visaService.submitVisaEnquiry({
+      fullName: 'Auth Failure Test',
+      email: 'applicant.auth@example.com',
+      phone: '+971550001122',
+      visaType: 'freelance_2y',
+    });
+
+    // 2. Simulate permanent 535 SMTP authentication failure
+    const originalSend = smtpTransportManager.sendMail.bind(smtpTransportManager);
+    smtpTransportManager.sendMail = async () => {
+      const err = new Error('535 Authentication failed: Bad credentials');
+      (err as unknown as { code: string; responseCode: number }).code = 'EAUTH';
+      (err as unknown as { code: string; responseCode: number }).responseCode = 535;
+      throw err;
+    };
+
+    try {
+      const batchResult = await notificationService.processBatch({ batchSize: 10 });
+      assert.equal(batchResult.processed, 2);
+      assert.equal(batchResult.exhausted, 2);
+      assert.equal(batchResult.failed, 0); // Zero retries scheduled
+
+      // Verify records in DB have status 'exhausted'
+      const notifs = await testKnex('notification_queue').where('reference_id', result.enquiryId);
+      for (const notif of notifs) {
+        assert.equal(notif.status, 'exhausted');
+        assert.ok(notif.last_error?.includes('535'));
       }
     } finally {
       smtpTransportManager.sendMail = originalSend;

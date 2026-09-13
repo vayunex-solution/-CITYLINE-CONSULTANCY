@@ -119,7 +119,7 @@ export class NotificationService {
           id: adminId,
           notification_type: 'visa_enquiry_admin',
           reference_id: params.enquiryId,
-          recipient_email: env.NOTIFICATION_ADMIN_EMAIL,
+          recipient_email: env.NOTIFICATION_ADMIN_EMAIL || 'dev-admin@example.test',
           subject: adminSubject,
           payload_json: JSON.stringify(adminPayload),
           idempotency_hash: adminHash,
@@ -230,13 +230,27 @@ export class NotificationService {
 
         if (isExhausted) {
           stats.exhausted++;
-          logger.warn(`Notification exhausted all retry attempts or failed permanently`, {
-            notificationId: record.id,
-            notificationType: record.notification_type,
-            retryCount: newRetryCount,
-            error: classification.sanitizedMessage,
-            durationMs: duration,
-          });
+          if (classification.isAuthFailure) {
+            logger.error(`SMTP authentication failure encountered; notification moved to exhausted immediately without retry loops to prevent account lockouts`, undefined, {
+              notificationId: record.id,
+              notificationType: record.notification_type,
+              error: classification.sanitizedMessage,
+            });
+          } else if (classification.isConfigFailure) {
+            logger.error(`SMTP configuration failure encountered; notification moved to exhausted`, undefined, {
+              notificationId: record.id,
+              notificationType: record.notification_type,
+              error: classification.sanitizedMessage,
+            });
+          } else {
+            logger.warn(`Notification exhausted all retry attempts or failed permanently`, {
+              notificationId: record.id,
+              notificationType: record.notification_type,
+              retryCount: newRetryCount,
+              error: classification.sanitizedMessage,
+              durationMs: duration,
+            });
+          }
         } else {
           stats.failed++;
           logger.warn(`Notification delivery attempt failed; retry scheduled`, {
