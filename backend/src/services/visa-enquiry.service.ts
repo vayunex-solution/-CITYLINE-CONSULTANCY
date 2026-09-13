@@ -24,6 +24,7 @@ import { visaServiceRepository, VisaServiceRepository } from '../repositories/vi
 import { enquiryRepository, EnquiryRepository } from '../repositories/enquiry.repository';
 import { documentRepository, DocumentRepository, DocumentRecord } from '../repositories/document.repository';
 import { auditLogRepository, AuditLogRepository } from '../repositories/audit-log.repository';
+import { notificationService, NotificationService } from './notification.service';
 
 export interface ProcessedVisaEnquiryResult {
   reference: string;
@@ -39,7 +40,8 @@ export class VisaEnquiryService {
     private docRepo: DocumentRepository = documentRepository,
     private auditRepo: AuditLogRepository = auditLogRepository,
     private storage: StorageService = storageService,
-    private scanner: MalwareScannerService = malwareScannerService
+    private scanner: MalwareScannerService = malwareScannerService,
+    private notification: NotificationService = notificationService
   ) {}
 
   /**
@@ -175,7 +177,12 @@ export class VisaEnquiryService {
         });
       }
 
-      // 6. Atomic MariaDB transaction: persist enquiries, visa_enquiries, and documents metadata
+      // 6. Generate non-sequential, public-safe reference: CLC-V-YYYY-XXXXXXXX
+      const year = new Date().getFullYear();
+      const shortCode = enquiryId.replace(/-/g, '').slice(0, 8).toUpperCase();
+      const publicReference = `CLC-V-${year}-${shortCode}`;
+
+      // 7. Atomic MariaDB transaction: persist enquiries, visa_enquiries, documents, and notifications outbox
       await withTransaction(async (trx) => {
         // Parent inquiry record
         await this.enquiryRepo.createVisaEnquiry(
@@ -213,6 +220,25 @@ export class VisaEnquiryService {
         if (documentRecords.length > 0) {
           await this.docRepo.insertBatch(documentRecords, trx);
         }
+
+        // Phase 7 Outbox: Enqueue transactional email notifications
+        await this.notification.enqueueVisaEnquiryNotifications(
+          {
+            enquiryId,
+            publicReference,
+            fullName: input.fullName,
+            email: input.email,
+            phone: input.phone,
+            whatsapp: input.whatsapp || null,
+            nationality: input.nationality || null,
+            serviceTitle: visaService.title,
+            applicantCount: input.applicantCount || 1,
+            timeline: input.timeline || null,
+            details: input.details || null,
+            documentsCount: documentRecords.length,
+          },
+          trx
+        );
       });
     } catch (err: unknown) {
       // COMPENSATION: If DB transaction fails or scanner rejected, purge newly written orphan files
@@ -223,7 +249,6 @@ export class VisaEnquiryService {
       throw err;
     }
 
-    // 7. Generate non-sequential, public-safe reference: CLC-V-YYYY-XXXXXXXX
     const year = new Date().getFullYear();
     const shortCode = enquiryId.replace(/-/g, '').slice(0, 8).toUpperCase();
     const publicReference = `CLC-V-${year}-${shortCode}`;

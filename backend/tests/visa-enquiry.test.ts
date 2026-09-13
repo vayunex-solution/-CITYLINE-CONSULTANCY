@@ -143,6 +143,23 @@ describe('Visa Enquiry & Document Upload Integration (/api/v1/visa-enquiries)', 
       t.timestamp('created_at').defaultTo(testKnex.fn.now());
     });
 
+    await testKnex.schema.createTable('notification_queue', (t) => {
+      t.string('id', 36).primary();
+      t.string('notification_type', 50).notNullable();
+      t.string('reference_id', 36).notNullable();
+      t.string('recipient_email', 255).notNullable();
+      t.string('subject', 255).notNullable();
+      t.text('payload_json').notNullable();
+      t.string('status', 50).defaultTo('pending').notNullable();
+      t.integer('retry_count').defaultTo(0).notNullable();
+      t.timestamp('next_retry_at').defaultTo(testKnex.fn.now()).notNullable();
+      t.text('last_error').nullable();
+      t.timestamp('sent_at').nullable();
+      t.string('idempotency_hash', 64).notNullable().unique();
+      t.timestamp('created_at').defaultTo(testKnex.fn.now()).notNullable();
+      t.timestamp('updated_at').defaultTo(testKnex.fn.now()).notNullable();
+    });
+
     // 4. Seed active and inactive visa services
     await testKnex('visa_services').insert([
       {

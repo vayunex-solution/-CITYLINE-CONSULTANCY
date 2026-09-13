@@ -14,7 +14,8 @@
     "db:rollback": "node --import tsx ../node_modules/knex/bin/cli.js --knexfile src/config/knex.config.ts migrate:rollback",
     "db:seed": "node --import tsx ../node_modules/knex/bin/cli.js --knexfile src/config/knex.config.ts seed:run",
     "db:validate": "tsx --test tests/database.test.ts",
-    "db:test": "node ../scripts/test-db-connection.js"
+    "db:test": "node ../scripts/test-db-connection.js",
+    "queue:process": "tsx src/scripts/process-notification-queue.ts"
   },
   "dependencies": {
     "@cityline/shared": "*",
@@ -29,6 +30,7 @@
     "knex": "^3.3.0",
     "multer": "^1.4.5-lts.2",
     "mysql2": "^3.24.4",
+    "nodemailer": "^10.0.9",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -37,6 +39,7 @@
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.14.9",
+    "@types/nodemailer": "^8.0.1",
     "@types/supertest": "^6.0.2",
     "sqlite3": "^6.0.1",
     "supertest": "^7.0.0",

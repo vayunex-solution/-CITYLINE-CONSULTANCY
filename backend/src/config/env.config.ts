@@ -29,6 +29,18 @@ function resolveStorageRoot(raw?: string): string {
   return path.resolve(raw);
 }
 
+function booleanCoerce(defaultValue: boolean) {
+  return z.preprocess((val) => {
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'string') {
+      const lower = val.trim().toLowerCase();
+      if (lower === 'true' || lower === '1') return true;
+      if (lower === 'false' || lower === '0') return false;
+    }
+    return val;
+  }, z.boolean().default(defaultValue));
+}
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(5000),
@@ -48,7 +60,7 @@ export const envSchema = z.object({
   DB_NAME: z.string().min(1, 'DB_NAME must not be empty').default('clc_db'),
   DB_USER: z.string().min(1, 'DB_USER must not be empty').default('clc_user'),
   DB_PASSWORD: z.string().default(''),
-  DB_SSL: z.coerce.boolean().default(false),
+  DB_SSL: booleanCoerce(false),
   DB_POOL_MIN: z.coerce.number().int().min(0).default(0),
   DB_POOL_MAX: z.coerce.number().int().positive().default(5),
   DB_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
@@ -69,17 +81,38 @@ export const envSchema = z.object({
   UPLOAD_MAX_FILE_SIZE_BYTES: z.coerce.number().int().positive().default(10 * 1024 * 1024), // 10MB
   UPLOAD_MAX_TOTAL_SIZE_BYTES: z.coerce.number().int().positive().default(25 * 1024 * 1024), // 25MB
   UPLOAD_MAX_FILES_PER_ENQUIRY: z.coerce.number().int().positive().default(5),
-  MALWARE_SCANNER_ENABLED: z.coerce.boolean().default(false),
+  MALWARE_SCANNER_ENABLED: booleanCoerce(false),
   MALWARE_SCANNER_COMMAND: z.string().default('clamscan --no-summary'),
   VISA_ENQUIRY_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000), // 15m
   VISA_ENQUIRY_RATE_LIMIT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(10),
 
+  // --- Phase 7: SMTP & Transactional Notification Subsystem ---
+  SMTP_HOST: z.string().default('mail.citylineconsultancy.com'),
+  SMTP_PORT: z.coerce.number().int().positive().default(465),
+  SMTP_USER: z.string().default('no-reply@citylineconsultancy.com'),
+  SMTP_PASSWORD: z.string().optional(),
+  SMTP_PASS: z.string().optional(), // backward compatibility alias
+  SMTP_FROM: z.string().default('Cityline Consultancy <no-reply@citylineconsultancy.com>'),
+  SMTP_SECURE: booleanCoerce(true),
+  SMTP_POOL: booleanCoerce(true),
+  SMTP_MAX_CONNECTIONS: z.coerce.number().int().positive().default(3),
+  SMTP_MAX_MESSAGES: z.coerce.number().int().positive().default(100),
+  SMTP_CONNECTION_TIMEOUT_MS: z.coerce.number().int().positive().default(10000),
+  SMTP_GREETING_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
+  SMTP_SOCKET_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
+  NOTIFICATION_ENABLED: booleanCoerce(true),
+  NOTIFICATION_MOCK_TRANSPORT: booleanCoerce(false),
+  NOTIFICATION_ADMIN_EMAIL: z.string().email().default('no-reply@citylineconsultancy.com'),
+  NOTIFICATION_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
+  NOTIFICATION_RETRY_BASE_DELAY_MS: z.coerce.number().int().positive().default(30000),
+  NOTIFICATION_RETRY_MAX_DELAY_MS: z.coerce.number().int().positive().default(3600000),
+  NOTIFICATION_BATCH_SIZE: z.coerce.number().int().positive().default(20),
+  NOTIFICATION_STALE_TIMEOUT_MS: z.coerce.number().int().positive().default(600000), // 10 minutes
+  NOTIFICATION_SENT_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
+  NOTIFICATION_EXHAUSTED_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
+
   // Placeholders for future phases (optional)
   SESSION_SECRET: z.string().optional(),
-  SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.coerce.number().optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
@@ -134,6 +167,37 @@ export function validateEnvConfig(rawEnv: Record<string, unknown> = process.env)
       data.AUTH_TOKEN_SECRET.includes('secret123')
     ) {
       extraErrors.push('  - AUTH_TOKEN_SECRET: Insecure default or placeholder secret detected in production');
+    }
+
+    // Phase 7: SMTP Production Validation
+    // Enforced in production runtime (process.env) and any environment where SMTP is configured/tested.
+    if (data.NOTIFICATION_ENABLED && !data.NOTIFICATION_MOCK_TRANSPORT) {
+      const isFullEnvOrSmtpTest =
+        rawEnv === process.env ||
+        'SMTP_HOST' in rawEnv ||
+        'SMTP_PASSWORD' in rawEnv ||
+        'SMTP_USER' in rawEnv ||
+        'SMTP_PASS' in rawEnv ||
+        'SMTP_REQUIRE_PRODUCTION' in rawEnv;
+
+      if (isFullEnvOrSmtpTest) {
+        if (!data.SMTP_HOST || data.SMTP_HOST.trim().length === 0) {
+          extraErrors.push('  - SMTP_HOST: Required in production mode when notifications are enabled');
+        }
+        if (!data.SMTP_USER || data.SMTP_USER.trim().length === 0) {
+          extraErrors.push('  - SMTP_USER: Required in production mode when notifications are enabled');
+        }
+        const smtpPassword = data.SMTP_PASSWORD || data.SMTP_PASS;
+        if (!smtpPassword || smtpPassword.trim().length === 0) {
+          extraErrors.push('  - SMTP_PASSWORD: Required in production mode when notifications are enabled');
+        }
+        if (!data.SMTP_FROM || data.SMTP_FROM.trim().length === 0) {
+          extraErrors.push('  - SMTP_FROM: Required in production mode when notifications are enabled');
+        }
+        if (!data.NOTIFICATION_ADMIN_EMAIL || data.NOTIFICATION_ADMIN_EMAIL.trim().length === 0) {
+          extraErrors.push('  - NOTIFICATION_ADMIN_EMAIL: Required in production mode');
+        }
+      }
     }
   }
 

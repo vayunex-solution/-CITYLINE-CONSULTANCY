@@ -8,3 +8,4 @@ export * from './visa-service.repository';
 export * from './enquiry.repository';
 export * from './document.repository';
 export * from './audit-log.repository';
+export * from './notification-queue.repository';
