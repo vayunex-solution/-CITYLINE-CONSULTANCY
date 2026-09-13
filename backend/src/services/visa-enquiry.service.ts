@@ -104,26 +104,58 @@ export class VisaEnquiryService {
         );
         createdPhysicalPaths.push(storageResult.absolutePath);
 
-        // Run scanner adapter on saved file
-        const scanResult = await this.scanner.scanFile(storageResult.absolutePath);
+        let validationStatus = 'pending';
+        let malwareScanStatus = 'skipped';
 
-        if (!scanResult.clean) {
-          logger.warn(`Malicious upload blocked for enquiry ${enquiryId}: ${file.sanitizedFilename}`);
-          await this.auditRepo.logEvent({
-            action: 'malware_detected',
-            resource_type: 'document',
-            request_id: context.requestId,
-            client_ip: context.clientIp,
-            details_json: JSON.stringify({
-              filename: file.sanitizedFilename,
-              reason: scanResult.details,
-            }),
-          });
-          throw new AppError(
-            'One or more uploaded files failed security verification.',
-            400,
-            'MALICIOUS_FILE_DETECTED'
-          );
+        if (this.scanner.isEnabled()) {
+          // Run scanner adapter on saved file
+          const scanResult = await this.scanner.scanFile(storageResult.absolutePath);
+
+          if (scanResult.status === 'infected') {
+            logger.warn(`Malicious upload blocked for enquiry ${enquiryId}: ${file.sanitizedFilename}`);
+            await this.auditRepo.logEvent({
+              action: 'malware_detected',
+              resource_type: 'document',
+              request_id: context.requestId,
+              client_ip: context.clientIp,
+              details_json: JSON.stringify({
+                filename: file.sanitizedFilename,
+                reason: scanResult.details,
+              }),
+            });
+            throw new AppError(
+              'One or more uploaded files failed security verification.',
+              400,
+              'MALICIOUS_FILE_DETECTED'
+            );
+          }
+
+          if (scanResult.status === 'scan_failed' || !scanResult.clean) {
+            logger.error(`Malware scanner execution failure for enquiry ${enquiryId}: ${file.sanitizedFilename} (${scanResult.details})`);
+            await this.auditRepo.logEvent({
+              action: 'malware_scan_failed',
+              resource_type: 'document',
+              request_id: context.requestId,
+              client_ip: context.clientIp,
+              details_json: JSON.stringify({
+                filename: file.sanitizedFilename,
+                reason: 'Scanner command execution failed closed',
+              }),
+            });
+            throw new AppError(
+              'Security scanning could not be completed at this time. Please try again later.',
+              500,
+              'SCANNER_UNAVAILABLE'
+            );
+          }
+
+          // Authoritatively verified clean by active scanner -> ACCEPTED / TRUSTED
+          validationStatus = 'valid';
+          malwareScanStatus = 'clean';
+        } else {
+          // Scanner disabled in environment: document remains quarantined / untrusted
+          validationStatus = 'pending';
+          malwareScanStatus = 'skipped';
         }
 
         documentRecords.push({
@@ -137,8 +169,8 @@ export class VisaEnquiryService {
           file_extension: file.extension,
           file_size_bytes: file.sizeBytes,
           sha256_hash: file.sha256Hash,
-          validation_status: 'valid',
-          malware_scan_status: scanResult.status,
+          validation_status: validationStatus,
+          malware_scan_status: malwareScanStatus,
           retention_status: 'active',
         });
       }

@@ -6,6 +6,7 @@
 import { Knex } from 'knex';
 import { AbstractKnexRepository } from './base.repository';
 import { normalizeDatabaseError } from '../database/database-error';
+import { AppError } from '../utils/app-error';
 
 export interface DocumentRecord {
   [key: string]: unknown;
@@ -77,3 +78,34 @@ export class DocumentRepository extends AbstractKnexRepository<DocumentRecord, s
 }
 
 export const documentRepository = new DocumentRepository();
+
+/**
+ * Asserts whether a document record meets the authoritative security trust boundary.
+ * A document is TRUSTED/ACCEPTED if and only if:
+ * 1. `validation_status === 'valid'` (passed binary signature, MIME, and package validation).
+ * 2. `malware_scan_status === 'clean'` (authoritatively verified by active malware scanner).
+ * Any document with status 'pending', 'skipped', 'scan_failed', or 'infected' is strictly UNTRUSTED.
+ */
+export function isDocumentTrusted(doc: {
+  validation_status: string;
+  malware_scan_status: string;
+}): boolean {
+  return doc.validation_status === 'valid' && doc.malware_scan_status === 'clean';
+}
+
+/**
+ * Throws an AppError if a document is not in a trusted, fully-scanned state.
+ * Used by future document access and retrieval workflows to prevent casual leakage of quarantined documents.
+ */
+export function assertDocumentTrusted(doc: {
+  validation_status: string;
+  malware_scan_status: string;
+}): void {
+  if (!isDocumentTrusted(doc)) {
+    throw new AppError(
+      'Document cannot be retrieved or accessed because it is quarantined or unverified.',
+      403,
+      'DOCUMENT_UNTRUSTED'
+    );
+  }
+}

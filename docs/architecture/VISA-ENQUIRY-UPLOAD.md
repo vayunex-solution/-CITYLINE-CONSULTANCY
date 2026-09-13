@@ -1,6 +1,6 @@
 # CITYLINE CONSULTANCY — Phase 6 Architecture: Visa Enquiry & Document Upload System
 
-**Status:** IMPLEMENTED & LOCKED  
+**Status:** IMPLEMENTED, CONSOLIDATED & LOCKED
 **Authority:** Phase 0 Scope Lock + Phase 1 Repository Foundation + Phase 2 Database Architecture + Phase 3 Backend Core + Phase 4 Admin Authentication & Security + Phase 5 Public Website  
 **Date:** 2026-09-13  
 
@@ -20,8 +20,8 @@ Visa Enquiry Form (/visa-enquiry)
 POST /api/v1/visa-enquiries [Multipart Form-Data / JSON]
   │ [IP Sliding Window Rate Limiter: 10 per 15 min]
   ▼
-Multer In-Memory Buffer Pipeline
-  │ [Strict Limits: 10MB/file, 25MB total, max 5 files]
+Content-Length Pre-Check & BoundedMemoryStorage Pipeline
+  │ [Strict Limits: 10MB/file, 25MB aggregate stream limit, max 5 files, max 20 fields]
   ▼
 Authoritative Zod Schema Validation
   │ [fullName, email, phone, whatsapp, visaType, nationality, timeline, details, consent]
@@ -38,13 +38,16 @@ DOCX Zip-Bomb & Structural Validation
 Private Filesystem Storage Write
   │ [STORAGE_ROOT/visa-enquiries/<enquiryId>/<randomUUID>.<ext> with 0o600 permissions]
   ▼
-Pluggable Malware Scanner Adapter
-  │ [Quarantine/untrusted state reporting when scanner is inactive]
+Pluggable Malware Scanner Adapter (Fail-Closed)
+  │ ├── [SCANNER ENABLED + CLEAN] ──► Accepted / Trusted (valid / clean)
+  │ ├── [SCANNER ENABLED + INFECTED] ──► Rejected (400 MALICIOUS_FILE_DETECTED) + Unlink files + Audit log
+  │ ├── [SCANNER ENABLED + COMMAND FAILED] ──► Fail-Closed (500 SCANNER_UNAVAILABLE) + Unlink files + Audit log
+  │ └── [SCANNER DISABLED] ──► Quarantined / Untrusted (pending / skipped)
   ▼
 Atomic MariaDB Transaction
   │ ├── enquiries (parent enquiry record)
   │ ├── visa_enquiries (1-to-1 detail record)
-  │ └── documents (batch metadata insertion)
+  │ └── documents (batch metadata insertion with accurate trust statuses)
   │
   ├── [FAILURE] ──► Rollback + Compensation: Unlink newly written physical files
   │
@@ -100,14 +103,38 @@ Public-Safe Response (HTTP 201)
 - **`400 INVALID_VISA_SERVICE`**: Selected visa service is unknown or currently deactivated in `visa_services`.
 - **`400 FILE_TYPE_PROHIBITED`**: Uploaded file has an executable or dangerous extension (`.exe`, `.sh`, `.php`, etc.).
 - **`415 UNSUPPORTED_MEDIA_TYPE`**: File binary signature / magic bytes do not match approved formats.
-- **`413 FILE_TOO_LARGE`**: An individual file exceeds 10MB or total payload exceeds 25MB.
+- **`413 FILE_TOO_LARGE`**: An individual file exceeds 10MB.
+- **`413 PAYLOAD_TOO_LARGE`**: Total request/upload payload exceeds 25MB (checked before and during parsing).
 - **`400 TOO_MANY_FILES`**: More than 5 documents submitted.
+- **`400 TOO_MANY_FIELDS`**: More than 20 multipart text fields submitted.
 - **`429 RATE_LIMIT_EXCEEDED`**: Client exceeded rate limits (returns `Retry-After` header).
+- **`500 SCANNER_UNAVAILABLE`**: Active malware scanner command execution failed closed.
 - **`500 DATABASE_ERROR`**: Safe sanitized error message suppressing all raw SQL, column names, and stack traces.
 
 ---
 
-## 3. Document Security & Storage Architecture
+## 3. Multipart RAM Exhaustion Defense (`BoundedMemoryStorage`)
+
+To prevent memory exhaustion and multipart Denial of Service (DoS) attacks, Phase 6 implements parser-level streaming protection:
+
+1. **Pre-flight Header Check:**
+   Before Multer begins buffering, `req.headers['content-length']` is evaluated. Any request declaring a body > 25MB (`UPLOAD_MAX_TOTAL_SIZE_BYTES`) is rejected immediately (`HTTP 413 PAYLOAD_TOO_LARGE`) without allocating buffer memory.
+2. **Active Streaming Byte Tracking:**
+   `BoundedMemoryStorage` tracks cumulative uploaded bytes across all file streams in real-time. As chunks stream from the socket:
+   - If an individual file exceeds 10MB, the stream is destroyed immediately (`LIMIT_FILE_SIZE`).
+   - If cumulative bytes across all files exceed 25MB, the stream is destroyed immediately (`LIMIT_TOTAL_FILE_SIZE`).
+   - Sockets are aborted before unmanaged RAM buffering occurs.
+3. **Multipart Field Flood Defense:**
+   Busboy parsing limits are strictly enforced:
+   - `fileSize`: 10MB
+   - `files`: 5
+   - `fields`: 20 (prevents multipart non-file flooding)
+   - `fieldSize`: 100KB (limits text field length)
+   - `parts`: 30 (limits total multipart components)
+
+---
+
+## 4. Document Security & Storage Architecture
 
 ### Physical Storage Isolation
 - **Storage Location:** Configured via `STORAGE_ROOT` (defaults to `~/clc_storage` in production and local isolated directories in development/testing).
@@ -151,14 +178,40 @@ Microsoft Word `.docx` documents are ZIP archives. Rather than blindly extractin
 
 ---
 
-## 4. Database Integration & Transactional Consistency
+## 5. Malware Scanner Architecture & Trust Lifecycle
+
+### Fail-Closed Scanner Execution Flow
+The `MalwareScannerService` adapter manages virus scanner execution (`child_process.execFile` with argument arrays to prevent shell injection).
+
+```
+File Uploaded & Binary Validated
+           │
+           ▼
+MALWARE_SCANNER_ENABLED?
+  ├── [YES] ──► Execute scanner command (e.g. clamscan)
+  │               ├── Clean exit (0 threats) ──► validation_status: 'valid' | malware_scan_status: 'clean' (ACCEPTED)
+  │               ├── Virus detected (exit 1 / FOUND) ──► 400 MALICIOUS_FILE_DETECTED + Unlink files + Audit event
+  │               └── Command failure (ENOENT / error / timeout) ──► 500 SCANNER_UNAVAILABLE + Unlink files + Fail closed
+  │
+  └── [NO] ──► validation_status: 'pending' | malware_scan_status: 'skipped' (QUARANTINED / UNTRUSTED)
+```
+
+### Trust Boundary Verification (`isDocumentTrusted` & `assertDocumentTrusted`)
+To enforce that pending or skipped documents cannot be casually treated as verified:
+- **`isDocumentTrusted(doc)`**: Returns `true` IF AND ONLY IF `doc.validation_status === 'valid' && doc.malware_scan_status === 'clean'`.
+- **`assertDocumentTrusted(doc)`**: Throws HTTP 403 `DOCUMENT_UNTRUSTED` if any document has status `pending`, `skipped`, `scan_failed`, or `infected`.
+- **Private Access:** No public document download route exists in Phase 6. Future authenticated retrieval services in Phase 11 must call `assertDocumentTrusted` before streaming file bytes.
+
+---
+
+## 6. Database Integration & Transactional Consistency
 
 ### Database Baseline (Phase 2 Schema Preservation)
 Phase 6 uses the existing Phase 2 MariaDB relational schema without requiring structural alterations or migrations:
 - **`visa_services`**: Canonical catalog queried by `slug` or `service_code` (`freelance_2y`, `visit_30d`, `visit_60d`).
 - **`enquiries`**: Root parent record (`id`, `enquiry_type: 'visa'`, `status: 'new'`, `full_name`, `email`, `phone`, `whatsapp`, `nationality`, `subject`, `message`, `source_channel: 'website'`).
 - **`visa_enquiries`**: 1-to-1 extension record (`enquiry_id`, `visa_service_id`, `duration_days`, `applicant_count`, `notes`).
-- **`documents`**: Document metadata records (`entity_type: 'enquiry'`, `entity_id`, `document_category: 'passport_copy'`, `original_filename`, `storage_key`, `mime_type`, `file_extension`, `file_size_bytes`, `sha256_hash`, `validation_status: 'valid'`, `malware_scan_status`, `retention_status: 'active'`).
+- **`documents`**: Document metadata records (`entity_type: 'enquiry'`, `entity_id`, `document_category: 'passport_copy'`, `original_filename`, `storage_key`, `mime_type`, `file_extension`, `file_size_bytes`, `sha256_hash`, `validation_status`, `malware_scan_status`, `retention_status: 'active'`).
 - **`audit_logs`**: Append-only security audit log (`actor_admin_id: null`, `action: 'visa_enquiry_submitted'`, `resource_type: 'enquiry'`, `client_ip`, `request_id`, `details_json`).
 
 ### Transaction & Rollback Compensation Strategy
@@ -174,25 +227,7 @@ Because filesystem writes cannot participate directly in MariaDB two-phase commi
 
 ---
 
-## 5. Malware Scanner Architecture & Trust Model
-
-### Architecture
-- **Adapter Class:** `MalwareScannerService` supporting configurable scanner execution via `MALWARE_SCANNER_ENABLED` and `MALWARE_SCANNER_COMMAND`.
-- **Command Execution:** Uses `child_process.execFile` with argument arrays to prevent shell argument injection.
-- **Configurable Scanner:** Compatible with ClamAV (`clamscan --no-summary`).
-
-### Honest Quarantine / Untrusted State Model
-- When `MALWARE_SCANNER_ENABLED=false` (e.g., development or hosts without ClamAV daemon installed):
-  - The system **does not** fabricate false clean claims.
-  - Document metadata records `malware_scan_status: 'pending'` or `'skipped'`.
-  - The limitations are explicitly logged in server logs and recorded in audit trails.
-- When `MALWARE_SCANNER_ENABLED=true`:
-  - Scans physical file prior to database commit.
-  - If infected (`clean: false`), logs an audit event (`action: 'malware_detected'`), triggers compensation file cleanup, and rejects the submission with `MALICIOUS_FILE_DETECTED`.
-
----
-
-## 6. Frontend Integration & User Experience
+## 7. Frontend Integration & User Experience
 
 - **Route:** `/visa-enquiry`
 - **Component:** `frontend/components/forms/VisaEnquiryForm.tsx`
@@ -202,6 +237,7 @@ Because filesystem writes cannot participate directly in MariaDB two-phase commi
   - File picker browse button with accessible keyboard navigation (`Tab`, `Space`, `Enter`).
   - Real-time client-side pre-validation (extension check, 10MB per file limit, 5 files max).
   - Selected files preview list showing filename, formatted size, and accessible "Remove document" button.
+  - Total upload size indicator (e.g. `1.24 MB / 25 MB maximum`).
   - Form submission loading state with animated spinner and button disabling.
   - Dedicated success screen displaying the unique public reference badge (`CLC-V-YYYY-XXXX`) and clear follow-up instructions.
   - Accessible error callouts announcing server-side validation and rate-limiting messages (`role="alert"`).
@@ -209,26 +245,28 @@ Because filesystem writes cannot participate directly in MariaDB two-phase commi
 
 ---
 
-## 7. Verification & Quality Gates
+## 8. Verification & Quality Gates
 
 | Quality Gate | Command | Status | Result |
 | :--- | :--- | :--- | :--- |
 | **TypeScript Typecheck** | `npm run typecheck` | **PASS** | 0 errors across `@cityline/shared`, `@cityline/backend`, `@cityline/frontend` |
 | **Code Style & Linting** | `npm run lint` | **PASS** | 0 ESLint warnings or errors |
-| **Full Backend Test Suite** | `npm run test` | **PASS** | **138 passing tests** across 23 test suites (0 failures) |
+| **Full Backend Test Suite** | `npm run test` | **PASS** | **146 passing tests** across 25 test suites (0 failures) |
 | **Document Security Tests** | `tsx --test tests/document-security.test.ts` | **PASS** | 24 tests: magic bytes, sanitization, zip bomb, mime check |
 | **Storage Isolation Tests** | `tsx --test tests/storage-service.test.ts` | **PASS** | 5 tests: webroot isolation, path traversal, orphan cleanup |
-| **Visa Integration Tests** | `tsx --test tests/visa-enquiry.test.ts` | **PASS** | 12 tests: submission, validation, rate limits, compensation, private storage |
+| **Visa Integration Tests** | `tsx --test tests/visa-enquiry.test.ts` | **PASS** | 20 tests: submission, validation, rate limits, compensation, private storage, scanner paths, trust boundary, multipart limits |
 | **Environment Pre-Flight** | `npm run verify:env` | **PASS** | Storage isolation verified outside webroot |
 | **Production Build** | `npm run build` | **PASS** | Next.js 19 routes + Shared + Backend built successfully |
 | **Git Diff Check** | `git diff --check` | **PASS** | Clean whitespace, no merge markers |
 
 ---
 
-## 8. Deferred Functionality (Strictly Out of Scope)
+## 9. Deferred Functionality (Strictly Out of Scope)
 
 The following capabilities are deliberately **not** implemented in Phase 6 and remain strictly deferred:
 - **Phase 7:** SMTP notification dispatch, email queue, and admin email alerts.
 - **Phase 8:** Job applications, recruitment resumes, and candidate document storage.
 - **Phase 9:** Employer manpower enquiry processing.
+- **Phase 10:** Testimonials management.
 - **Phase 11:** Admin dashboard enquiry review UI, document download endpoints, and status management.
+- **Phase 12:** Analytics / visitor intelligence.

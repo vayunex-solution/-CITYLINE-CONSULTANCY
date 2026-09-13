@@ -14,6 +14,8 @@ import os from 'os';
 import { createApp } from '../src/app';
 import { setDbClient } from '../src/database/connection';
 import { storageService } from '../src/services/storage.service';
+import { malwareScannerService } from '../src/services/malware-scanner.service';
+import { isDocumentTrusted, assertDocumentTrusted } from '../src/repositories/document.repository';
 import { visaEnquiryRateLimiterInstance } from '../src/middleware/visa-rate-limit.middleware';
 
 // Helper to construct in-memory ZIP archive buffers for DOCX testing
@@ -196,6 +198,8 @@ describe('Visa Enquiry & Document Upload Integration (/api/v1/visa-enquiries)', 
 
   beforeEach(() => {
     visaEnquiryRateLimiterInstance.clear();
+    malwareScannerService.setEnabled(false);
+    malwareScannerService.setCommand('clamscan --no-summary');
   });
 
   it('submits a valid visa enquiry with text fields only and persists records', async () => {
@@ -514,5 +518,207 @@ describe('Visa Enquiry & Document Upload Integration (/api/v1/visa-enquiries)', 
 
     const res3 = await request(app).get('/storage/visa-enquiries/sample.pdf');
     assert.strictEqual(res3.status, 404);
+  });
+
+  describe('Malware Scanner Execution Path & Trust Lifecycle', () => {
+    it('when malware scanner is disabled, uploaded document is persisted in quarantined/untrusted status (pending/skipped) and assertDocumentTrusted fails', async () => {
+      malwareScannerService.setEnabled(false);
+
+      const pdfBuf = Buffer.from('%PDF-1.7 mock applicant passport copy');
+      const res = await request(app)
+        .post('/api/v1/visa-enquiries')
+        .field('fullName', 'Tariq Mansoor')
+        .field('email', 'tariq.mansoor@example.com')
+        .field('phone', '+971 50 111 2233')
+        .field('visaType', 'visit-visa-30')
+        .field('nationality', 'Oman')
+        .field('consent', 'true')
+        .attach('documents', pdfBuf, 'tariq_passport.pdf');
+
+      assert.strictEqual(res.status, 201);
+
+      const savedEnquiry = await testKnex('enquiries').where({ email: 'tariq.mansoor@example.com' }).first();
+      assert.ok(savedEnquiry);
+
+      const doc = await testKnex('documents').where({ entity_id: savedEnquiry.id }).first();
+      assert.ok(doc);
+      // Untrusted lifecycle state
+      assert.strictEqual(doc.validation_status, 'pending');
+      assert.strictEqual(doc.malware_scan_status, 'skipped');
+
+      // Trust assertions
+      assert.strictEqual(isDocumentTrusted(doc), false);
+      assert.throws(
+        () => assertDocumentTrusted(doc),
+        (err: any) => {
+          assert.strictEqual(err.code, 'DOCUMENT_UNTRUSTED');
+          assert.strictEqual(err.statusCode, 403);
+          return true;
+        }
+      );
+    });
+
+    it('when malware scanner is enabled and reports clean, document is accepted as trusted (valid/clean) and assertDocumentTrusted succeeds', async () => {
+      malwareScannerService.setEnabled(true);
+      // Execute a benign mock scanner that exits cleanly
+      malwareScannerService.setCommand('node -e process.exit(0)');
+
+      const pdfBuf = Buffer.from('%PDF-1.7 mock clean document payload');
+      const res = await request(app)
+        .post('/api/v1/visa-enquiries')
+        .field('fullName', 'Zainab Qasim')
+        .field('email', 'zainab.qasim@example.com')
+        .field('phone', '+971 50 444 5566')
+        .field('visaType', 'visit-visa-60')
+        .field('nationality', 'Bahrain')
+        .field('consent', 'true')
+        .attach('documents', pdfBuf, 'clean_scan.pdf');
+
+      assert.strictEqual(res.status, 201);
+
+      const savedEnquiry = await testKnex('enquiries').where({ email: 'zainab.qasim@example.com' }).first();
+      assert.ok(savedEnquiry);
+
+      const doc = await testKnex('documents').where({ entity_id: savedEnquiry.id }).first();
+      assert.ok(doc);
+      // Trusted lifecycle state
+      assert.strictEqual(doc.validation_status, 'valid');
+      assert.strictEqual(doc.malware_scan_status, 'clean');
+
+      // Trust assertions
+      assert.strictEqual(isDocumentTrusted(doc), true);
+      assert.doesNotThrow(() => assertDocumentTrusted(doc));
+    });
+
+    it('when malware scanner is enabled and detects malware, upload is rejected with 400 MALICIOUS_FILE_DETECTED, compensation unlinks files, and audit log records malware_detected', async () => {
+      malwareScannerService.setEnabled(true);
+      // Mock scanner that outputs infection signature and exits with 1
+      malwareScannerService.setCommand('node -e console.log("FOUND_Infected_Signature");process.exit(1)');
+
+      const pdfBuf = Buffer.from('%PDF-1.7 infected mock payload');
+      const res = await request(app)
+        .post('/api/v1/visa-enquiries')
+        .field('fullName', 'Infected User')
+        .field('email', 'infected@example.com')
+        .field('phone', '+971 50 000 9999')
+        .field('visaType', 'visit-visa-30')
+        .field('nationality', 'Unknown')
+        .field('consent', 'true')
+        .attach('documents', pdfBuf, 'virus.pdf');
+
+      assert.strictEqual(res.status, 400);
+      assert.strictEqual(res.body.error.code, 'MALICIOUS_FILE_DETECTED');
+
+      // Verify no DB record created
+      const savedEnquiry = await testKnex('enquiries').where({ email: 'infected@example.com' }).first();
+      assert.strictEqual(savedEnquiry, undefined);
+
+      // Verify audit log record created
+      const auditLog = await testKnex('audit_logs').where({ action: 'malware_detected' }).first();
+      assert.ok(auditLog, 'Audit log must record malware_detected event');
+      assert.strictEqual(auditLog.resource_type, 'document');
+      assert.strictEqual(auditLog.details_json.includes('virus.pdf'), true);
+      assert.strictEqual(auditLog.details_json.includes('%PDF'), false, 'Never log file content bytes');
+    });
+
+    it('when malware scanner is enabled and scanner command fails, system fails closed with 500 SCANNER_UNAVAILABLE and cleans up files', async () => {
+      malwareScannerService.setEnabled(true);
+      // Mock scanner command that fails to execute (non-existent binary)
+      malwareScannerService.setCommand('non_existent_clamscan_binary_missing_xyz');
+
+      const pdfBuf = Buffer.from('%PDF-1.7 mock file for failed scanner');
+      const res = await request(app)
+        .post('/api/v1/visa-enquiries')
+        .field('fullName', 'FailClosed User')
+        .field('email', 'failclosed@example.com')
+        .field('phone', '+971 50 888 7777')
+        .field('visaType', 'visit-visa-30')
+        .field('nationality', 'Kuwait')
+        .field('consent', 'true')
+        .attach('documents', pdfBuf, 'fail_closed.pdf');
+
+      assert.strictEqual(res.status, 500);
+      assert.strictEqual(res.body.error.code, 'SCANNER_UNAVAILABLE');
+
+      // Fail closed: no DB record created
+      const savedEnquiry = await testKnex('enquiries').where({ email: 'failclosed@example.com' }).first();
+      assert.strictEqual(savedEnquiry, undefined);
+
+      // Audit log records failure
+      const auditLog = await testKnex('audit_logs').where({ action: 'malware_scan_failed' }).first();
+      assert.ok(auditLog, 'Audit log must record malware_scan_failed event');
+    });
+  });
+
+  describe('Multipart Request Limits & RAM Exhaustion Defense', () => {
+    it('rejects an individual file exceeding the 10MB limit (HTTP 413 FILE_TOO_LARGE)', async () => {
+      // 10MB + 1KB buffer
+      const oversizedBuf = Buffer.alloc(10 * 1024 * 1024 + 1024);
+      oversizedBuf.set(Buffer.from('%PDF-1.7'), 0);
+
+      const res = await request(app)
+        .post('/api/v1/visa-enquiries')
+        .field('fullName', 'Big File User')
+        .field('email', 'bigfile@example.com')
+        .field('phone', '+971 50 123 4567')
+        .field('visaType', 'visit-visa-30')
+        .field('nationality', 'UAE')
+        .field('consent', 'true')
+        .attach('documents', oversizedBuf, 'big_file.pdf');
+
+      assert.strictEqual(res.status, 413);
+      assert.strictEqual(res.body.error.code, 'FILE_TOO_LARGE');
+    });
+
+    it('rejects request declaring Content-Length > 25MB before parsing buffers (HTTP 413 PAYLOAD_TOO_LARGE)', async () => {
+      const res = await request(app)
+        .post('/api/v1/visa-enquiries')
+        .set('Content-Length', (26 * 1024 * 1024).toString())
+        .set('Content-Type', 'multipart/form-data; boundary=---test')
+        .send('mock data');
+
+      assert.strictEqual(res.status, 413);
+      assert.strictEqual(res.body.error.code, 'PAYLOAD_TOO_LARGE');
+    });
+
+    it('accepts exact boundary of 5 documents without error', async () => {
+      const pdfBuf = Buffer.from('%PDF-1.7 mock passport copy');
+      const reqBuilder = request(app)
+        .post('/api/v1/visa-enquiries')
+        .field('fullName', 'Five Docs User')
+        .field('email', 'fivedocs@example.com')
+        .field('phone', '+971 50 123 4567')
+        .field('visaType', 'visit-visa-30')
+        .field('nationality', 'UAE')
+        .field('consent', 'true');
+
+      for (let i = 1; i <= 5; i++) {
+        reqBuilder.attach('documents', pdfBuf, `doc_${i}.pdf`);
+      }
+
+      const res = await reqBuilder;
+      assert.strictEqual(res.status, 201);
+      assert.strictEqual(res.body.data.documentsUploaded, 5);
+    });
+
+    it('rejects excessive multipart text fields (>20 fields) to prevent multipart flooding', async () => {
+      const reqBuilder = request(app)
+        .post('/api/v1/visa-enquiries')
+        .field('fullName', 'Field Flood User')
+        .field('email', 'flood@example.com')
+        .field('phone', '+971 50 123 4567')
+        .field('visaType', 'visit-visa-30')
+        .field('nationality', 'UAE')
+        .field('consent', 'true');
+
+      // Add 25 extra text fields
+      for (let i = 1; i <= 25; i++) {
+        reqBuilder.field(`extra_field_${i}`, `value_${i}`);
+      }
+
+      const res = await reqBuilder;
+      assert.strictEqual(res.status, 400);
+      assert.strictEqual(res.body.error.code, 'TOO_MANY_FIELDS');
+    });
   });
 });
