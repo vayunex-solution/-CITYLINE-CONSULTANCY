@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FormField } from './FormField';
 import { SelectField } from './SelectField';
 import { TextareaField } from './TextareaField';
@@ -12,21 +12,31 @@ interface VisaEnquiryFormProps {
   defaultVisaType?: string;
 }
 
+const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'docx'];
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+const MAX_FILES_COUNT = 5;
+
 export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     phone: '',
-    visaType: defaultVisaType,
+    visaType: defaultVisaType || 'freelance-visa',
     nationality: '',
     timeline: '',
     details: '',
     consent: false,
   });
 
+  const [files, setFiles] = useState<File[]>([]);
+  const [fileError, setFileError] = useState<string>('');
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [referenceNumber, setReferenceNumber] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const visaOptions = [
@@ -41,6 +51,45 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
     { value: '1-3-months', label: '1 to 3 months' },
     { value: 'exploring', label: 'Planning / Exploring options' },
   ];
+
+  const handleFilesAdded = (incomingFiles: FileList | null) => {
+    if (!incomingFiles || incomingFiles.length === 0) return;
+
+    setFileError('');
+    const newFiles: File[] = [...files];
+
+    for (let i = 0; i < incomingFiles.length; i++) {
+      const file = incomingFiles[i];
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        setFileError(`File "${file.name}" has an unsupported format. Allowed: PDF, JPG, PNG, DOCX.`);
+        return;
+      }
+
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setFileError(`File "${file.name}" exceeds the 10MB individual file limit.`);
+        return;
+      }
+
+      if (newFiles.length >= MAX_FILES_COUNT) {
+        setFileError(`Maximum of ${MAX_FILES_COUNT} documents can be attached per enquiry.`);
+        return;
+      }
+
+      // Avoid duplicates by name + size
+      if (!newFiles.some((f) => f.name === file.name && f.size === file.size)) {
+        newFiles.push(file);
+      }
+    }
+
+    setFiles(newFiles);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setFileError('');
+  };
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -68,10 +117,45 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
     setErrorMessage('');
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const payload = new FormData();
+      payload.append('fullName', formData.fullName.trim());
+      payload.append('email', formData.email.trim().toLowerCase());
+      payload.append('phone', formData.phone.trim());
+      payload.append('visaType', formData.visaType);
+      payload.append('nationality', formData.nationality.trim());
+      if (formData.timeline) payload.append('timeline', formData.timeline);
+      if (formData.details) payload.append('details', formData.details.trim());
+      payload.append('consent', 'true');
+
+      for (const file of files) {
+        payload.append('documents', file);
+      }
+
+      const response = await fetch('/api/v1/visa-enquiries', {
+        method: 'POST',
+        body: payload,
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        if (responseData.error?.fieldErrors) {
+          setErrors(responseData.error.fieldErrors);
+          setErrorMessage('Please correct the highlighted errors in the form.');
+        } else if (response.status === 413) {
+          setErrorMessage('The uploaded files exceed the maximum allowed size limit (25MB total).');
+        } else if (response.status === 429) {
+          setErrorMessage('Too many submissions received. Please wait a few minutes before trying again.');
+        } else {
+          setErrorMessage(responseData.error?.message || responseData.message || 'Submission failed. Please try again.');
+        }
+        return;
+      }
+
+      setReferenceNumber(responseData.data?.reference || '');
       setSubmitted(true);
     } catch {
-      setErrorMessage('Submission failed. Please check your internet connection and try again.');
+      setErrorMessage('Unable to connect to the enquiry service. Please check your network connection and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -80,15 +164,21 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
   if (submitted) {
     return (
       <FormSuccess
-        title="Visa Consultation Enquiry Submitted"
-        message="Your visa enquiry has been registered with Cityline Consultancy. A visa specialist will review your profile requirements and contact you with structured guidance."
+        title="Visa Consultation Enquiry Registered"
+        message={
+          referenceNumber
+            ? `Your enquiry has been successfully registered under Reference: ${referenceNumber}. Our visa advisory team will evaluate your case requirements and contact you with structured procedural guidance.`
+            : 'Your visa enquiry has been registered with Cityline Consultancy. A visa specialist will review your profile requirements and contact you with structured guidance.'
+        }
         onReset={() => {
           setSubmitted(false);
+          setReferenceNumber('');
+          setFiles([]);
           setFormData({
             fullName: '',
             email: '',
             phone: '',
-            visaType: defaultVisaType,
+            visaType: defaultVisaType || 'freelance-visa',
             nationality: '',
             timeline: '',
             details: '',
@@ -98,6 +188,9 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
       />
     );
   }
+
+  const totalBytes = files.reduce((sum, f) => sum + f.size, 0);
+  const totalMb = (totalBytes / (1024 * 1024)).toFixed(2);
 
   return (
     <form onSubmit={handleSubmit} className={styles.form} noValidate>
@@ -177,6 +270,90 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
         value={formData.details}
         onChange={(e) => setFormData({ ...formData, details: e.target.value })}
       />
+
+      {/* Document Upload Section */}
+      <div className={styles.group}>
+        <label className={styles.label}>
+          Supporting Documents (Optional)
+        </label>
+        <span className={styles.helpText}>
+          Upload passport copy or resume for faster profile evaluation. Formats: PDF, JPG, PNG, DOCX (Max 10MB per file, up to 5 files).
+        </span>
+
+        <div
+          className={`${styles.uploadDropzone} ${isDragOver ? styles.uploadDropzoneActive : ''}`}
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragOver(true);
+          }}
+          onDragLeave={() => setIsDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragOver(false);
+            handleFilesAdded(e.dataTransfer.files);
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label="Upload supporting documents"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.docx"
+            className={styles.fileInputHidden}
+            onChange={(e) => handleFilesAdded(e.target.files)}
+          />
+          <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>📄</div>
+          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
+            Drag and drop documents here, or <span style={{ color: 'var(--accent-gold-primary)' }}>browse files</span>
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+            PDF, JPG, PNG, or DOCX up to 10MB each ({files.length}/5 attached)
+          </div>
+        </div>
+
+        {fileError && <span className={styles.errorText} role="alert">{fileError}</span>}
+
+        {files.length > 0 && (
+          <div>
+            <ul className={styles.fileList}>
+              {files.map((file, idx) => (
+                <li key={`${file.name}-${idx}`} className={styles.fileItem}>
+                  <div className={styles.fileInfo}>
+                    <span>📎</span>
+                    <span className={styles.fileName}>{file.name}</span>
+                    <span className={styles.fileSize}>
+                      ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.fileRemoveBtn}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveFile(idx);
+                    }}
+                    aria-label={`Remove ${file.name}`}
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: '0.5rem', textAlign: 'right' }}>
+              Total upload size: {totalMb} MB / 25 MB maximum
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className={styles.group}>
         <label className={styles.checkboxLabel}>

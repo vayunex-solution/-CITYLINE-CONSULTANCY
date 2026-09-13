@@ -65,6 +65,15 @@ export const envSchema = z.object({
   AUTH_RATE_LIMIT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
   AUTH_LOCKOUT_DURATION_MS: z.coerce.number().int().positive().default(900000),
 
+  // --- Visa Enquiry & Document Upload Subsystem (Phase 6) ---
+  UPLOAD_MAX_FILE_SIZE_BYTES: z.coerce.number().int().positive().default(10 * 1024 * 1024), // 10MB
+  UPLOAD_MAX_TOTAL_SIZE_BYTES: z.coerce.number().int().positive().default(25 * 1024 * 1024), // 25MB
+  UPLOAD_MAX_FILES_PER_ENQUIRY: z.coerce.number().int().positive().default(5),
+  MALWARE_SCANNER_ENABLED: z.coerce.boolean().default(false),
+  MALWARE_SCANNER_COMMAND: z.string().default('clamscan --no-summary'),
+  VISA_ENQUIRY_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000), // 15m
+  VISA_ENQUIRY_RATE_LIMIT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(10),
+
   // Placeholders for future phases (optional)
   SESSION_SECRET: z.string().optional(),
   SMTP_HOST: z.string().optional(),

@@ -6,6 +6,7 @@
 import { Router } from 'express';
 import healthRoutes from './health.routes';
 import authRoutes from './auth.routes';
+import visaEnquiryRoutes from './visa-enquiry.routes';
 
 const apiRouter = Router();
 
@@ -15,9 +16,10 @@ apiRouter.use('/health', healthRoutes);
 // Phase 4: Admin Authentication & Security Foundation
 apiRouter.use('/admin/auth', authRoutes);
 
-// Future Phase Route Mounts (Strictly Deferred):
-// Phase 5: Public Website Implementation
 // Phase 6: Visa Enquiry + Document Upload System
+apiRouter.use('/visa-enquiries', visaEnquiryRoutes);
+
+// Future Phase Route Mounts (Strictly Deferred):
 // Phase 7: SMTP Notification System
 // Phase 8: Jobs & Recruitment System
 // Phase 9: Employer / Manpower Enquiry System

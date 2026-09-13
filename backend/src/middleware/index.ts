@@ -10,3 +10,5 @@ export * from './validate.middleware';
 export * from './auth.middleware';
 export * from './auth-rate-limit.middleware';
 export * from './csrf.middleware';
+export * from './visa-rate-limit.middleware';
+export * from './upload.middleware';
