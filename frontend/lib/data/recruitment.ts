@@ -1,0 +1,68 @@
+import { ManpowerCategory } from '../types/website.types';
+
+export const MANPOWER_CATEGORIES: ManpowerCategory[] = [
+  {
+    id: 'hotel-staff',
+    slug: 'hotel-staff',
+    title: 'Hotel Staff',
+    description: 'Front of house, housekeeping, stewards, food & beverage attendants, and culinary support staff for hospitality establishments.',
+    demandFocus: 'Luxury hospitality, resorts, business hotels, and premium dining venues across Dubai and Abu Dhabi.',
+    iconName: 'hotel',
+  },
+  {
+    id: 'cleaning',
+    slug: 'cleaning',
+    title: 'Cleaning & Facility Care',
+    description: 'Commercial janitorial personnel, residential housekeeping teams, industrial facility cleaners, and mall hygiene staff.',
+    demandFocus: 'Corporate towers, commercial shopping centers, residential complexes, and airport facilities.',
+    iconName: 'sparkles',
+  },
+  {
+    id: 'mason',
+    slug: 'mason',
+    title: 'Mason',
+    description: 'Skilled block masons, plasterers, tile layers, and stone workers with experience in precision civil finishes.',
+    demandFocus: 'Residential developments, high-rise residential construction, and infrastructure projects.',
+    iconName: 'brick',
+  },
+  {
+    id: 'steel-fixer',
+    slug: 'steel-fixer',
+    title: 'Steel Fixer',
+    description: 'Trained rebar specialists, reinforcement cutters, and benders adept at reading structural blueprints for heavy foundations.',
+    demandFocus: 'Civil engineering mega-projects, transport bridges, metro expansions, and structural framing.',
+    iconName: 'hammer',
+  },
+  {
+    id: 'carpenter',
+    slug: 'carpenter',
+    title: 'Carpenter',
+    description: 'Shuttering carpenters for concrete formwork as well as finishing carpenters for interior joinery and fit-out installations.',
+    demandFocus: 'Interior fit-out firms, exhibition setup contractors, and building construction developments.',
+    iconName: 'axe',
+  },
+  {
+    id: 'bike-rider-delivery',
+    slug: 'bike-rider-delivery',
+    title: 'Bike Rider / Delivery Job',
+    description: 'Licensed delivery riders equipped with navigation expertise, defensive driving competence, and customer service acumen.',
+    demandFocus: 'E-commerce logistics, express couriers, quick-commerce fulfillment, and food delivery networks.',
+    iconName: 'bike',
+  },
+  {
+    id: 'taxi-driver',
+    slug: 'taxi-driver',
+    title: 'Taxi Driver',
+    description: 'Professional drivers certified or ready for UAE RTA driver permits, offering safe navigation and passenger hospitality.',
+    demandFocus: 'Public and private metropolitan transport fleets across major UAE cities.',
+    iconName: 'car',
+  },
+  {
+    id: 'truck-driver',
+    slug: 'truck-driver',
+    title: 'Truck Driver',
+    description: 'Heavy vehicle and trailer drivers certified for interstate logistics, port freight dispatch, and construction hauling.',
+    demandFocus: 'Supply chain distribution centers, ports, quarries, and industrial transport corridors.',
+    iconName: 'truck',
+  },
+];

@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%">
+  <defs>
+    <radialGradient id="skyGlow" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="40%" stop-color="#0a192f" />
+      <stop offset="100%" stop-color="#060b14" />
+    </radialGradient>
+    <radialGradient id="goldAura" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#d4af37" stop-opacity="0.25" />
+      <stop offset="60%" stop-color="#c59b27" stop-opacity="0.05" />
+      <stop offset="100%" stop-color="#c59b27" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="horizonMesh" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#060b14" stop-opacity="0.95" />
+      <stop offset="40%" stop-color="#0a1120" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="transparent" />
+    </linearGradient>
+    <linearGradient id="towerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1920" height="1080" fill="url(#skyGlow)" />
+  <rect width="1920" height="1080" fill="url(#goldAura)" />
+
+  <!-- Subtle Architectural Skyline Geometry (Abstract Editorial UAE) -->
+  <g opacity="0.35">
+    <polygon points="400,1080 430,450 480,450 510,1080" fill="url(#towerGrad)" />
+    <polygon points="530,1080 560,520 610,520 640,1080" fill="url(#towerGrad)" />
+    <polygon points="900,1080 940,240 960,180 980,240 1020,1080" fill="url(#towerGrad)" />
+    <polygon points="1200,1080 1230,380 1290,380 1320,1080" fill="url(#towerGrad)" />
+    <polygon points="1350,1080 1370,480 1420,480 1440,1080" fill="url(#towerGrad)" />
+    <polygon points="1500,1080 1520,600 1570,600 1590,1080" fill="url(#towerGrad)" />
+  </g>
+
+  <!-- Ambient Light Sweep -->
+  <path d="M -200 1080 L 1000 0 L 1200 0 L 2120 1080 Z" fill="#d4af37" opacity="0.03" />
+
+  <!-- Bottom Horizon Gradient -->
+  <rect width="1920" height="1080" fill="url(#horizonMesh)" />
+</svg>
