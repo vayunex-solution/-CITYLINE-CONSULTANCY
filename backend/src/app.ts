@@ -12,6 +12,7 @@
 import express, { Express } from 'express';
 import helmet from 'helmet';
 import cors, { CorsOptions } from 'cors';
+import cookieParser from 'cookie-parser';
 import { env } from './config/env.config';
 import { requestIdMiddleware } from './middleware/request-id.middleware';
 import { requestLoggerMiddleware } from './middleware/request-logger.middleware';
@@ -45,17 +46,18 @@ export function createApp(): Express {
       return callback(new Error(`Origin ${origin} is not allowed by CORS policy`));
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'x-request-id'],
-    exposedHeaders: ['X-Request-ID', 'x-request-id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'x-request-id', 'X-CSRF-Token', 'x-csrf-token'],
+    exposedHeaders: ['X-Request-ID', 'x-request-id', 'X-CSRF-Token', 'x-csrf-token'],
     credentials: true,
     maxAge: 86400, // 24 hours preflight cache
   };
 
   app.use(cors(corsOptions));
 
-  // 3. Request Body Parsing with Strict 100kb Size Limits
+  // 3. Request Body Parsing with Strict 100kb Size Limits & Cookie Parsing
   app.use(express.json({ limit: '100kb' }));
   app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+  app.use(cookieParser());
 
   // 4. Correlation ID Tracking (X-Request-ID)
   app.use(requestIdMiddleware);

@@ -7,3 +7,6 @@ export * from './request-logger.middleware';
 export * from './error-handler.middleware';
 export * from './not-found.middleware';
 export * from './validate.middleware';
+export * from './auth.middleware';
+export * from './auth-rate-limit.middleware';
+export * from './csrf.middleware';

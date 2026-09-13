@@ -5,14 +5,17 @@
 
 import { Router } from 'express';
 import healthRoutes from './health.routes';
+import authRoutes from './auth.routes';
 
 const apiRouter = Router();
 
 // Health monitoring endpoint under API prefix: /api/v1/health
 apiRouter.use('/health', healthRoutes);
 
-// Future Phase Route Mounts (Strictly Deferred):
 // Phase 4: Admin Authentication & Security Foundation
+apiRouter.use('/admin/auth', authRoutes);
+
+// Future Phase Route Mounts (Strictly Deferred):
 // Phase 5: Public Website Implementation
 // Phase 6: Visa Enquiry + Document Upload System
 // Phase 7: SMTP Notification System

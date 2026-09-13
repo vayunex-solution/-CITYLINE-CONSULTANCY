@@ -3,3 +3,4 @@
  */
 
 export * from './base.repository';
+export * from './admin-user.repository';

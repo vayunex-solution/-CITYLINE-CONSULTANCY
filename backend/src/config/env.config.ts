@@ -56,7 +56,16 @@ export const envSchema = z.object({
   // Logging
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
-  // Placeholders for future phases (optional in Phase 3)
+  // --- Admin Authentication & Security Subsystem (Phase 4) ---
+  AUTH_TOKEN_SECRET: z.string().default('development_insecure_auth_token_secret_must_be_at_least_32_characters_long_for_security'),
+  AUTH_TOKEN_TTL: z.string().default('30m'),
+  AUTH_COOKIE_NAME: z.string().default('clc_admin_token'),
+  AUTH_CSRF_COOKIE_NAME: z.string().default('clc_csrf_token'),
+  AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000),
+  AUTH_RATE_LIMIT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
+  AUTH_LOCKOUT_DURATION_MS: z.coerce.number().int().positive().default(900000),
+
+  // Placeholders for future phases (optional)
   SESSION_SECRET: z.string().optional(),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().optional(),
@@ -104,6 +113,18 @@ export function validateEnvConfig(rawEnv: Record<string, unknown> = process.env)
       if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
         extraErrors.push(`  - CORS_ORIGIN: Localhost origin (${origin}) is prohibited in production`);
       }
+    }
+
+    // Phase 4: Administrative Token Secret Hardening
+    if (!rawEnv.AUTH_TOKEN_SECRET || data.AUTH_TOKEN_SECRET.length < 32) {
+      extraErrors.push('  - AUTH_TOKEN_SECRET: Required in production and must be at least 32 characters long');
+    }
+    if (
+      data.AUTH_TOKEN_SECRET.includes('development') ||
+      data.AUTH_TOKEN_SECRET.includes('change-me') ||
+      data.AUTH_TOKEN_SECRET.includes('secret123')
+    ) {
+      extraErrors.push('  - AUTH_TOKEN_SECRET: Insecure default or placeholder secret detected in production');
     }
   }
 
