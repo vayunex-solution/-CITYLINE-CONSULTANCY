@@ -3,7 +3,7 @@
  *
  * PHASE 1 ARCHITECTURAL CONTRACT:
  * - This placeholder defines the contract for role-level authorization checks.
- * - Full implementation (role resolution, permission evaluation) is strictly reserved for Phase 5 (RBAC & Portal).
+ * - Full implementation (role resolution, permission evaluation) is strictly reserved for Phase 4 (Admin Auth & Security) / Phase 11 (Admin Dashboard & Management).
  * - Supported roles defined in @cityline/shared: 'super_admin' | 'operations' | 'agent'
  */
 
@@ -13,10 +13,10 @@ import { AppError } from '../utils/app-error';
 
 export function requireRolePlaceholder(...allowedRoles: AdminRole[]) {
   return (_req: Request, _res: Response, next: NextFunction): void => {
-    // Phase 1 Stub: In Phase 5, this evaluates whether req.user.role matches allowedRoles.
+    // Architectural Stub: In Phase 4 / Phase 11, this evaluates whether req.user.role matches allowedRoles.
     next(
       AppError.forbidden(
-        `RBAC authorization subsystem will be activated in Phase 5. Required roles: ${allowedRoles.join(', ')}`
+        `RBAC authorization subsystem will be activated in Phase 4 / Phase 11. Required roles: ${allowedRoles.join(', ')}`
       )
     );
   };

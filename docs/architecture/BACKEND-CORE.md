@@ -92,6 +92,8 @@ All backend runtime behavior is driven exclusively by validated environment vari
 
 ## 4. Database Connection Architecture & Lifecycle
 
+Phase 2 established the locked 18-table MariaDB schema, including normalized entities, foreign keys, indexes, lifecycle/delete policies, notification outbox infrastructure, document metadata, analytics tables, and audit logging. Phase 3 establishes the runtime connection, transaction runner, and error handling layers on top of this foundation.
+
 ### 4.1 Single Controlled Knex Client
 - Connection management is centralized in [`src/database/connection.ts`](file:///d:/VAYUNEX/vayu-backup/CLC-Website/backend/src/database/connection.ts).
 - Avoids connection leaks by enforcing a singleton Knex instance across the entire backend.
@@ -105,6 +107,11 @@ All backend runtime behavior is driven exclusively by validated environment vari
 - `initializeDatabase()`: Runs initial connectivity ping (`SELECT 1 as ping`) on startup.
 - `checkDatabaseConnectivity()`: Returns safe `{ ok: boolean, error?: string }` without throwing unhandled exceptions.
 - `closeDatabaseConnection()`: Gracefully destroys the connection pool during shutdown.
+
+### 4.4 SSL & Deployment Topology Policy
+- **Remote MariaDB SSL Status**: Port 3306 on the remote MariaDB host currently reports SSL disabled (`have_ssl: DISABLED`).
+- **Network Security Policy**: Direct internet-facing remote DB connections should not be used for production.
+- **Production Deployment Strategy**: Production connection topology remains to be verified during Phase 17 deployment. If the application and database are co-located on the cPanel host, use local connectivity (`127.0.0.1` or UNIX/local socket) and avoid exposing database traffic over the public network.
 
 ---
 
@@ -270,11 +277,21 @@ npm run test
 ---
 
 ## 12. Phase Boundaries & Deferred Items
-
+ 
 The following business features are **strictly deferred** to later phases:
-- **Phase 4**: Administrative Authentication, RBAC Guard, Login APIs, Session Management.
-- **Phase 5**: Public Website & Dynamic Job Board Controllers & Public Routing.
-- **Phase 6**: Document Upload Handling, Malware Scanning, Private Storage Staging.
-- **Phase 7**: SMTP Transport, Outbox Background Worker, Email Templates.
-- **Phase 8+**: Visa Inquiries, Business Setup Inquiries, Employer Manpower Controllers.
-- **Phase 17**: Production cPanel Deployment.
+- **PHASE 4** — Admin Authentication & Security Foundation
+- **PHASE 5** — Public Website Implementation
+- **PHASE 6** — Visa Enquiry + Document Upload System
+- **PHASE 7** — SMTP Notification System
+- **PHASE 8** — Jobs & Recruitment System
+- **PHASE 9** — Employer / Manpower Enquiry System
+- **PHASE 10** — Testimonials Management
+- **PHASE 11** — Admin Dashboard & Management
+- **PHASE 12** — Analytics / Visitor Intelligence
+- **PHASE 13** — Frontend ↔ Backend Integration
+- **PHASE 14** — Security Audit
+- **PHASE 15** — QA / Testing
+- **PHASE 16** — Performance + SEO
+- **PHASE 17** — cPanel Production Deployment
+- **PHASE 18** — Production Verification
+- **PHASE 19** — Final Handover
