@@ -182,10 +182,11 @@ export class AuthController {
       const admin = req.admin;
 
       if (admin) {
-        // Invalidate token identifier in revocation store
-        tokenRevocationStore.revoke(admin.tokenJti, Math.floor(Date.now() / 1000) + 3600);
+        // 1. Persist revocation record in database (must succeed before reporting successful logout)
+        const expiresAt = admin.tokenExp || Math.floor(Date.now() / 1000) + 1800;
+        await tokenRevocationStore.revoke(admin.tokenJti, expiresAt);
 
-        // Record audit event
+        // 2. Record audit event
         void recordAuditEvent({
           actorAdminId: admin.id,
           action: 'logout',

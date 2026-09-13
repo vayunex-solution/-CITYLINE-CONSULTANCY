@@ -19,17 +19,29 @@ import { authRateLimiterStore } from '../src/middleware/auth-rate-limit.middlewa
 import { tokenRevocationStore } from '../src/auth/token-revocation';
 import { env } from '../src/config/env.config';
 
+import knex, { Knex } from 'knex';
+import { up } from '../src/database/migrations/20260913000001_create_revoked_tokens';
+
 describe('Admin Authentication Endpoints (/api/v1/admin/auth)', () => {
   const app = createApp();
   const testPassword = 'CorrectHorseBatteryStaple123!';
   let activeSuperAdmin: AdminUserWithRole;
   let inactiveAdmin: AdminUserWithRole;
+  let testKnex: Knex;
 
   const originalFindByIdentity = adminUserRepository.findByIdentity;
   const originalFindByIdWithRole = adminUserRepository.findByIdWithRole;
   const originalUpdateLastLogin = adminUserRepository.updateLastLogin;
 
   before(async () => {
+    testKnex = knex({
+      client: 'sqlite3',
+      connection: { filename: ':memory:' },
+      useNullAsDefault: true,
+    });
+    await up(testKnex);
+    tokenRevocationStore.setClient(testKnex);
+
     const passwordHash = await hashPassword(testPassword);
 
     activeSuperAdmin = {
@@ -83,15 +95,21 @@ describe('Admin Authentication Endpoints (/api/v1/admin/auth)', () => {
     adminUserRepository.updateLastLogin = async () => {};
   });
 
-  after(() => {
+  after(async () => {
     adminUserRepository.findByIdentity = originalFindByIdentity;
     adminUserRepository.findByIdWithRole = originalFindByIdWithRole;
     adminUserRepository.updateLastLogin = originalUpdateLastLogin;
+    tokenRevocationStore.setClient(null);
+    if (testKnex) {
+      await testKnex.destroy();
+    }
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     authRateLimiterStore.clear();
-    tokenRevocationStore.clear();
+    if (testKnex) {
+      await testKnex('revoked_tokens').truncate();
+    }
   });
 
   it('POST /login: Authenticates valid credentials and issues secure cookies', async () => {

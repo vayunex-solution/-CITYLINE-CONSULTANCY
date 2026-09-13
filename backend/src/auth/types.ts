@@ -12,4 +12,5 @@ export interface AuthenticatedAdminContext {
   role: AdminRole;
   roleId: number;
   tokenJti: string;
+  tokenExp: number;
 }

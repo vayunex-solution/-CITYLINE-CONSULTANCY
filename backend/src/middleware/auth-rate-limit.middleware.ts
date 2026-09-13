@@ -1,16 +1,31 @@
 /**
  * CITYLINE CONSULTANCY — Authentication Rate Limiting & Brute-Force Defense
- * Implements sliding-window and temporary lockout tracking for login endpoints.
  *
- * GOVERNANCE:
- * - Throttles both by client IP and compound key (IP + normalized identity).
- * - Avoids permanent account lockouts (preventing denial-of-service against administrators).
- * - Returns 429 TOO_MANY_REQUESTS with Retry-After header.
+ * GOVERNANCE & ARCHITECTURAL LIMITATION NOTE:
+ * - Current development/runtime limiter is process-local. Multi-process/global abuse protection
+ *   must be validated or upgraded during production deployment/security verification.
+ * - This implementation is structured behind the `RateLimitStore` abstraction so that
+ *   a distributed store (e.g. Redis or database-backed) can be plugged in seamlessly
+ *   during Phase 17 deployment without modifying authentication routes or controllers.
+ * - PROXY TRUST: Never trusts raw X-Forwarded-For headers directly; relies on Express req.ip
+ *   which respects the deliberate 'trust proxy' configuration of the application.
  */
 
 import { Request, Response, NextFunction } from 'express';
 import { env } from '../config/env.config';
 import { AppError } from '../utils/app-error';
+
+export interface RateLimitStatus {
+  limited: boolean;
+  retryAfterSeconds?: number;
+}
+
+export interface RateLimitStore {
+  isRateLimited(ip: string, identity?: string): RateLimitStatus;
+  recordFailure(ip: string, identity?: string): void;
+  recordSuccess(ip: string, identity?: string): void;
+  clear(): void;
+}
 
 interface RateLimitRecord {
   attempts: number;
@@ -18,7 +33,10 @@ interface RateLimitRecord {
   lockedUntil: number | null;
 }
 
-class AuthRateLimiterStore {
+/**
+ * Process-local in-memory implementation of RateLimitStore.
+ */
+export class MemoryRateLimitStore implements RateLimitStore {
   private records = new Map<string, RateLimitRecord>();
 
   private getKey(ip: string, identity?: string): string {
@@ -28,7 +46,7 @@ class AuthRateLimiterStore {
     return ip;
   }
 
-  public isRateLimited(ip: string, identity?: string): { limited: boolean; retryAfterSeconds?: number } {
+  public isRateLimited(ip: string, identity?: string): RateLimitStatus {
     const now = Date.now();
     const keysToCheck = [this.getKey(ip)];
     if (identity) {
@@ -98,20 +116,33 @@ class AuthRateLimiterStore {
   }
 }
 
-export const authRateLimiterStore = new AuthRateLimiterStore();
+// Active store instance (swappable for multi-instance production engines)
+let activeRateLimitStore: RateLimitStore = new MemoryRateLimitStore();
+
+export function setRateLimitStore(store: RateLimitStore): void {
+  activeRateLimitStore = store;
+}
+
+export function getRateLimitStore(): RateLimitStore {
+  return activeRateLimitStore;
+}
+
+export const authRateLimiterStore = {
+  isRateLimited: (ip: string, identity?: string) => activeRateLimitStore.isRateLimited(ip, identity),
+  recordFailure: (ip: string, identity?: string) => activeRateLimitStore.recordFailure(ip, identity),
+  recordSuccess: (ip: string, identity?: string) => activeRateLimitStore.recordSuccess(ip, identity),
+  clear: () => activeRateLimitStore.clear(),
+};
 
 /**
  * Express middleware checking rate limits before allowing login evaluation.
+ * Note: Relies securely on req.ip (governed by Express trust proxy settings).
  */
 export function authRateLimiter(req: Request, res: Response, next: NextFunction): void {
-  const forwarded = req.headers['x-forwarded-for'];
-  const ip = typeof forwarded === 'string'
-    ? forwarded.split(',')[0].trim()
-    : req.ip || req.socket.remoteAddress || 'unknown-ip';
-
+  const ip = req.ip || req.socket.remoteAddress || 'unknown-ip';
   const identity = typeof req.body?.identity === 'string' ? req.body.identity : undefined;
 
-  const status = authRateLimiterStore.isRateLimited(ip, identity);
+  const status = activeRateLimitStore.isRateLimited(ip, identity);
 
   if (status.limited) {
     if (status.retryAfterSeconds) {

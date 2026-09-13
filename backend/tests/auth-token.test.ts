@@ -3,7 +3,7 @@
  * Verifies JWT token generation, signature validation, revocation, and CSRF Double-Submit verification.
  */
 
-import { describe, it, beforeEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import jwt from 'jsonwebtoken';
 import {
@@ -14,13 +14,8 @@ import {
   getAuthCookieOptions,
   getCsrfCookieOptions,
 } from '../src/auth/token';
-import { tokenRevocationStore } from '../src/auth/token-revocation';
 
 describe('Admin Token & CSRF Subsystem', () => {
-  beforeEach(() => {
-    tokenRevocationStore.clear();
-  });
-
   it('generates a valid signed JWT access token with all required claims', () => {
     const admin = {
       id: '550e8400-e29b-41d4-a716-446655440000',
@@ -55,29 +50,6 @@ describe('Admin Token & CSRF Subsystem', () => {
 
     const verified = verifyAdminToken(forgedToken);
     assert.equal(verified, null, 'Forged token must return null');
-  });
-
-  it('rejects tokens whose jti is present in the revocation store', () => {
-    const admin = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      username: 'clc_admin',
-      email: 'admin@citylineconsultancy.ae',
-      role: 'super_admin' as const,
-      roleId: 1,
-    };
-
-    const { token, jti, exp } = createAdminToken(admin);
-
-    // Initial check: valid
-    assert.ok(verifyAdminToken(token) !== null);
-
-    // Revoke token
-    tokenRevocationStore.revoke(jti, exp);
-    assert.equal(tokenRevocationStore.isRevoked(jti), true);
-
-    // Subsequent check: rejected
-    const afterRevocation = verifyAdminToken(token);
-    assert.equal(afterRevocation, null, 'Revoked token must be rejected');
   });
 
   it('rejects expired tokens cleanly', () => {

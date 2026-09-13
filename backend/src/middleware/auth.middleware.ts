@@ -13,6 +13,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AdminRole } from '@cityline/shared';
 import { env } from '../config/env.config';
 import { verifyAdminToken } from '../auth/token';
+import { tokenRevocationStore } from '../auth/token-revocation';
 import { adminUserRepository } from '../repositories/admin-user.repository';
 import { recordAuditEvent } from '../auth/audit';
 import { AppError } from '../utils/app-error';
@@ -40,7 +41,13 @@ export async function requireAuthenticatedAdmin(req: Request, _res: Response, ne
   }
 
   try {
-    // 3. Query database to verify user existence and active status
+    // 3. Check persistent token revocation in database
+    const isRevoked = await tokenRevocationStore.isRevoked(claims.jti);
+    if (isRevoked) {
+      return next(new AppError('Authentication token has been revoked.', 401, 'AUTHENTICATION_FAILED'));
+    }
+
+    // 4. Query database to verify user existence and active status
     const user = await adminUserRepository.findByIdWithRole(claims.sub);
 
     if (!user) {
@@ -62,7 +69,7 @@ export async function requireAuthenticatedAdmin(req: Request, _res: Response, ne
       return next(new AppError('Administrative account is deactivated.', 401, 'AUTHENTICATION_FAILED'));
     }
 
-    // 4. Attach verified context to request
+    // 5. Attach verified context to request
     req.admin = {
       id: user.id,
       username: user.username,
@@ -71,6 +78,7 @@ export async function requireAuthenticatedAdmin(req: Request, _res: Response, ne
       role: user.role_key,
       roleId: user.role_id,
       tokenJti: claims.jti,
+      tokenExp: claims.exp,
     };
 
     next();

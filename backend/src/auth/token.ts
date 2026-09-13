@@ -13,7 +13,6 @@ import jwt from 'jsonwebtoken';
 import { CookieOptions } from 'express';
 import { AdminRole } from '@cityline/shared';
 import { env } from '../config/env.config';
-import { tokenRevocationStore } from './token-revocation';
 
 export interface AdminTokenPayloadInput {
   id: string;
@@ -76,11 +75,6 @@ export function verifyAdminToken(token: string): AdminTokenClaims | null {
     const claims = jwt.verify(token, env.AUTH_TOKEN_SECRET, {
       algorithms: ['HS256'],
     }) as AdminTokenClaims;
-
-    // Reject immediately if token identifier is in the revocation blacklist
-    if (tokenRevocationStore.isRevoked(claims.jti)) {
-      return null;
-    }
 
     return claims;
   } catch {

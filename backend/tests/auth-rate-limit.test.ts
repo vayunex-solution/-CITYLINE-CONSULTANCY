@@ -68,4 +68,57 @@ describe('Authentication Rate Limiter & Brute-Force Protection', () => {
     // IP 2 must still be unaffected
     assert.equal(authRateLimiterStore.isRateLimited(ip2, identity).limited, false);
   });
+
+  it('supports replaceable RateLimitStore implementations via setRateLimitStore', () => {
+    let customCalled = false;
+    const customStore = {
+      isRateLimited: () => {
+        customCalled = true;
+        return { limited: false };
+      },
+      recordFailure: () => {},
+      recordSuccess: () => {},
+      clear: () => {},
+    };
+
+    const { setRateLimitStore, MemoryRateLimitStore } = require('../src/middleware/auth-rate-limit.middleware');
+    setRateLimitStore(customStore);
+
+    authRateLimiterStore.isRateLimited('1.1.1.1', 'test');
+    assert.equal(customCalled, true, 'Pluggable store must intercept calls');
+
+    // Restore standard store
+    setRateLimitStore(new MemoryRateLimitStore());
+  });
+
+  it('prevents spoofed X-Forwarded-For headers from bypassing rate limiting under untrusted proxy configuration', async () => {
+    const express = require('express');
+    const request = require('supertest');
+    const { authRateLimiter } = require('../src/middleware/auth-rate-limit.middleware');
+
+    const app = express();
+    app.set('trust proxy', false); // Deliberate untrusted proxy setting
+    app.use(express.json());
+    app.post('/test-login', authRateLimiter, (_req: any, res: any) => {
+      // Simulate failed login attempt
+      authRateLimiterStore.recordFailure(_req.ip || _req.socket.remoteAddress, _req.body?.identity);
+      res.status(401).json({ success: false });
+    });
+
+    // Make 5 requests with spoofed rotating X-Forwarded-For headers
+    for (let i = 0; i < 5; i++) {
+      await request(app)
+        .post('/test-login')
+        .set('X-Forwarded-For', `203.0.113.${i + 1}`) // Spoofed rotating IP
+        .send({ identity: 'target_user' });
+    }
+
+    // 6th request with yet another spoofed IP must STILL be rate-limited because socket IP is identical
+    const blockedRes = await request(app)
+      .post('/test-login')
+      .set('X-Forwarded-For', '203.0.113.99')
+      .send({ identity: 'target_user' });
+
+    assert.equal(blockedRes.status, 429, 'Spoofed X-Forwarded-For must not bypass rate limit');
+  });
 });

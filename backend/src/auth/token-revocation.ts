@@ -1,70 +1,126 @@
 /**
- * CITYLINE CONSULTANCY — Token Revocation Subsystem
- * Tracks revoked JWT identifiers (jti) in-memory until their natural expiration.
+ * CITYLINE CONSULTANCY — Persistent Token Revocation Subsystem
+ * Persists revoked JWT identifiers (jti) in the MariaDB revoked_tokens table.
  *
  * GOVERNANCE:
- * - Evicts expired revocation entries periodically to bound memory usage.
- * - Used during administrative logout and emergency credential invalidation.
+ * - Persistent: Survives process restarts and synchronizes across multi-process Passenger workers.
+ * - Indexed by `jti` for fast lookups and `expires_at` for bounded background purges.
+ * - Expired records are pruned safely via purgeExpired().
+ * - Replaces the process-local in-memory store.
  */
 
-class TokenRevocationStore {
-  private revokedTokens = new Map<string, number>();
-  private cleanupInterval: NodeJS.Timeout | null = null;
+import { Knex } from 'knex';
+import { getDbClient } from '../database/connection';
+import { logger } from '../utils/logger';
 
-  constructor() {
-    // Run cleanup every 5 minutes
-    this.cleanupInterval = setInterval(() => this.purgeExpired(), 5 * 60 * 1000);
-    if (this.cleanupInterval.unref) {
-      this.cleanupInterval.unref();
+export interface RevokedTokenRow {
+  id: string | number;
+  jti: string;
+  expires_at: Date;
+  revoked_at: Date;
+}
+
+export class DatabaseTokenRevocationStore {
+  private customClient: Knex | null = null;
+
+  constructor(customClient?: Knex) {
+    if (customClient) {
+      this.customClient = customClient;
     }
   }
 
   /**
-   * Adds a token's jti to the revocation blacklist.
+   * Sets a custom Knex client (used for testing or transaction overrides).
    */
-  public revoke(jti: string, expiresAt: number): void {
+  public setClient(client: Knex | null): void {
+    this.customClient = client;
+  }
+
+  private getDb(trx?: Knex.Transaction): Knex {
+    if (trx) return trx;
+    if (this.customClient) return this.customClient;
+    return getDbClient();
+  }
+
+  /**
+   * Persists a revoked JWT identifier with its natural expiration date.
+   */
+  public async revoke(jti: string, expiresAtUnixSeconds: number, trx?: Knex.Transaction): Promise<void> {
     if (!jti) return;
-    this.revokedTokens.set(jti, expiresAt);
-  }
 
-  /**
-   * Checks if a jti is in the revocation blacklist.
-   */
-  public isRevoked(jti: string): boolean {
-    if (!jti) return true;
-    const expiresAt = this.revokedTokens.get(jti);
-    if (!expiresAt) return false;
+    const db = this.getDb(trx);
+    const expiresAt = new Date(expiresAtUnixSeconds * 1000);
 
-    const now = Math.floor(Date.now() / 1000);
-    if (now > expiresAt) {
-      this.revokedTokens.delete(jti);
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Purges expired revocation records.
-   */
-  public purgeExpired(): void {
-    const now = Math.floor(Date.now() / 1000);
-    for (const [jti, expiresAt] of this.revokedTokens.entries()) {
-      if (now > expiresAt) {
-        this.revokedTokens.delete(jti);
+    try {
+      await db('revoked_tokens').insert({
+        jti,
+        expires_at: expiresAt,
+        revoked_at: new Date(),
+      });
+    } catch (error: any) {
+      // If already recorded (duplicate entry), safe to treat as revoked
+      if (error?.code === 'ER_DUP_ENTRY' || error?.message?.includes('UNIQUE constraint failed')) {
+        return;
       }
+      logger.error(
+        'Failed to record persistent token revocation',
+        error instanceof Error ? error : new Error(String(error)),
+        { jti }
+      );
+      throw error;
     }
   }
 
   /**
-   * Resets the revocation store (used in test teardown).
+   * Checks if a jti is persistently marked as revoked.
+   * Only matches if the token has not yet reached natural expiration.
    */
-  public clear(): void {
-    this.revokedTokens.clear();
+  public async isRevoked(jti: string, trx?: Knex.Transaction): Promise<boolean> {
+    if (!jti) return true;
+
+    const db = this.getDb(trx);
+    const now = new Date();
+
+    try {
+      const record = await db('revoked_tokens')
+        .where('jti', jti)
+        .where('expires_at', '>', now)
+        .first();
+
+      return Boolean(record);
+    } catch (error: any) {
+      logger.error(
+        'Error querying persistent token revocation state',
+        error instanceof Error ? error : new Error(String(error)),
+        { jti }
+      );
+      // Security defense: on database error during check, default to rejecting access safely
+      throw error;
+    }
   }
 
-  public size(): number {
-    return this.revokedTokens.size;
+  /**
+   * Bounded purge of expired revocation records.
+   * Records whose natural JWT expiration has passed are safe to remove.
+   */
+  public async purgeExpired(trx?: Knex.Transaction): Promise<number> {
+    const db = this.getDb(trx);
+    const now = new Date();
+
+    try {
+      const deletedCount = await db('revoked_tokens')
+        .where('expires_at', '<=', now)
+        .delete();
+
+      return Number(deletedCount);
+    } catch (error: any) {
+      logger.error(
+        'Error purging expired token revocations',
+        error instanceof Error ? error : new Error(String(error))
+      );
+      throw error;
+    }
   }
 }
 
-export const tokenRevocationStore = new TokenRevocationStore();
+export const tokenRevocationStore = new DatabaseTokenRevocationStore();

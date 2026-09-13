@@ -24,6 +24,11 @@ import healthRoutes from './routes/health.routes';
 export function createApp(): Express {
   const app = express();
 
+  // Deliberate Proxy Trust Policy:
+  // Set to false by default to prevent clients from spoofing X-Forwarded-For headers.
+  // Production reverse proxy topology remains UNVERIFIED until Phase 17 deployment.
+  app.set('trust proxy', false);
+
   // 1. Security HTTP Headers (Helmet)
   app.use(
     helmet({
