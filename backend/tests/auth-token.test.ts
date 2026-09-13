@@ -52,7 +52,7 @@ describe('Admin Token & CSRF Subsystem', () => {
     assert.equal(verified, null, 'Forged token must return null');
   });
 
-  it('rejects expired tokens cleanly', () => {
+  it('rejects expired tokens cleanly via JWT exp claim validation', () => {
     const expiredToken = jwt.sign(
       { sub: 'test-admin', role: 'admin_operator', jti: 'expired-jti' },
       process.env.AUTH_TOKEN_SECRET || 'development_insecure_auth_token_secret_must_be_at_least_32_characters_long_for_security',

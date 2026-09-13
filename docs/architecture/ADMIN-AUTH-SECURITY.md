@@ -88,23 +88,27 @@ Created via versioned Knex migration `20260913000001_create_revoked_tokens.ts`:
 ### Revocation Lifecycle:
 1. **Login**: A signed JWT is generated containing a unique `jti` and expiration timestamp `exp`. No preliminary rows are inserted into `revoked_tokens`.
 2. **Authenticated Request**:
-   - The token signature, algorithm, and `exp` claim are verified cryptographically.
+   - The token's cryptographic signature and algorithm are verified to guarantee authenticity and data integrity, and its `exp` (expiration) claim is validated to reject expired tokens.
    - The token's `jti` is checked against the database: `await tokenRevocationStore.isRevoked(claims.jti)`.
    - If present in `revoked_tokens`, the request is immediately rejected with HTTP 401 `AUTHENTICATION_FAILED`.
    - The administrator's active status is verified in `admin_users`. If `is_active === false`, the request is rejected with HTTP 401.
 3. **Logout**:
    - The active administrator context supplies `jti` and `tokenExp`.
-   - The server executes `await tokenRevocationStore.revoke(admin.tokenJti, admin.tokenExp)`.
-   - The revocation record is committed to the database, ensuring all Node/Passenger processes recognize the revocation.
-   - Auth and CSRF cookies are cleared from the client browser.
-   - An immutable audit log entry (`action: 'logout'`) is written.
-4. **Transactional & Persistence Safety**:
-   - If the database write to `revoked_tokens` fails during logout, the controller catches the failure and delegates to centralized error handling.
-   - The system **never** falsely reports a successful logout when persistent revocation has failed.
+   - The server persists token revocation first: `await tokenRevocationStore.revoke(admin.tokenJti, admin.tokenExp)`.
+   - If revocation persistence fails, the operation aborts and logout is not reported as successful.
+   - Only after successful revocation persistence are auth and CSRF cookies cleared (`res.clearCookie`).
+   - An immutable audit log entry (`action: 'logout'`) is recorded afterward.
+4. **Failure-Safe Logout Semantics & Atomic Revocation Persistence**:
+   - Logout is designed with failure-safe ordering rather than an explicit multi-table database transaction:
+     1. Persist token revocation to the database first.
+     2. If revocation persistence fails, an error is propagated immediately; the server never falsely reports a successful logout.
+     3. Clear authentication and CSRF cookies only after successful revocation persistence.
+     4. Record the logout audit event.
    - Database internal details are suppressed; client receives a safe HTTP 500 error envelope.
 
 ### Safe Revocation Cleanup:
-Because the JWT cryptographic verification layer automatically rejects expired tokens regardless of revocation state, revocation records whose `expires_at < CURRENT_TIMESTAMP` no longer need to be retained.
+While JWT cryptographic signature verification validates token authenticity and data integrity, the standard JWT `exp` (expiration) claim validation automatically rejects expired tokens without consulting the database. The `revoked_tokens` table is utilized strictly for explicit early server-side invalidation before natural JWT expiration.
+- Consequently, once a token's natural expiration timestamp has elapsed (`expires_at < CURRENT_TIMESTAMP`), retaining its record in `revoked_tokens` is redundant because JWT `exp` claim validation independently rejects the token.
 - **Bounded Purge**: `purgeExpired()` executes `DELETE FROM revoked_tokens WHERE expires_at < CURRENT_TIMESTAMP`.
 - **Performance**: The operation is bounded and accelerated by `idx_revoked_tokens_expires`.
 - **Zero High-Frequency Overhead**: Avoids continuous polling; invoked during scheduled maintenance or bounded maintenance jobs.
@@ -145,8 +149,9 @@ The runtime provides `MemoryRateLimitStore` (in-memory sliding window). The arch
 When deployed behind web servers, reverse proxies, or Passenger, client IP extraction must not naively trust arbitrary headers:
 
 - **Express Proxy Trust**: The application deliberately configures `app.set('trust proxy', false)` by default.
-- **Spoofing Defense**: Client requests supplying fabricated `X-Forwarded-For` headers cannot bypass IP-based rate limiting or poison security logs. The socket address (`req.ip`) is authoritative under untrusted proxy settings.
-- **cPanel Reverse Proxy Status**: Marked **UNVERIFIED**.
+- **Client IP Attribution Under Untrusted Proxy**: With `trust proxy=false`, Express ignores untrusted forwarding headers (`X-Forwarded-For`, `X-Real-IP`) for `req.ip` determination and client-IP attribution. Instead, `req.ip` is derived directly from the underlying peer socket address (`req.socket.remoteAddress`). Incoming HTTP requests supplying `X-Forwarded-For` headers are not rejected as invalid requests by the server; rather, the header is simply not trusted for identity or security-sensitive IP attribution.
+- **Anti-Spoofing Abuse Defense**: Because rate limiting and audit attribution rely on `req.ip` (the actual socket peer address), a client cannot bypass IP-based rate limiting by sending fabricated or rotating `X-Forwarded-For` headers. Automated tests explicitly verify that rotating spoofed forwarding headers fails to evade rate limiting under `trust proxy=false`.
+- **cPanel Reverse-Proxy Status**: Marked **UNVERIFIED**.
   > [!NOTE]
   > The exact cPanel Passenger/Apache reverse-proxy topology cannot be verified until staging deployment. Blindly enabling `trust proxy: true` is prohibited because it allows clients to spoof arbitrary IPs. In Phase 17, proxy trust will be calibrated to the specific loopback/trusted proxy hop once the network topology is confirmed.
 
@@ -222,7 +227,7 @@ sequenceDiagram
 - **`admin_operator`**: Operational triage, applicant review, vacancy editing, and assigned lead management.
 
 ### Enforcement Guards:
-- [requireAuthenticatedAdmin](file:///d:/VAYUNEX/vayu-backup/CLC-Website/backend/src/middleware/auth.middleware.ts#L22): Base guard verifying valid signature, non-revocation in DB, and active status in DB.
+- [requireAuthenticatedAdmin](file:///d:/VAYUNEX/vayu-backup/CLC-Website/backend/src/middleware/auth.middleware.ts#L22): Base guard verifying cryptographic signature authenticity, `exp` claim validity, non-revocation in `revoked_tokens` database table, and active status in `admin_users` table.
 - [requireRole(...allowedRoles)](file:///d:/VAYUNEX/vayu-backup/CLC-Website/backend/src/middleware/auth.middleware.ts#L80): Role authorization guard returning 403 `FORBIDDEN` and logging `authorization_denied` upon role mismatch.
 - [assertAdminResourceAccess(admin, resourceOwnerId)](file:///d:/VAYUNEX/vayu-backup/CLC-Website/backend/src/middleware/auth.middleware.ts#L118): Centralized IDOR guard:
   - `super_admin` possesses universal resource access.
@@ -288,7 +293,7 @@ Total Automated Tests: **96 Tests across 16 Suites (100% Pass, 0 Failures)**.
 
 | Suite | Tests | Result | Verification Coverage |
 | :--- | :---: | :---: | :--- |
-| `auth-revocation-persistent.test.ts` | 10 | **PASS** | Persistent DB revocation, survival across connections/restarts, jti indexing, cleanup, failed write propagation |
+| `auth-revocation-persistent.test.ts` | 10 | **PASS** | Persistent DB revocation, survival across connections/restarts, jti indexing, cleanup, failed write propagation, exp claim validation independent of DB |
 | `auth-password.test.ts` | 7 | **PASS** | Argon2id configuration, salt uniqueness, policy length, timing defense |
 | `auth-token.test.ts` | 6 | **PASS** | JWT generation, claim integrity, forged secret rejection, CSRF tokens |
 | `auth-rate-limit.test.ts` | 5 | **PASS** | Sliding window, 5-failure threshold, lockout trigger, success reset, IP isolation, proxy spoofing defense |
@@ -303,7 +308,7 @@ Total Automated Tests: **96 Tests across 16 Suites (100% Pass, 0 Failures)**.
 
 ## 14. Known Limitations & Deferred Work
 
-- **Live Remote Database Mapping**: Remote database `cityline_db` access remains `BLOCKED — DATABASE PRIVILEGE REQUIRED` on cPanel. Live migrations/queries will execute once privileges are assigned in cPanel.
+- **Live Remote Database Mapping**: Remote database `cityline_db` access remains `BLOCKED — DATABASE PRIVILEGE REQUIRED` on cPanel. While migration and persistence logic are verified in local automated test harnesses, live production MariaDB migration is not live-verified until DDL privileges are assigned in cPanel.
 - **Admin Dashboard UI**: Deferred to **Phase 11** (Admin Dashboard & Management).
 - **Public Website & Forms**: Deferred to **Phase 5** (Public Website Implementation).
 - **Visa Enquiry & Documents**: Deferred to **Phase 6** (Visa Enquiry + Document Upload System).

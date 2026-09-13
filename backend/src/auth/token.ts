@@ -66,7 +66,9 @@ export function createAdminToken(admin: AdminTokenPayloadInput): { token: string
 
 /**
  * Verifies a candidate JWT access token.
- * Returns decoded claims if valid and not revoked; returns null otherwise.
+ * Validates cryptographic signature authenticity and exp expiration claim.
+ * Note: Database-backed token revocation is evaluated separately via tokenRevocationStore.
+ * Returns decoded claims if signature and claims are valid; returns null otherwise.
  */
 export function verifyAdminToken(token: string): AdminTokenClaims | null {
   if (!token) return null;

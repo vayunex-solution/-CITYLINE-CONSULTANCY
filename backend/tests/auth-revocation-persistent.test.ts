@@ -192,7 +192,18 @@ describe('Persistent Token Revocation Architecture', () => {
     );
   });
 
-  it('8. Valid non-revoked tokens continue to authenticate', async () => {
+  it('8. Revocation persistence writes directly to revoked_tokens database table', async () => {
+    const store = new DatabaseTokenRevocationStore(db1);
+    const { jti, exp } = createAdminToken(sampleAdmin);
+
+    await store.revoke(jti, exp);
+
+    const record = await db1('revoked_tokens').where({ jti }).first();
+    assert.ok(record, 'Revocation record must exist in revoked_tokens table');
+    assert.equal(record.jti, jti);
+  });
+
+  it('9. Valid non-revoked tokens continue to authenticate', async () => {
     const store = new DatabaseTokenRevocationStore(db1);
     const { token, jti } = createAdminToken(sampleAdmin);
 
@@ -200,18 +211,16 @@ describe('Persistent Token Revocation Architecture', () => {
     assert.equal(await store.isRevoked(jti), false);
   });
 
-  it('9. Token expiration functions independently of the revocation table', () => {
+  it('10. Token expiration via JWT exp claim validation functions independently of the revocation table', () => {
     // Token with negative expiration (already expired)
-    const { token } = createAdminToken(sampleAdmin);
-    // Tamper expiration
     const expiredToken = jwt.sign(
       { sub: sampleAdmin.id, role: sampleAdmin.role, jti: 'independent-expired-jti' },
       process.env.AUTH_TOKEN_SECRET || 'development_insecure_auth_token_secret_must_be_at_least_32_characters_long_for_security',
       { algorithm: 'HS256', expiresIn: '-10s' }
     );
 
-    // Natural JWT expiration rejects without needing revocation lookup
+    // Natural JWT exp claim validation rejects without needing revocation lookup
     const claims = verifyAdminToken(expiredToken);
-    assert.equal(claims, null, 'Expired token must be rejected by JWT layer');
+    assert.equal(claims, null, 'Expired token must be rejected by JWT exp claim validation');
   });
 });
