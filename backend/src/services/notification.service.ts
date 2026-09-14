@@ -30,6 +30,10 @@ import {
   JobApplicationAdminNotificationData,
   renderJobApplicationConfirmation,
   JobApplicationConfirmationData,
+  renderManpowerEnquiryAdminNotification,
+  ManpowerEnquiryAdminNotificationData,
+  renderManpowerEnquiryConfirmation,
+  ManpowerEnquiryConfirmationData,
 } from '../notifications/templates';
 
 export interface EnqueueJobApplicationParams {
@@ -62,6 +66,38 @@ export interface EnqueueVisaEnquiryParams {
   timeline?: string | null;
   details?: string | null;
   documentsCount: number;
+}
+
+export interface EnqueueManpowerEnquiryParams {
+  enquiryId: string;
+  publicReference: string;
+  companyName: string;
+  contactPerson: string;
+  contactDesignation?: string | null;
+  email: string;
+  phone: string;
+  whatsapp?: string | null;
+  city: string;
+  website?: string | null;
+  industry?: string | null;
+  preferredTimeline?: string | null;
+  deploymentLocation?: string | null;
+  specialRequirements?: string | null;
+  positions: Array<{
+    categorySlug: string;
+    roleTitle: string;
+    headcount: number;
+    experienceYearsRequired?: number | null;
+    qualification?: string | null;
+    genderRequirement?: string | null;
+    languageRequirements?: string | null;
+    salaryOffered?: string | null;
+    accommodationProvided?: string | null;
+    transportProvided?: string | null;
+    foodProvided?: string | null;
+    notes?: string | null;
+  }>;
+  totalHeadcount: number;
 }
 
 export interface BatchProcessingResult {
@@ -242,6 +278,86 @@ export class NotificationService {
   }
 
   /**
+   * Transactionally enqueues both admin alert and employer confirmation notifications
+   * for a corporate manpower requirement within an existing database transaction.
+   */
+  public async enqueueManpowerEnquiryNotifications(
+    params: EnqueueManpowerEnquiryParams,
+    trx: Knex.Transaction
+  ): Promise<{ adminNotificationId: string; confirmationNotificationId: string }> {
+    const adminId = crypto.randomUUID();
+    const confirmationId = crypto.randomUUID();
+    const submittedAtStr = new Date().toUTCString();
+
+    const adminHash = this.generateIdempotencyHash('manpower-enquiry', params.enquiryId, 'admin');
+    const confirmationHash = this.generateIdempotencyHash('manpower-enquiry', params.enquiryId, 'confirmation');
+
+    // 1. Admin notification payload & subject
+    const adminPayload: ManpowerEnquiryAdminNotificationData = {
+      reference: params.publicReference,
+      companyName: params.companyName,
+      contactPerson: params.contactPerson,
+      contactDesignation: params.contactDesignation,
+      email: params.email,
+      phone: params.phone,
+      whatsapp: params.whatsapp,
+      city: params.city,
+      website: params.website,
+      industry: params.industry,
+      preferredTimeline: params.preferredTimeline,
+      deploymentLocation: params.deploymentLocation,
+      specialRequirements: params.specialRequirements,
+      positions: params.positions,
+      totalHeadcount: params.totalHeadcount,
+      submittedAt: submittedAtStr,
+    };
+
+    const adminSubject = `[Manpower Requirement] New Requisition — ${params.publicReference} (${params.companyName})`;
+
+    // 2. Employer confirmation payload & subject
+    const confirmationPayload: ManpowerEnquiryConfirmationData = {
+      reference: params.publicReference,
+      companyName: params.companyName,
+      contactPerson: params.contactPerson,
+      rolesCount: params.positions.length,
+      totalHeadcount: params.totalHeadcount,
+      submittedAt: submittedAtStr,
+    };
+
+    const confirmationSubject = `Manpower Requirement Received — ${params.publicReference}`;
+
+    // 3. Batch enqueue in outbox table
+    await this.queueRepo.enqueueBatch(
+      [
+        {
+          id: adminId,
+          notification_type: 'manpower_enquiry_admin',
+          reference_id: params.enquiryId,
+          recipient_email: env.NOTIFICATION_ADMIN_EMAIL,
+          subject: adminSubject,
+          payload_json: JSON.stringify(adminPayload),
+          idempotency_hash: adminHash,
+        },
+        {
+          id: confirmationId,
+          notification_type: 'manpower_enquiry_confirmation',
+          reference_id: params.enquiryId,
+          recipient_email: params.email,
+          subject: confirmationSubject,
+          payload_json: JSON.stringify(confirmationPayload),
+          idempotency_hash: confirmationHash,
+        },
+      ],
+      trx
+    );
+
+    return {
+      adminNotificationId: adminId,
+      confirmationNotificationId: confirmationId,
+    };
+  }
+
+  /**
    * Processes a bounded batch of queued notifications.
    *
    * CRITICAL GUARANTEES:
@@ -393,6 +509,12 @@ export class NotificationService {
 
       case 'job_application_confirmation':
         return renderJobApplicationConfirmation(payload as unknown as JobApplicationConfirmationData);
+
+      case 'manpower_enquiry_admin':
+        return renderManpowerEnquiryAdminNotification(payload as unknown as ManpowerEnquiryAdminNotificationData);
+
+      case 'manpower_enquiry_confirmation':
+        return renderManpowerEnquiryConfirmation(payload as unknown as ManpowerEnquiryConfirmationData);
 
       default:
         throw new Error(`Unsupported notification type: ${record.notification_type}`);

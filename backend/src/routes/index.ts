@@ -9,6 +9,8 @@ import authRoutes from './auth.routes';
 import visaEnquiryRoutes from './visa-enquiry.routes';
 import jobRoutes from './job.routes';
 import adminJobRoutes from './admin-job.routes';
+import manpowerEnquiryRoutes from './manpower-enquiry.routes';
+import adminManpowerRoutes from './admin-manpower.routes';
 
 const apiRouter = Router();
 
@@ -25,8 +27,11 @@ apiRouter.use('/visa-enquiries', visaEnquiryRoutes);
 apiRouter.use('/jobs', jobRoutes);
 apiRouter.use('/admin/recruitment', adminJobRoutes);
 
-// Future Phase Route Mounts (Strictly Deferred):
 // Phase 9: Employer / Manpower Enquiry System
+apiRouter.use('/manpower-enquiries', manpowerEnquiryRoutes);
+apiRouter.use('/admin/manpower-enquiries', adminManpowerRoutes);
+
+// Future Phase Route Mounts (Strictly Deferred):
 // Phase 10: Testimonials Management
 // Phase 11: Admin Dashboard & Management UI
 // Phase 12: Analytics / Visitor Intelligence
