@@ -56,9 +56,9 @@ export async function down(knex: Knex): Promise<void> {
   });
 
   await knex.schema.alterTable('manpower_enquiries', (table) => {
-    table.dropIndex([], 'uniq_manpower_reference');
-    table.dropIndex([], 'uniq_manpower_idempotency_key');
-    table.dropIndex([], 'idx_manpower_request_hash');
+    table.dropUnique(['reference_number'], 'uniq_manpower_reference');
+    table.dropUnique(['idempotency_key'], 'uniq_manpower_idempotency_key');
+    table.dropIndex(['request_hash'], 'idx_manpower_request_hash');
     table.dropColumn('reference_number');
     table.dropColumn('idempotency_key');
     table.dropColumn('request_hash');

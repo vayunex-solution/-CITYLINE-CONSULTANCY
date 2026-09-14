@@ -132,10 +132,39 @@ export class ManpowerEnquiryService {
     });
     ManpowerEnquiryService.inFlightLocks.set(lockKey, currentLock);
 
+    let dedicatedConn: any = null;
     let hasAdvisoryLock = false;
 
     try {
       await lockWaitPromise;
+
+      // Acquire dedicated connection from Knex pool for MariaDB session advisory lock
+      const clientDialect = String((db.client as any)?.dialect || '');
+      const isMySQL = clientDialect.includes('mysql') || clientDialect.includes('mariadb');
+
+      if (isMySQL) {
+        try {
+          if (typeof (db.client as any)?.acquireConnection === 'function') {
+            dedicatedConn = await (db.client as any).acquireConnection();
+          }
+        } catch (connErr) {
+          logger.warn('Failed to acquire dedicated connection for advisory lock; proceeding with in-process lock only', { error: connErr });
+          dedicatedConn = null;
+        }
+
+        if (dedicatedConn) {
+          try {
+            const lockRes = await db.raw('SELECT GET_LOCK(?, 5) AS acquired', [lockKey]).connection(dedicatedConn);
+            const acquired = lockRes?.[0]?.[0]?.acquired ?? lockRes?.[0]?.acquired;
+            hasAdvisoryLock = acquired === 1;
+            if (!hasAdvisoryLock) {
+              logger.warn(`Could not acquire MariaDB advisory lock for key "${lockKey}" within 5s timeout`);
+            }
+          } catch {
+            hasAdvisoryLock = false;
+          }
+        }
+      }
 
       // Check again after acquiring lock in case previous concurrent request already processed this
       if (idempotencyKey) {
@@ -151,20 +180,15 @@ export class ManpowerEnquiryService {
               message: 'Your manpower requirement has been received and will be reviewed by our team.',
               isDuplicate: true,
             };
+          } else {
+            throw new AppError(
+              'Idempotency key conflict: This key was previously used for a different manpower requisition.',
+              409,
+              'IDEMPOTENCY_KEY_CONFLICT'
+            );
           }
         }
-      }
-
-      if (!idempotencyKey) {
-        // Acquire MariaDB advisory lock with 5-second timeout to serialize concurrent identical requests
-        try {
-          const lockRes = await db.raw('SELECT GET_LOCK(?, 5) AS acquired', [lockKey]);
-          hasAdvisoryLock = lockRes?.[0]?.[0]?.acquired === 1;
-        } catch {
-          // If advisory locking is unsupported (e.g. mock DB in tests), proceed without lock
-          hasAdvisoryLock = false;
-        }
-
+      } else {
         // Check recent duplicate within 15-minute sliding window matching company, email, and exact request hash
         const recentDuplicate = await this.manpowerRepo.findRecentDuplicate(
           input.companyName,
@@ -379,12 +403,21 @@ export class ManpowerEnquiryService {
       if (ManpowerEnquiryService.inFlightLocks.get(lockKey) === currentLock) {
         ManpowerEnquiryService.inFlightLocks.delete(lockKey);
       }
-      // Guarantee release of MariaDB session advisory lock
-      if (hasAdvisoryLock) {
+
+      // Guarantee release of MariaDB session advisory lock on the exact same dedicated connection
+      if (dedicatedConn) {
         try {
-          await db.raw('SELECT RELEASE_LOCK(?)', [lockKey]);
-        } catch (err: unknown) {
-          logger.error('Failed to release advisory lock for manpower enquiry', err as Error);
+          if (hasAdvisoryLock) {
+            await db.raw('SELECT RELEASE_LOCK(?)', [lockKey]).connection(dedicatedConn);
+          }
+        } catch (releaseErr: unknown) {
+          logger.error('Failed to release advisory lock for manpower enquiry on dedicated connection', releaseErr as Error);
+        } finally {
+          try {
+            await (db.client as any).releaseConnection(dedicatedConn);
+          } catch (poolErr: unknown) {
+            logger.error('Failed to release dedicated connection back to pool', poolErr as Error);
+          }
         }
       }
     }

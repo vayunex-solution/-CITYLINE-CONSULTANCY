@@ -18,6 +18,7 @@ import {
   computeCanonicalRequestHash,
   ManpowerEnquiryInput,
 } from '../src/schemas/manpower-enquiry.schema';
+import * as phase9Migration from '../src/database/migrations/20260914000001_extend_manpower_enquiries';
 
 describe('Phase 9 — Employer / Manpower Enquiry System Suite', () => {
   let app: ReturnType<typeof createApp>;
@@ -374,39 +375,39 @@ describe('Phase 9 — Employer / Manpower Enquiry System Suite', () => {
   // 2. CANONICAL POSITION ORDERING & FINGERPRINTING
   // =========================================================================
   describe('2. Canonical Request Fingerprinting & Deterministic Position Ordering', () => {
+    const basePosition = {
+      categorySlug: 'cleaning' as const,
+      roleTitle: 'General Cleaner',
+      headcount: 10,
+      experienceYearsRequired: 1,
+      qualification: 'Secondary School',
+      genderRequirement: 'any' as const,
+      languageRequirements: 'English',
+      salaryOffered: '1200 AED',
+      accommodationProvided: 'provided' as const,
+      transportProvided: 'provided' as const,
+      foodProvided: 'not_provided' as const,
+      notes: 'Commercial mall experience',
+    };
+
+    const secondPosition = {
+      categorySlug: 'hotel-staff' as const,
+      roleTitle: 'Kitchen Steward',
+      headcount: 5,
+      experienceYearsRequired: 2,
+      qualification: 'Culinary Certificate',
+      genderRequirement: 'male' as const,
+      languageRequirements: 'English, Hindi',
+      salaryOffered: '1500 AED',
+      accommodationProvided: 'provided' as const,
+      transportProvided: 'provided' as const,
+      foodProvided: 'provided' as const,
+      notes: 'HACCP knowledge',
+    };
+
     it('produces an IDENTICAL canonical request hash when positions array is shuffled', () => {
-      const posA = {
-        categorySlug: 'cleaning' as const,
-        roleTitle: 'General Cleaner',
-        headcount: 10,
-        experienceYearsRequired: 1,
-        qualification: 'Secondary School',
-        genderRequirement: 'any' as const,
-        languageRequirements: 'English',
-        salaryOffered: '1200 AED',
-        accommodationProvided: 'provided' as const,
-        transportProvided: 'provided' as const,
-        foodProvided: 'not_provided' as const,
-        notes: 'Commercial mall experience',
-      };
-
-      const posB = {
-        categorySlug: 'hotel-staff' as const,
-        roleTitle: 'Kitchen Steward',
-        headcount: 5,
-        experienceYearsRequired: 2,
-        qualification: null,
-        genderRequirement: null,
-        languageRequirements: null,
-        salaryOffered: null,
-        accommodationProvided: 'provided' as const,
-        transportProvided: 'provided' as const,
-        foodProvided: null,
-        notes: null,
-      };
-
-      const input1 = validPayload({ positions: [posA, posB] });
-      const input2 = validPayload({ positions: [posB, posA] }); // Reversed order
+      const input1 = validPayload({ positions: [basePosition, secondPosition] });
+      const input2 = validPayload({ positions: [secondPosition, basePosition] }); // Shuffled order
 
       const hash1 = computeCanonicalRequestHash(input1);
       const hash2 = computeCanonicalRequestHash(input2);
@@ -414,42 +415,129 @@ describe('Phase 9 — Employer / Manpower Enquiry System Suite', () => {
       assert.strictEqual(hash1, hash2, 'Reordered position arrays must produce identical canonical hashes');
     });
 
-    it('produces a DIFFERENT canonical hash if any field in any position is modified', () => {
-      const base = validPayload();
+    it('changing qualification changes the canonical request hash', () => {
+      const base = validPayload({ positions: [basePosition] });
       const baseHash = computeCanonicalRequestHash(base);
 
-      // Change headcount
+      const modified = validPayload({
+        positions: [{ ...basePosition, qualification: 'High School Diploma' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(modified), baseHash);
+    });
+
+    it('changing languageRequirements changes the canonical request hash', () => {
+      const base = validPayload({ positions: [basePosition] });
+      const baseHash = computeCanonicalRequestHash(base);
+
+      const modified = validPayload({
+        positions: [{ ...basePosition, languageRequirements: 'Arabic, English' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(modified), baseHash);
+    });
+
+    it('changing accommodationProvided changes the canonical request hash', () => {
+      const base = validPayload({ positions: [basePosition] });
+      const baseHash = computeCanonicalRequestHash(base);
+
+      const modified = validPayload({
+        positions: [{ ...basePosition, accommodationProvided: 'not_provided' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(modified), baseHash);
+    });
+
+    it('changing salaryOffered changes the canonical request hash', () => {
+      const base = validPayload({ positions: [basePosition] });
+      const baseHash = computeCanonicalRequestHash(base);
+
+      const modified = validPayload({
+        positions: [{ ...basePosition, salaryOffered: '1400 AED' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(modified), baseHash);
+    });
+
+    it('changing notes changes the canonical request hash', () => {
+      const base = validPayload({ positions: [basePosition] });
+      const baseHash = computeCanonicalRequestHash(base);
+
+      const modified = validPayload({
+        positions: [{ ...basePosition, notes: 'Hospitality cleaning experience' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(modified), baseHash);
+    });
+
+    it('changing provisions (foodProvided or transportProvided) changes the canonical request hash', () => {
+      const base = validPayload({ positions: [basePosition] });
+      const baseHash = computeCanonicalRequestHash(base);
+
+      const changedFood = validPayload({
+        positions: [{ ...basePosition, foodProvided: 'provided' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(changedFood), baseHash);
+
+      const changedTransport = validPayload({
+        positions: [{ ...basePosition, transportProvided: 'not_provided' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(changedTransport), baseHash);
+    });
+
+    it('changing categorySlug, roleTitle, headcount, experience, or gender changes the canonical hash', () => {
+      const base = validPayload({ positions: [basePosition] });
+      const baseHash = computeCanonicalRequestHash(base);
+
+      const changedCategory = validPayload({
+        positions: [{ ...basePosition, categorySlug: 'mason' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(changedCategory), baseHash);
+
+      const changedRole = validPayload({
+        positions: [{ ...basePosition, roleTitle: 'Senior Deep Cleaner' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(changedRole), baseHash);
+
       const changedHeadcount = validPayload({
-        positions: [
-          { ...base.positions[0], headcount: 12 },
-          base.positions[1],
-        ],
+        positions: [{ ...basePosition, headcount: 25 }],
       });
       assert.notStrictEqual(computeCanonicalRequestHash(changedHeadcount), baseHash);
 
-      // Change qualification
-      const changedQual = validPayload({
-        positions: [
-          { ...base.positions[0], qualification: 'Vocational Diploma' },
-          base.positions[1],
-        ],
+      const changedExp = validPayload({
+        positions: [{ ...basePosition, experienceYearsRequired: 3 }],
       });
-      assert.notStrictEqual(computeCanonicalRequestHash(changedQual), baseHash);
+      assert.notStrictEqual(computeCanonicalRequestHash(changedExp), baseHash);
 
-      // Change company name
-      const changedCompany = validPayload({ companyName: 'Different Company LLC' });
-      assert.notStrictEqual(computeCanonicalRequestHash(changedCompany), baseHash);
+      const changedGender = validPayload({
+        positions: [{ ...basePosition, genderRequirement: 'female' }],
+      });
+      assert.notStrictEqual(computeCanonicalRequestHash(changedGender), baseHash);
     });
 
-    it('excludes idempotencyKey from canonical fingerprint calculation', () => {
+    it('changing employer corporate fields changes the canonical hash', () => {
+      const base = validPayload();
+      const baseHash = computeCanonicalRequestHash(base);
+
+      const changedCompany = validPayload({ companyName: 'Completely Different Corp LLC' });
+      assert.notStrictEqual(computeCanonicalRequestHash(changedCompany), baseHash);
+
+      const changedEmail = validPayload({ email: 'differing@corporate.ae' });
+      assert.notStrictEqual(computeCanonicalRequestHash(changedEmail), baseHash);
+
+      const changedContact = validPayload({ contactPerson: 'Fatima Al Mansoori' });
+      assert.notStrictEqual(computeCanonicalRequestHash(changedContact), baseHash);
+
+      const changedPhone = validPayload({ phone: '+971 4 777 8888' });
+      assert.notStrictEqual(computeCanonicalRequestHash(changedPhone), baseHash);
+    });
+
+    it('excludes idempotencyKey and transport metadata from canonical fingerprint calculation', () => {
       const inputA = validPayload({ idempotencyKey: 'key-alpha-111' });
       const inputB = validPayload({ idempotencyKey: 'key-beta-222' });
+      const inputNone = validPayload({ idempotencyKey: undefined });
 
-      assert.strictEqual(
-        computeCanonicalRequestHash(inputA),
-        computeCanonicalRequestHash(inputB),
-        'idempotencyKey must not alter the business request hash'
-      );
+      const hashA = computeCanonicalRequestHash(inputA);
+      const hashB = computeCanonicalRequestHash(inputB);
+      const hashNone = computeCanonicalRequestHash(inputNone);
+
+      assert.strictEqual(hashA, hashB, 'idempotencyKey must not alter the business request hash');
+      assert.strictEqual(hashA, hashNone, 'Omission of idempotencyKey must yield the identical business request hash');
     });
   });
 
@@ -584,11 +672,14 @@ describe('Phase 9 — Employer / Manpower Enquiry System Suite', () => {
       assert.notStrictEqual(res2.body.data.reference, res1.body.data.reference);
     });
 
-    it('concurrent simultaneous identical submissions create exactly ONE enquiry', async () => {
+    it('concurrent simultaneous identical submissions create exactly ONE enquiry, employer, parent enquiry, position set, and 2 outbox notifications', async () => {
       const payload = validPayload({
         companyName: 'Concurrent Race Services',
         email: 'race@concurrent.ae',
       });
+
+      // Clear any prior notification rows for this email
+      await testKnex('notification_queue').where('recipient_email', 'race@concurrent.ae').del();
 
       // Fire 3 simultaneous identical requests without idempotency key
       const [r1, r2, r3] = await Promise.all([
@@ -606,8 +697,28 @@ describe('Phase 9 — Employer / Manpower Enquiry System Suite', () => {
       // Verify DB: exactly 1 enquiry created
       const enquiries = await testKnex('manpower_enquiries')
         .join('employers', 'manpower_enquiries.employer_id', 'employers.id')
-        .where('employers.email', 'race@concurrent.ae');
-      assert.strictEqual(enquiries.length, 1);
+        .where('employers.email', 'race@concurrent.ae')
+        .select('manpower_enquiries.id as mp_id', 'manpower_enquiries.enquiry_id as enquiry_id');
+      assert.strictEqual(enquiries.length, 1, 'Exactly one manpower enquiry must be created');
+
+      // Verify DB: exactly 1 employer created
+      const employers = await testKnex('employers').where('email', 'race@concurrent.ae');
+      assert.strictEqual(employers.length, 1, 'Exactly one employer record must be created');
+
+      // Verify DB: exactly 1 parent enquiry created
+      const parentEnquiries = await testKnex('enquiries').where('email', 'race@concurrent.ae');
+      assert.strictEqual(parentEnquiries.length, 1, 'Exactly one parent enquiry must be created');
+
+      // Verify DB: exactly 1 position set created
+      const positions = await testKnex('manpower_enquiry_positions').where(
+        'manpower_enquiry_id',
+        enquiries[0].mp_id
+      );
+      assert.strictEqual(positions.length, payload.positions.length, 'Exactly one position set must be created');
+
+      // Verify DB: exactly 2 outbox notifications (1 admin + 1 confirmation)
+      const outbox = await testKnex('notification_queue').where('reference_id', enquiries[0].enquiry_id);
+      assert.strictEqual(outbox.length, 2, 'Exactly two outbox notifications must be enqueued');
     });
   });
 
@@ -685,6 +796,65 @@ describe('Phase 9 — Employer / Manpower Enquiry System Suite', () => {
 
       const empCount = await testKnex('employers').where('email', 'common@group.ae').count('* as c');
       assert.strictEqual(Number(empCount[0].c), 2);
+    });
+
+    it('simultaneous submissions for unseen company + email create exactly ONE employer record referenced by both enquiries', async () => {
+      const companyName = 'Simultaneous Construction Group LLC';
+      const email = 'build@simultaneous-group.ae';
+
+      // Two different requisitions for the same previously unseen company
+      const req1 = validPayload({
+        companyName,
+        email,
+        deploymentLocation: 'Downtown Dubai Tower Project',
+        positions: [{ categorySlug: 'mason', roleTitle: 'Block Mason', headcount: 20 }],
+      });
+
+      const req2 = validPayload({
+        companyName,
+        email,
+        deploymentLocation: 'Dubai Marina Luxury Resort',
+        positions: [{ categorySlug: 'carpenter', roleTitle: 'Shuttering Carpenter', headcount: 15 }],
+      });
+
+      // Fire both simultaneously
+      const [res1, res2] = await Promise.all([
+        supertest(app).post('/api/v1/manpower-enquiries').send(req1),
+        supertest(app).post('/api/v1/manpower-enquiries').send(req2),
+      ]);
+
+      assert.strictEqual(res1.status, 201);
+      assert.strictEqual(res2.status, 201);
+
+      // Verify: exactly ONE employer record exists for this company + email
+      const employers = await testKnex('employers').where('email', email);
+      assert.strictEqual(employers.length, 1, 'Exactly one employer record must be created');
+
+      // Verify: BOTH enquiries reference the exact same employer_id
+      const enquiry1 = await testKnex('manpower_enquiries')
+        .where('reference_number', res1.body.data.reference)
+        .first();
+      const enquiry2 = await testKnex('manpower_enquiries')
+        .where('reference_number', res2.body.data.reference)
+        .first();
+
+      assert.ok(enquiry1);
+      assert.ok(enquiry2);
+      assert.strictEqual(
+        enquiry1.employer_id,
+        employers[0].id,
+        'Enquiry 1 must reference the single master employer record'
+      );
+      assert.strictEqual(
+        enquiry2.employer_id,
+        employers[0].id,
+        'Enquiry 2 must reference the single master employer record'
+      );
+      assert.strictEqual(
+        enquiry1.employer_id,
+        enquiry2.employer_id,
+        'Both enquiries must reference the exact same employer_id'
+      );
     });
   });
 
@@ -1018,6 +1188,283 @@ describe('Phase 9 — Employer / Manpower Enquiry System Suite', () => {
       // Confirm zero filesystem paths or private keys in payload
       assert.ok(!employerPayloadStr.includes('/storage/'));
       assert.ok(!employerPayloadStr.includes('storage_key'));
+    });
+  });
+
+  // =========================================================================
+  // 10. DATABASE MIGRATION LIFECYCLE & INDEX VERIFICATION
+  // =========================================================================
+  describe('10. Database Migration Lifecycle & Index Verification', () => {
+    let migDb: Knex;
+
+    before(async () => {
+      migDb = knex({
+        client: 'sqlite3',
+        connection: { filename: ':memory:' },
+        useNullAsDefault: true,
+      });
+
+      // 1. Create base tables as they existed at end of Phase 8
+      await migDb.schema.createTable('employers', (t) => {
+        t.string('id', 36).primary();
+        t.string('company_name', 200).notNullable();
+        t.string('industry', 100).notNullable();
+        t.string('contact_person', 150).notNullable();
+        t.string('email', 255).notNullable();
+        t.string('phone', 50).notNullable();
+        t.string('city', 100).notNullable();
+      });
+
+      await migDb.schema.createTable('manpower_enquiries', (t) => {
+        t.string('id', 36).primary();
+        t.string('enquiry_id', 36).notNullable();
+        t.string('employer_id', 36).nullable();
+        t.string('status', 50).defaultTo('new');
+        t.integer('total_headcount').defaultTo(1);
+        t.string('deployment_location', 150).nullable();
+        t.text('special_requirements').nullable();
+      });
+
+      await migDb.schema.createTable('manpower_enquiry_positions', (t) => {
+        t.increments('id').primary();
+        t.string('manpower_enquiry_id', 36).notNullable();
+        t.integer('job_category_id').nullable();
+        t.string('role_title', 150).notNullable();
+        t.integer('headcount').defaultTo(1);
+        t.integer('experience_years_required').nullable();
+      });
+    });
+
+    after(async () => {
+      await migDb.destroy();
+    });
+
+    it('successfully executes migration UP and adds all approved Phase 9 columns', async () => {
+      await phase9Migration.up(migDb);
+
+      const hasCountry = await migDb.schema.hasColumn('employers', 'country');
+      const hasRef = await migDb.schema.hasColumn('manpower_enquiries', 'reference_number');
+      const hasIdemp = await migDb.schema.hasColumn('manpower_enquiries', 'idempotency_key');
+      const hasHash = await migDb.schema.hasColumn('manpower_enquiries', 'request_hash');
+      const hasTimeline = await migDb.schema.hasColumn('manpower_enquiries', 'preferred_timeline');
+      const hasAdminNotes = await migDb.schema.hasColumn('manpower_enquiries', 'admin_notes');
+      const hasQual = await migDb.schema.hasColumn('manpower_enquiry_positions', 'qualification');
+
+      assert.ok(hasCountry, 'employers.country must be added');
+      assert.ok(hasRef, 'manpower_enquiries.reference_number must be added');
+      assert.ok(hasIdemp, 'manpower_enquiries.idempotency_key must be added');
+      assert.ok(hasHash, 'manpower_enquiries.request_hash must be added');
+      assert.ok(hasTimeline, 'manpower_enquiries.preferred_timeline must be added');
+      assert.ok(hasAdminNotes, 'manpower_enquiries.admin_notes must be added');
+      assert.ok(hasQual, 'manpower_enquiry_positions.qualification must be added');
+    });
+
+    it('permits multiple rows with NULL idempotency_key at database level', async () => {
+      await migDb('manpower_enquiries').insert([
+        { id: 'null-key-row-1', enquiry_id: 'enq-1', idempotency_key: null, reference_number: 'REF-NULL-1' },
+        { id: 'null-key-row-2', enquiry_id: 'enq-2', idempotency_key: null, reference_number: 'REF-NULL-2' },
+        { id: 'null-key-row-3', enquiry_id: 'enq-3', idempotency_key: null, reference_number: 'REF-NULL-3' },
+      ]);
+
+      const count = await migDb('manpower_enquiries').whereNull('idempotency_key').count('* as c');
+      assert.strictEqual(Number(count[0].c), 3, 'Multiple NULL idempotency_key rows must be permitted');
+    });
+
+    it('rejects duplicate non-null idempotency_key with unique constraint violation at DB level', async () => {
+      await migDb('manpower_enquiries').insert({
+        id: 'uniq-key-row-1',
+        enquiry_id: 'enq-uniq-1',
+        idempotency_key: 'DB-LEVEL-UNIQUE-KEY-001',
+        reference_number: 'REF-UNIQ-1',
+      });
+
+      await assert.rejects(
+        async () => {
+          await migDb('manpower_enquiries').insert({
+            id: 'uniq-key-row-2',
+            enquiry_id: 'enq-uniq-2',
+            idempotency_key: 'DB-LEVEL-UNIQUE-KEY-001', // duplicate non-null key!
+            reference_number: 'REF-UNIQ-2',
+          });
+        },
+        (err: any) => {
+          const msg = String(err?.message || '');
+          return (
+            msg.includes('UNIQUE constraint failed') ||
+            msg.includes('ER_DUP_ENTRY') ||
+            err?.code === 'SQLITE_CONSTRAINT'
+          );
+        },
+        'Database must reject duplicate non-null idempotency_key'
+      );
+    });
+
+    it('rejects duplicate reference_number with unique constraint violation at DB level', async () => {
+      await migDb('manpower_enquiries').insert({
+        id: 'ref-row-1',
+        enquiry_id: 'enq-ref-1',
+        reference_number: 'CLC-MP-2026-DUPLICATE-TEST',
+      });
+
+      await assert.rejects(
+        async () => {
+          await migDb('manpower_enquiries').insert({
+            id: 'ref-row-2',
+            enquiry_id: 'enq-ref-2',
+            reference_number: 'CLC-MP-2026-DUPLICATE-TEST', // duplicate reference!
+          });
+        },
+        (err: any) => {
+          const msg = String(err?.message || '');
+          return (
+            msg.includes('UNIQUE constraint failed') ||
+            msg.includes('ER_DUP_ENTRY') ||
+            err?.code === 'SQLITE_CONSTRAINT'
+          );
+        },
+        'Database must reject duplicate reference_number'
+      );
+    });
+
+    it('successfully executes migration DOWN and removes extended columns', async () => {
+      await phase9Migration.down(migDb);
+
+      const hasCountry = await migDb.schema.hasColumn('employers', 'country');
+      const hasRef = await migDb.schema.hasColumn('manpower_enquiries', 'reference_number');
+      const hasIdemp = await migDb.schema.hasColumn('manpower_enquiries', 'idempotency_key');
+      const hasHash = await migDb.schema.hasColumn('manpower_enquiries', 'request_hash');
+      const hasTimeline = await migDb.schema.hasColumn('manpower_enquiries', 'preferred_timeline');
+      const hasAdminNotes = await migDb.schema.hasColumn('manpower_enquiries', 'admin_notes');
+      const hasQual = await migDb.schema.hasColumn('manpower_enquiry_positions', 'qualification');
+
+      assert.strictEqual(hasCountry, false, 'employers.country must be dropped on rollback');
+      assert.strictEqual(hasRef, false, 'manpower_enquiries.reference_number must be dropped on rollback');
+      assert.strictEqual(hasIdemp, false, 'manpower_enquiries.idempotency_key must be dropped on rollback');
+      assert.strictEqual(hasHash, false, 'manpower_enquiries.request_hash must be dropped on rollback');
+      assert.strictEqual(hasTimeline, false, 'manpower_enquiries.preferred_timeline must be dropped on rollback');
+      assert.strictEqual(hasAdminNotes, false, 'manpower_enquiries.admin_notes must be dropped on rollback');
+      assert.strictEqual(hasQual, false, 'manpower_enquiry_positions.qualification must be dropped on rollback');
+    });
+  });
+
+  // =========================================================================
+  // 11. ADVISORY LOCK DEDICATED CONNECTION & RESOURCE CLEANUP
+  // =========================================================================
+  describe('11. Advisory Lock Dedicated Connection & Resource Cleanup', () => {
+    it('acquires and releases dedicated connection with MariaDB GET_LOCK and RELEASE_LOCK', async () => {
+      let acquiredConnection: any = null;
+      let releasedConnection: any = null;
+      let getLockExecuted = false;
+      let releaseLockExecuted = false;
+
+      const mockDedicatedConnection = { id: 'mock-mariadb-dedicated-conn' };
+
+      // Mock MariaDB Knex Client
+      const mockMariaKnex: any = {
+        client: {
+          dialect: 'mysql2',
+          acquireConnection: async () => {
+            acquiredConnection = mockDedicatedConnection;
+            return mockDedicatedConnection;
+          },
+          releaseConnection: async (conn: any) => {
+            releasedConnection = conn;
+          },
+        },
+        raw: (sql: string, bindings?: any) => {
+          return {
+            connection: (conn: any) => {
+              if (sql.includes('GET_LOCK') && conn === mockDedicatedConnection) {
+                getLockExecuted = true;
+                return Promise.resolve([[{ acquired: 1 }]]);
+              }
+              if (sql.includes('RELEASE_LOCK') && conn === mockDedicatedConnection) {
+                releaseLockExecuted = true;
+                return Promise.resolve([[{ released: 1 }]]);
+              }
+              return Promise.resolve([]);
+            },
+          };
+        },
+      };
+
+      let dedicatedConn: any = null;
+      let hasAdvisoryLock = false;
+      const lockKey = 'test_mariadb_lock';
+
+      try {
+        dedicatedConn = await mockMariaKnex.client.acquireConnection();
+        const lockRes = await mockMariaKnex.raw('SELECT GET_LOCK(?, 5) AS acquired', [lockKey]).connection(dedicatedConn);
+        hasAdvisoryLock = lockRes?.[0]?.[0]?.acquired === 1;
+
+        assert.strictEqual(dedicatedConn, mockDedicatedConnection);
+        assert.strictEqual(hasAdvisoryLock, true);
+        assert.strictEqual(getLockExecuted, true);
+      } finally {
+        if (dedicatedConn) {
+          try {
+            if (hasAdvisoryLock) {
+              await mockMariaKnex.raw('SELECT RELEASE_LOCK(?)', [lockKey]).connection(dedicatedConn);
+            }
+          } finally {
+            await mockMariaKnex.client.releaseConnection(dedicatedConn);
+          }
+        }
+      }
+
+      assert.strictEqual(releaseLockExecuted, true, 'RELEASE_LOCK must be called on the dedicated connection');
+      assert.strictEqual(releasedConnection, mockDedicatedConnection, 'Dedicated connection must be released to pool');
+    });
+
+    it('guarantees dedicated connection release even when an exception occurs during execution', async () => {
+      let releasedConnection: any = null;
+      let releaseLockExecuted = false;
+
+      const mockDedicatedConnection = { id: 'mock-mariadb-dedicated-conn-err' };
+
+      const mockMariaKnex: any = {
+        client: {
+          dialect: 'mysql2',
+          acquireConnection: async () => mockDedicatedConnection,
+          releaseConnection: async (conn: any) => {
+            releasedConnection = conn;
+          },
+        },
+        raw: (sql: string) => {
+          return {
+            connection: (conn: any) => {
+              if (sql.includes('RELEASE_LOCK')) {
+                releaseLockExecuted = true;
+              }
+              return Promise.resolve([[{ released: 1 }]]);
+            },
+          };
+        },
+      };
+
+      let dedicatedConn: any = null;
+      let hasAdvisoryLock = true;
+      const lockKey = 'test_err_lock';
+
+      try {
+        dedicatedConn = await mockMariaKnex.client.acquireConnection();
+        throw new Error('Simulated transaction failure');
+      } catch (err: any) {
+        assert.strictEqual(err.message, 'Simulated transaction failure');
+      } finally {
+        if (dedicatedConn) {
+          try {
+            if (hasAdvisoryLock) {
+              await mockMariaKnex.raw('SELECT RELEASE_LOCK(?)', [lockKey]).connection(dedicatedConn);
+            }
+          } finally {
+            await mockMariaKnex.client.releaseConnection(dedicatedConn);
+          }
+        }
+      }
+
+      assert.strictEqual(releaseLockExecuted, true);
+      assert.strictEqual(releasedConnection, mockDedicatedConnection);
     });
   });
 });

@@ -185,22 +185,21 @@ export type ManpowerQueryParams = z.infer<typeof manpowerQuerySchema>;
  */
 export function serializeCanonicalPosition(pos: ManpowerPositionInput): string {
   const canonicalObj = {
-    accommodationProvided: pos.accommodationProvided || null,
+    accommodationProvided: pos.accommodationProvided?.trim() || null,
     categorySlug: pos.categorySlug.toLowerCase().trim(),
     experienceYearsRequired: pos.experienceYearsRequired ?? null,
-    foodProvided: pos.foodProvided || null,
-    genderRequirement: pos.genderRequirement || null,
+    foodProvided: pos.foodProvided?.trim() || null,
+    genderRequirement: pos.genderRequirement?.trim() || null,
     headcount: pos.headcount,
     languageRequirements: pos.languageRequirements?.trim() || null,
     notes: pos.notes?.trim() || null,
     qualification: pos.qualification?.trim() || null,
     roleTitle: pos.roleTitle.trim(),
     salaryOffered: pos.salaryOffered?.trim() || null,
-    transportProvided: pos.transportProvided || null,
+    transportProvided: pos.transportProvided?.trim() || null,
   };
 
-  // Deterministically sort keys
-  return JSON.stringify(canonicalObj, Object.keys(canonicalObj).sort());
+  return JSON.stringify(sortObjectKeys(canonicalObj));
 }
 
 function sortObjectKeys(obj: any): any {
