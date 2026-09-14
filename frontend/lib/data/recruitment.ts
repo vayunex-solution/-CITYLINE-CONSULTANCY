@@ -12,7 +12,7 @@ export const MANPOWER_CATEGORIES: ManpowerCategory[] = [
   {
     id: 'cleaning',
     slug: 'cleaning',
-    title: 'Cleaning & Facility Care',
+    title: 'Cleaning',
     description: 'Commercial janitorial personnel, residential housekeeping teams, industrial facility cleaners, and mall hygiene staff.',
     demandFocus: 'Corporate towers, commercial shopping centers, residential complexes, and airport facilities.',
     iconName: 'sparkles',

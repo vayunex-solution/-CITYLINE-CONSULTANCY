@@ -90,6 +90,42 @@ export class StorageService {
   }
 
   /**
+   * Writes a candidate document (CV/Resume) buffer to private storage for a job application.
+   */
+  public async writeApplicationFile(
+    applicationId: string,
+    storageFilename: string,
+    buffer: Buffer
+  ): Promise<StorageResult> {
+    // 1. Sanitize directory components
+    const safeAppDir = applicationId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeFilename = path.basename(storageFilename);
+
+    if (!safeAppDir || !safeFilename) {
+      throw new AppError('Invalid storage path parameters.', 400, 'STORAGE_PATH_INVALID');
+    }
+
+    const relativeKey = path.posix.join('job-applications', safeAppDir, safeFilename);
+    const targetDir = path.join(this.storageRoot, 'job-applications', safeAppDir);
+    const absolutePath = path.join(targetDir, safeFilename);
+
+    // Verify isolation
+    this.assertPathWithinStorageRoot(absolutePath);
+
+    // Ensure directory exists
+    await fs.promises.mkdir(targetDir, { recursive: true });
+
+    // Write file securely with restricted permissions
+    await fs.promises.writeFile(absolutePath, buffer, { mode: 0o600 });
+
+    return {
+      absolutePath,
+      storageKey: relativeKey,
+      sizeBytes: buffer.length,
+    };
+  }
+
+  /**
    * Cleans up an array of physical files on transaction rollback or failure.
    */
   public async cleanupFiles(filePaths: string[]): Promise<void> {

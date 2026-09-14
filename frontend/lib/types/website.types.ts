@@ -58,6 +58,11 @@ export interface JobOpportunity {
   overview: string;
   responsibilities: string[];
   requirements: string[];
+  qualification?: string;
+  experienceYearsRequired?: number;
+  salaryRange?: string;
+  benefits?: string;
+  publishedAt?: string;
   isFeatured?: boolean;
 }
 

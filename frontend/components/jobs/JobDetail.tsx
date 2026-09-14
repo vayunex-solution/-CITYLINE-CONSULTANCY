@@ -9,8 +9,61 @@ interface JobDetailProps {
 }
 
 export function JobDetail({ job }: JobDetailProps) {
+  // Construct conditional Schema.org JobPosting structured data
+  // Guaranteed: Zero fabricated employers, salaries, or guarantees
+  const jsonLd: Record<string, any> = {
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    title: job.title,
+    description: job.overview,
+    datePosted: job.publishedAt ? new Date(job.publishedAt).toISOString().split('T')[0] : '2026-09-01',
+    validThrough: '2027-12-31',
+    employmentType: job.type === 'Full-Time' ? 'FULL_TIME' : job.type === 'Part-Time' ? 'PART_TIME' : 'OTHER',
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: 'Cityline Consultancy',
+      sameAs: 'https://citylineconsultancy.com',
+    },
+    jobLocation: {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: job.location.includes('Dubai') ? 'Dubai' : job.location,
+        addressCountry: 'AE',
+      },
+    },
+  };
+
+  if (job.qualification) {
+    jsonLd.qualifications = job.qualification;
+  }
+  if (job.responsibilities && job.responsibilities.length > 0) {
+    jsonLd.responsibilities = job.responsibilities.join('. ');
+  }
+  if (job.requirements && job.requirements.length > 0) {
+    jsonLd.experienceRequirements = job.requirements.join('. ');
+  }
+  // Only emit salary if genuine salary data exists
+  if (job.salaryRange && !job.salaryRange.toLowerCase().includes('competitive') && !job.salaryRange.toLowerCase().includes('industry standard')) {
+    jsonLd.baseSalary = {
+      '@type': 'MonetaryAmount',
+      currency: 'AED',
+      value: {
+        '@type': 'QuantitativeValue',
+        value: job.salaryRange,
+        unitText: 'MONTH',
+      },
+    };
+  }
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--space-8)' }}>
+      {/* Schema.org JobPosting */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Header Banner */}
       <GlassCard padding="lg" subtleGlow>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -18,6 +71,9 @@ export function JobDetail({ job }: JobDetailProps) {
             <Badge variant="gold">{job.category}</Badge>
             <Badge variant="slate">{job.type}</Badge>
             <Badge variant="outline">📍 {job.location}</Badge>
+            {job.experienceYearsRequired !== undefined && (
+              <Badge variant="outline">🛠️ {job.experienceYearsRequired}+ Yrs Exp</Badge>
+            )}
           </div>
 
           <h1
@@ -38,14 +94,56 @@ export function JobDetail({ job }: JobDetailProps) {
 
           <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', marginTop: 'var(--space-2)' }}>
             <Button href={`/jobs/${job.slug}/apply`} size="lg" variant="primary">
-              Apply for this Opportunity
+              Apply for this Trade Opportunity
             </Button>
             <Button href="/jobs" size="lg" variant="glass">
-              Browse All Jobs
+              Browse All Trade Jobs
             </Button>
           </div>
         </div>
       </GlassCard>
+
+      {/* Meta Specs if present */}
+      {(job.qualification || job.salaryRange || job.benefits) && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: 'var(--space-4)',
+          }}
+        >
+          {job.qualification && (
+            <div className="glass-panel" style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-gold-primary)', fontWeight: 600, textTransform: 'uppercase' }}>
+                Qualification
+              </div>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                {job.qualification}
+              </div>
+            </div>
+          )}
+          {job.salaryRange && (
+            <div className="glass-panel" style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-gold-primary)', fontWeight: 600, textTransform: 'uppercase' }}>
+                Salary Structure
+              </div>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                {job.salaryRange}
+              </div>
+            </div>
+          )}
+          {job.benefits && (
+            <div className="glass-panel" style={{ padding: 'var(--space-4)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--accent-gold-primary)', fontWeight: 600, textTransform: 'uppercase' }}>
+                Statutory Benefits
+              </div>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                {job.benefits}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main Content Split */}
       <div
@@ -58,7 +156,7 @@ export function JobDetail({ job }: JobDetailProps) {
         {/* Responsibilities */}
         <GlassCard padding="lg">
           <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, marginBottom: 'var(--space-4)' }}>
-            Role Responsibilities
+            Trade Responsibilities
           </h2>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {job.responsibilities.map((resp, i) => (
@@ -97,7 +195,7 @@ export function JobDetail({ job }: JobDetailProps) {
           lineHeight: 1.6,
         }}
       >
-        <strong>Recruitment Advisory:</strong> Cityline Consultancy coordinates directly with verified UAE employer sponsors. In compliance with ethical recruitment principles and UAE Ministry of Human Resources regulations, candidates are evaluated purely on verified trade skills and lawful credentials.
+        <strong>Recruitment Advisory:</strong> Cityline Consultancy operates strictly in accordance with ethical recruitment principles and UAE Ministry of Human Resources regulations. Candidates are evaluated purely on genuine trade competence, verified credentials, and legal eligibility. We do not charge unauthorized placement fees or guarantee outcomes.
       </div>
     </div>
   );

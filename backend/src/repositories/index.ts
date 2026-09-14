@@ -9,3 +9,6 @@ export * from './enquiry.repository';
 export * from './document.repository';
 export * from './audit-log.repository';
 export * from './notification-queue.repository';
+export * from './job.repository';
+export * from './job-application.repository';
+

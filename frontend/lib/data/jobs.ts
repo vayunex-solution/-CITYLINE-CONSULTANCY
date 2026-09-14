@@ -34,7 +34,7 @@ export const SEED_JOBS: JobOpportunity[] = [
     id: 'job-2',
     slug: 'commercial-facility-cleaner',
     title: 'Commercial Facility Cleaner',
-    category: 'Cleaning & Facility Care',
+    category: 'Cleaning',
     location: 'Abu Dhabi, UAE',
     type: 'Full-Time',
     isFeatured: true,

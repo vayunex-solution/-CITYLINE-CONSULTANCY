@@ -275,6 +275,7 @@ export function validateUploadedDocument(
   file: Express.Multer.File,
   options: {
     maxFileSizeBytes: number;
+    allowedTypes?: AllowedDocumentType[];
   }
 ): ValidatedFile {
   if (!file || !file.buffer || file.buffer.length === 0) {
@@ -317,6 +318,16 @@ export function validateUploadedDocument(
   if (!detectedType) {
     throw new AppError(
       `File "${file.originalname}" does not match any accepted document signature (PDF, JPEG, PNG, DOCX).`,
+      415,
+      'UNSUPPORTED_MEDIA_TYPE'
+    );
+  }
+
+  // 4b. Restrict to specific allowed types if requested (e.g. PDF/DOCX for CV uploads)
+  if (options.allowedTypes && !options.allowedTypes.includes(detectedType)) {
+    const allowedList = options.allowedTypes.map((t) => t.toUpperCase()).join(', ');
+    throw new AppError(
+      `File "${file.originalname}" is not an accepted document type. Allowed formats: ${allowedList}.`,
       415,
       'UNSUPPORTED_MEDIA_TYPE'
     );

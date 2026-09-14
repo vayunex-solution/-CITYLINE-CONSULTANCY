@@ -26,7 +26,28 @@ import {
   VisaAdminNotificationData,
   renderVisaApplicantConfirmation,
   VisaApplicantConfirmationData,
+  renderJobApplicationAdminNotification,
+  JobApplicationAdminNotificationData,
+  renderJobApplicationConfirmation,
+  JobApplicationConfirmationData,
 } from '../notifications/templates';
+
+export interface EnqueueJobApplicationParams {
+  applicationId: string;
+  publicReference: string;
+  jobTitle: string;
+  jobCategory: string;
+  applicantName: string;
+  email: string;
+  phone: string;
+  whatsapp?: string | null;
+  nationality: string;
+  currentLocation: string;
+  yearsExperience: number;
+  qualification?: string | null;
+  coverLetter?: string | null;
+  hasCv: boolean;
+}
 
 export interface EnqueueVisaEnquiryParams {
   enquiryId: string;
@@ -128,6 +149,83 @@ export class NotificationService {
           id: confirmationId,
           notification_type: 'visa_enquiry_confirmation',
           reference_id: params.enquiryId,
+          recipient_email: params.email,
+          subject: confirmationSubject,
+          payload_json: JSON.stringify(confirmationPayload),
+          idempotency_hash: confirmationHash,
+        },
+      ],
+      trx
+    );
+
+    return {
+      adminNotificationId: adminId,
+      confirmationNotificationId: confirmationId,
+    };
+  }
+
+  /**
+   * Transactionally enqueues both admin alert and candidate confirmation notifications
+   * for a job application within an existing database transaction.
+   */
+  public async enqueueJobApplicationNotifications(
+    params: EnqueueJobApplicationParams,
+    trx: Knex.Transaction
+  ): Promise<{ adminNotificationId: string; confirmationNotificationId: string }> {
+    const adminId = crypto.randomUUID();
+    const confirmationId = crypto.randomUUID();
+    const submittedAtStr = new Date().toUTCString();
+
+    const adminHash = this.generateIdempotencyHash('job-application', params.applicationId, 'admin');
+    const confirmationHash = this.generateIdempotencyHash('job-application', params.applicationId, 'confirmation');
+
+    // 1. Admin notification payload & subject
+    const adminPayload: JobApplicationAdminNotificationData = {
+      reference: params.publicReference,
+      jobTitle: params.jobTitle,
+      jobCategory: params.jobCategory,
+      applicantName: params.applicantName,
+      email: params.email,
+      phone: params.phone,
+      whatsapp: params.whatsapp,
+      nationality: params.nationality,
+      currentLocation: params.currentLocation,
+      yearsExperience: params.yearsExperience,
+      qualification: params.qualification,
+      coverLetter: params.coverLetter,
+      hasCv: params.hasCv,
+      submittedAt: submittedAtStr,
+    };
+
+    const adminSubject = `[Recruitment Lead] New Application — ${params.publicReference} (${params.jobTitle})`;
+
+    // 2. Candidate confirmation payload & subject
+    const confirmationPayload: JobApplicationConfirmationData = {
+      reference: params.publicReference,
+      applicantName: params.applicantName,
+      jobTitle: params.jobTitle,
+      jobCategory: params.jobCategory,
+      hasCv: params.hasCv,
+    };
+
+    const confirmationSubject = `Application Acknowledged: ${params.jobTitle} (Ref: ${params.publicReference}) — Cityline Consultancy`;
+
+    // 3. Batch enqueue into notification_queue
+    await this.queueRepo.enqueueBatch(
+      [
+        {
+          id: adminId,
+          notification_type: 'job_application_admin',
+          reference_id: params.applicationId,
+          recipient_email: env.NOTIFICATION_ADMIN_EMAIL || 'dev-admin@example.test',
+          subject: adminSubject,
+          payload_json: JSON.stringify(adminPayload),
+          idempotency_hash: adminHash,
+        },
+        {
+          id: confirmationId,
+          notification_type: 'job_application_confirmation',
+          reference_id: params.applicationId,
           recipient_email: params.email,
           subject: confirmationSubject,
           payload_json: JSON.stringify(confirmationPayload),
@@ -289,6 +387,12 @@ export class NotificationService {
 
       case 'visa_enquiry_confirmation':
         return renderVisaApplicantConfirmation(payload as unknown as VisaApplicantConfirmationData);
+
+      case 'job_application_admin':
+        return renderJobApplicationAdminNotification(payload as unknown as JobApplicationAdminNotificationData);
+
+      case 'job_application_confirmation':
+        return renderJobApplicationConfirmation(payload as unknown as JobApplicationConfirmationData);
 
       default:
         throw new Error(`Unsupported notification type: ${record.notification_type}`);
