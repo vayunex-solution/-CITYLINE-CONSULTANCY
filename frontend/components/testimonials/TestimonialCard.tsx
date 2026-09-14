@@ -12,10 +12,14 @@ export function TestimonialCard({ testimonial }: TestimonialCardProps) {
     <GlassCard padding="lg" subtleGlow>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', height: '100%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Badge variant="gold" size="sm">{testimonial.serviceCategory}</Badge>
-          <span style={{ color: 'var(--accent-gold-primary)', fontSize: '1.2rem' }} aria-hidden="true">
-            ★★★★★
-          </span>
+          {testimonial.serviceCategory ? (
+            <Badge variant="gold">{testimonial.serviceCategory}</Badge>
+          ) : <span />}
+          {testimonial.rating ? (
+            <span style={{ color: 'var(--accent-gold-primary)', fontSize: '1.2rem', letterSpacing: '2px' }} aria-label={`${testimonial.rating} out of 5 stars`}>
+              {'★'.repeat(Math.min(5, Math.max(1, testimonial.rating)))}
+            </span>
+          ) : null}
         </div>
 
         <blockquote

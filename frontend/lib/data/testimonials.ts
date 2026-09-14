@@ -11,3 +11,37 @@ export const APPROVED_TESTIMONIALS: TestimonialItem[] = [];
 export function getApprovedTestimonials(): TestimonialItem[] {
   return APPROVED_TESTIMONIALS;
 }
+
+/**
+ * Fetches published client testimonials from the backend REST API.
+ * Falls back to an empty array so graceful neutral empty states are rendered.
+ */
+export async function fetchPublishedTestimonials(): Promise<TestimonialItem[]> {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+    const res = await fetch(`${apiUrl}/testimonials`, {
+      next: { revalidate: 60 },
+    });
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const json = await res.json();
+    if (!json.success || !Array.isArray(json.data)) {
+      return [];
+    }
+
+    return json.data.map((item: any) => ({
+      id: String(item.id),
+      clientName: item.clientName,
+      clientRole: [item.clientDesignation, item.companyName].filter(Boolean).join(', ') || undefined,
+      location: item.clientLocation || undefined,
+      serviceCategory: item.serviceCategory || 'Client Experience',
+      quote: item.quote,
+      rating: item.rating ? Number(item.rating) : 5,
+    }));
+  } catch {
+    return [];
+  }
+}

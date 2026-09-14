@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { getApprovedTestimonials } from '@/lib/data/testimonials';
+import { fetchPublishedTestimonials } from '@/lib/data/testimonials';
 import { TestimonialCard } from '@/components/testimonials/TestimonialCard';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
     'Verified client milestone accounts and experiences with Cityline Consultancy across visas, business incorporation, and UAE career mobility.',
 };
 
-export default function TestimonialsPage() {
-  const testimonials = getApprovedTestimonials();
+export default async function TestimonialsPage() {
+  const testimonials = await fetchPublishedTestimonials();
 
   return (
     <div style={{ paddingTop: 'var(--space-20)' }}>

@@ -73,6 +73,7 @@ export interface TestimonialItem {
   location?: string;
   serviceCategory: string;
   quote: string;
+  rating?: number;
   publishedAt?: string;
 }
 

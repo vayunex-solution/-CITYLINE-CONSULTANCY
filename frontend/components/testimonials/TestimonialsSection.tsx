@@ -1,11 +1,11 @@
 import React from 'react';
-import { getApprovedTestimonials } from '@/lib/data/testimonials';
+import { fetchPublishedTestimonials } from '@/lib/data/testimonials';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/Button';
 import { TestimonialCard } from './TestimonialCard';
 
-export function TestimonialsSection() {
-  const testimonials = getApprovedTestimonials();
+export async function TestimonialsSection() {
+  const testimonials = await fetchPublishedTestimonials();
 
   return (
     <section className="section" id="testimonials">
