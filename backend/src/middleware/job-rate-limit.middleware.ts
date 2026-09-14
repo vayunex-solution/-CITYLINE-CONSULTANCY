@@ -2,7 +2,13 @@
  * CITYLINE CONSULTANCY — Public Job Application Rate Limiter
  * Guards the public candidate application endpoint against rapid flooding, automated spam, and bot submissions.
  *
- * ARCHITECTURE NOTE:
+ * TRUSTED CLIENT IP & PROXY SECURITY:
+ * - This middleware relies strictly on Express `req.ip` (or socket remoteAddress).
+ * - Under the application's root configuration (`app.set('trust proxy', false)`), Express resolves
+ *   `req.ip` directly from the TCP socket remote address and explicitly ignores raw, untrusted
+ *   `X-Forwarded-For` or `X-Real-IP` headers supplied by clients. Spoofing these headers cannot bypass the limiter.
+ *
+ * ARCHITECTURAL LIMITATION NOTE:
  * - This implementation operates in process-local memory using a sliding window algorithm.
  * - In a multi-process Passenger / PM2 cluster or across distributed nodes, each process maintains
  *   its own local sliding window. For horizontally scaled distributed deployments (Phase 17+),

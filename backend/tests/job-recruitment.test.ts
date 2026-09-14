@@ -286,7 +286,7 @@ describe('Jobs & Recruitment System Integration', () => {
         experience_years_required: 2,
         salary_range: 'AED 1,800 - 2,400',
         benefits: 'Employer-provided visa sponsorship, accommodation, transport, and medical insurance.',
-        status: 'published',
+        status: 'active',
         is_featured: true,
         published_at: new Date(),
       },
@@ -305,7 +305,7 @@ describe('Jobs & Recruitment System Integration', () => {
         experience_years_required: 1,
         salary_range: 'AED 2,500 - 3,200',
         benefits: 'Sponsorship visa, medical insurance, duty meals, and air ticket allowance.',
-        status: 'published',
+        status: 'active',
         is_featured: true,
         published_at: new Date(),
       },
@@ -740,6 +740,103 @@ describe('Jobs & Recruitment System Integration', () => {
       const records = await testKnex('job_applications').where({ email });
       assert.equal(records.length, 2, 'Candidate must be able to apply to different jobs independently');
     });
+
+    it('rejects submission with 409 Conflict if X-Idempotency-Key is reused for a different job', async () => {
+      const key = 'shared-key-job-conflict-123';
+
+      // First application to Mason
+      const res1 = await request(app)
+        .post('/api/v1/jobs/civil-block-plaster-mason/apply')
+        .set('X-Idempotency-Key', key)
+        .field('fullName', 'Candidate Test')
+        .field('email', 'conflict.job@example.com')
+        .field('phone', '+91 9876543210')
+        .field('currentLocation', 'Delhi')
+        .field('yearsExperience', '2')
+        .field('consent', 'true');
+      assert.equal(res1.status, 201);
+
+      // Second application with SAME key but to Hotel Staff
+      const res2 = await request(app)
+        .post('/api/v1/jobs/hotel-front-office-associate/apply')
+        .set('X-Idempotency-Key', key)
+        .field('fullName', 'Candidate Test')
+        .field('email', 'conflict.job@example.com')
+        .field('phone', '+91 9876543210')
+        .field('currentLocation', 'Delhi')
+        .field('yearsExperience', '2')
+        .field('consent', 'true');
+
+      assert.equal(res2.status, 409);
+      assert.equal(res2.body.error.code, 'IDEMPOTENCY_KEY_CONFLICT');
+    });
+
+    it('rejects submission with 409 Conflict if X-Idempotency-Key is reused for a different applicant email', async () => {
+      const key = 'shared-key-email-conflict-456';
+
+      // First application with email Alpha
+      const res1 = await request(app)
+        .post('/api/v1/jobs/civil-block-plaster-mason/apply')
+        .set('X-Idempotency-Key', key)
+        .field('fullName', 'Candidate Alpha')
+        .field('email', 'alpha@example.com')
+        .field('phone', '+91 9876543210')
+        .field('currentLocation', 'Delhi')
+        .field('yearsExperience', '2')
+        .field('consent', 'true');
+      assert.equal(res1.status, 201);
+
+      // Second application with SAME key but email Beta
+      const res2 = await request(app)
+        .post('/api/v1/jobs/civil-block-plaster-mason/apply')
+        .set('X-Idempotency-Key', key)
+        .field('fullName', 'Candidate Beta')
+        .field('email', 'beta@example.com')
+        .field('phone', '+91 9876543210')
+        .field('currentLocation', 'Delhi')
+        .field('yearsExperience', '2')
+        .field('consent', 'true');
+
+      assert.equal(res2.status, 409);
+      assert.equal(res2.body.error.code, 'IDEMPOTENCY_KEY_CONFLICT');
+    });
+
+    it('allows candidate to legitimately re-apply to the same job after the duplicate window has passed', async () => {
+      const email = 'later.reapply@example.com';
+
+      // First application
+      const res1 = await request(app)
+        .post('/api/v1/jobs/civil-block-plaster-mason/apply')
+        .field('fullName', 'Reapplicant')
+        .field('email', email)
+        .field('phone', '+91 9876543210')
+        .field('currentLocation', 'Jaipur')
+        .field('yearsExperience', '3')
+        .field('consent', 'true');
+      assert.equal(res1.status, 201);
+
+      // Age the first record by 20 minutes (outside the 15-minute window)
+      const twentyMinsAgo = new Date(Date.now() - 20 * 60 * 1000);
+      await testKnex('job_applications')
+        .where({ email })
+        .update({ created_at: twentyMinsAgo });
+
+      // Later legitimate re-application to the same job
+      const res2 = await request(app)
+        .post('/api/v1/jobs/civil-block-plaster-mason/apply')
+        .field('fullName', 'Reapplicant')
+        .field('email', email)
+        .field('phone', '+91 9876543210')
+        .field('currentLocation', 'Jaipur')
+        .field('yearsExperience', '3')
+        .field('consent', 'true');
+
+      assert.equal(res2.status, 201);
+      assert.notEqual(res1.body.data.reference, res2.body.data.reference);
+
+      const records = await testKnex('job_applications').where({ email });
+      assert.equal(records.length, 2, 'Candidate must not be permanently locked out of applying later');
+    });
   });
 
   // ============================================================================
@@ -812,6 +909,37 @@ describe('Jobs & Recruitment System Integration', () => {
       assert.equal(throttledRes.body.error.code, 'RATE_LIMIT_EXCEEDED');
       assert.ok(throttledRes.headers['retry-after']);
     });
+
+    it('does not allow arbitrary X-Forwarded-For headers to bypass rate limits when proxy is untrusted', async () => {
+      // Send 5 requests from the socket with varying X-Forwarded-For headers
+      for (let i = 1; i <= 5; i++) {
+        const res = await request(app)
+          .post('/api/v1/jobs/hotel-front-office-associate/apply')
+          .set('X-Forwarded-For', `203.0.113.${i}`)
+          .field('fullName', `Spoof Candidate ${i}`)
+          .field('email', `spoof${i}@example.com`)
+          .field('phone', '+91 9876543210')
+          .field('currentLocation', 'Mumbai')
+          .field('yearsExperience', '1')
+          .field('consent', 'true');
+        assert.equal(res.status, 201);
+      }
+
+      // 6th request with yet another spoofed X-Forwarded-For must still be rejected with 429
+      const res6 = await request(app)
+        .post('/api/v1/jobs/hotel-front-office-associate/apply')
+        .set('X-Forwarded-For', '203.0.113.99')
+        .field('fullName', 'Spoof Candidate 6')
+        .field('email', 'spoof6@example.com')
+        .field('phone', '+91 9876543210')
+        .field('currentLocation', 'Mumbai')
+        .field('yearsExperience', '1')
+        .field('consent', 'true');
+
+      assert.equal(res6.status, 429);
+      assert.equal(res6.body.error.code, 'RATE_LIMIT_EXCEEDED');
+      assert.ok(res6.headers['retry-after']);
+    });
   });
 
   // ============================================================================
@@ -847,6 +975,34 @@ describe('Jobs & Recruitment System Integration', () => {
           return true;
         }
       );
+    });
+
+    it('preserves application and document access after a job is archived', async () => {
+      // sampleJob1Id was soft-deleted/archived earlier
+      const apps = await testKnex('job_applications').where({ job_id: sampleJob1Id });
+      assert.ok(apps.length > 0);
+
+      // Admin detail for an application on the archived job can still resolve job details
+      const res = await request(app)
+        .get(`/api/v1/admin/recruitment/applications/${apps[0].id}`)
+        .set('Authorization', adminAuthHeader);
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.data.application.job_title, 'Civil Block & Plaster Mason');
+
+      // Public user cannot browse or apply to the archived job
+      const pubRes = await request(app).get('/api/v1/jobs/civil-block-plaster-mason');
+      assert.equal(pubRes.status, 404);
+
+      const applyRes = await request(app)
+        .post('/api/v1/jobs/civil-block-plaster-mason/apply')
+        .field('fullName', 'Late Applicant')
+        .field('email', 'late@example.com')
+        .field('phone', '+91 9876543210')
+        .field('currentLocation', 'Delhi')
+        .field('yearsExperience', '1')
+        .field('consent', 'true');
+      assert.equal(applyRes.status, 404);
     });
   });
 
@@ -947,6 +1103,58 @@ describe('Jobs & Recruitment System Integration', () => {
       const pubRes = await request(app).get(`/api/v1/jobs/${newJobSlug}`);
       assert.equal(pubRes.status, 200);
       assert.equal(pubRes.body.data.title, 'Structural Steel Fixer');
+    });
+
+    it('allows authenticated admin to view application detail with metadata-only document info', async () => {
+      const appRecord = await testKnex('job_applications').first();
+      assert.ok(appRecord);
+
+      const res = await request(app)
+        .get(`/api/v1/admin/recruitment/applications/${appRecord.id}`)
+        .set('Authorization', adminAuthHeader);
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.success, true);
+      assert.ok(res.body.data.application);
+      assert.equal(res.body.data.application.id, appRecord.id);
+      assert.ok(Array.isArray(res.body.data.documents));
+      if (res.body.data.documents.length > 0) {
+        const doc = res.body.data.documents[0];
+        assert.equal(doc.storage_key, undefined, 'Private storage_key must not be exposed');
+        assert.equal(doc.absolutePath, undefined, 'Physical filesystem paths must not be exposed');
+      }
+    });
+
+    it('rejects unauthorized roles (e.g. role without recruitment access) with 403', async () => {
+      const guestAdminId = '88888888-8888-8888-8888-888888888888';
+      await testKnex('admin_roles').insert({
+        id: 99,
+        role_key: 'guest_analyst',
+        name: 'Guest Analyst',
+      });
+      await testKnex('admin_users').insert({
+        id: guestAdminId,
+        role_id: 99,
+        username: 'guest_analyst',
+        email: 'guest@citylineconsultancy.ae',
+        password_hash: 'hashed_pw_test',
+        full_name: 'Guest Analyst',
+        is_active: true,
+      });
+
+      const guestToken = createAdminToken({
+        id: guestAdminId,
+        username: 'guest_analyst',
+        email: 'guest@citylineconsultancy.ae',
+        role: 'guest_analyst' as any,
+        roleId: 99,
+      });
+
+      const res = await request(app)
+        .get('/api/v1/admin/recruitment/jobs')
+        .set('Authorization', `Bearer ${guestToken.token}`);
+
+      assert.equal(res.status, 403);
     });
   });
 });

@@ -13,6 +13,8 @@ import { AbstractKnexRepository } from './base.repository';
 import { normalizeDatabaseError } from '../database/database-error';
 import { AppError } from '../utils/app-error';
 
+export const CANONICAL_PUBLIC_JOB_STATUS = 'active' as const;
+
 export interface JobRecord {
   [key: string]: unknown;
   id: string;
@@ -89,7 +91,7 @@ export class JobRepository extends AbstractKnexRepository<JobRecord, string> {
         .from('jobs')
         .join('job_categories', 'jobs.category_id', 'job_categories.id')
         .whereNull('jobs.deleted_at')
-        .whereIn('jobs.status', ['active', 'published']);
+        .where('jobs.status', CANONICAL_PUBLIC_JOB_STATUS);
 
       // 1. Category filter (by slug or name or ID)
       if (params.category && params.category.trim()) {
@@ -164,7 +166,7 @@ export class JobRepository extends AbstractKnexRepository<JobRecord, string> {
         .from('jobs')
         .join('job_categories', 'jobs.category_id', 'job_categories.id')
         .whereNull('jobs.deleted_at')
-        .whereIn('jobs.status', ['active', 'published'])
+        .where('jobs.status', CANONICAL_PUBLIC_JOB_STATUS)
         .where('jobs.slug', normalizedSlug)
         .select(
           'jobs.*',
@@ -188,7 +190,7 @@ export class JobRepository extends AbstractKnexRepository<JobRecord, string> {
         .from('jobs')
         .join('job_categories', 'jobs.category_id', 'job_categories.id')
         .whereNull('jobs.deleted_at')
-        .whereIn('jobs.status', ['active', 'published'])
+        .where('jobs.status', CANONICAL_PUBLIC_JOB_STATUS)
         .where('jobs.id', id)
         .select(
           'jobs.*',
@@ -217,7 +219,7 @@ export class JobRepository extends AbstractKnexRepository<JobRecord, string> {
         .from('jobs')
         .join('job_categories', 'jobs.category_id', 'job_categories.id')
         .whereNull('jobs.deleted_at')
-        .whereIn('jobs.status', ['active', 'published'])
+        .where('jobs.status', CANONICAL_PUBLIC_JOB_STATUS)
         .where('jobs.category_id', categoryId)
         .whereNot('jobs.id', currentJobId)
         .select(
@@ -247,7 +249,7 @@ export class JobRepository extends AbstractKnexRepository<JobRecord, string> {
       const counts = await this.getQuery(trx)
         .from('jobs')
         .whereNull('deleted_at')
-        .whereIn('status', ['active', 'published'])
+        .where('status', CANONICAL_PUBLIC_JOB_STATUS)
         .groupBy('category_id')
         .select('category_id')
         .count<{ category_id: number; count: number | string }[]>('id as count');

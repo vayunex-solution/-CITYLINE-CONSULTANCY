@@ -133,7 +133,8 @@ export class JobService {
     }
 
     const jobId = crypto.randomUUID();
-    const isPublic = input.status === 'active' || input.status === 'published';
+    const normalizedStatus = (input.status === 'published' || input.status === 'active') ? 'active' : input.status;
+    const isPublic = normalizedStatus === 'active';
 
     const jobRecord: Omit<JobRecord, 'created_at' | 'updated_at'> = {
       id: jobId,
@@ -150,7 +151,7 @@ export class JobService {
       experience_years_required: input.experienceYearsRequired ?? null,
       salary_range: input.salaryRange || null,
       benefits: input.benefits || null,
-      status: input.status,
+      status: normalizedStatus,
       is_featured: Boolean(input.isFeatured),
       published_at: isPublic ? new Date() : null,
       deleted_at: null,
@@ -169,7 +170,7 @@ export class JobService {
       details_json: JSON.stringify({
         title: input.title,
         slug: input.slug,
-        status: input.status,
+        status: normalizedStatus,
       }),
     });
 
@@ -215,8 +216,9 @@ export class JobService {
     if (input.isFeatured !== undefined) updates.is_featured = input.isFeatured;
 
     if (input.status !== undefined) {
-      updates.status = input.status;
-      if ((input.status === 'active' || input.status === 'published') && !existing.published_at) {
+      const normalizedStatus = (input.status === 'published' || input.status === 'active') ? 'active' : input.status;
+      updates.status = normalizedStatus;
+      if (normalizedStatus === 'active' && !existing.published_at) {
         updates.published_at = new Date();
       }
     }

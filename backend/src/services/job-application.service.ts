@@ -75,6 +75,26 @@ export class JobApplicationService {
     if (idempotencyKey && idempotencyKey.trim()) {
       const existingKeyApp = await this.jobAppRepo.findByIdempotencyKey(idempotencyKey.trim());
       if (existingKeyApp) {
+        // Enforce idempotency semantic hardening:
+        // A) Same key + same request (job and applicant) => returns existing application reference
+        // B) Same key + materially different request => returns 409 Conflict without creating application
+        const isSameJob = existingKeyApp.job_id === job.id;
+        const isSameEmail = existingKeyApp.email.trim().toLowerCase() === input.email.trim().toLowerCase();
+
+        if (!isSameJob || !isSameEmail) {
+          logger.warn(`Idempotency key conflict: Key "${idempotencyKey}" previously used for different payload`, {
+            existingJobId: existingKeyApp.job_id,
+            requestedJobId: job.id,
+            existingEmail: existingKeyApp.email,
+            requestedEmail: input.email,
+          });
+          throw new AppError(
+            'Idempotency key conflict: This key was previously used for a different application request.',
+            409,
+            'IDEMPOTENCY_KEY_CONFLICT'
+          );
+        }
+
         logger.info(`Idempotent retry detected for key ${idempotencyKey}; returning existing reference`);
         return {
           success: true,
