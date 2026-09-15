@@ -1,9 +1,18 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { FOOTER_SECTIONS } from '@/lib/data/navigation';
 import styles from './Footer.module.css';
 
 export function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   const currentYear = new Date().getFullYear();
 
   return (
