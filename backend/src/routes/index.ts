@@ -13,6 +13,10 @@ import manpowerEnquiryRoutes from './manpower-enquiry.routes';
 import adminManpowerRoutes from './admin-manpower.routes';
 import testimonialRoutes from './testimonial.routes';
 import adminTestimonialRoutes from './admin-testimonial.routes';
+import adminDashboardRoutes from './admin-dashboard.routes';
+import adminVisaEnquiryRoutes from './admin-visa-enquiry.routes';
+import adminNotificationRoutes from './admin-notification.routes';
+import adminAuditLogRoutes from './admin-audit-log.routes';
 
 const apiRouter = Router();
 
@@ -37,8 +41,13 @@ apiRouter.use('/admin/manpower-enquiries', adminManpowerRoutes);
 apiRouter.use('/testimonials', testimonialRoutes);
 apiRouter.use('/admin/testimonials', adminTestimonialRoutes);
 
-// Future Phase Route Mounts (Strictly Deferred):
 // Phase 11: Admin Dashboard & Management UI
+apiRouter.use('/admin/dashboard', adminDashboardRoutes);
+apiRouter.use('/admin/visa-enquiries', adminVisaEnquiryRoutes);
+apiRouter.use('/admin/notifications', adminNotificationRoutes);
+apiRouter.use('/admin/audit-logs', adminAuditLogRoutes);
+
+// Future Phase Route Mounts (Strictly Deferred):
 // Phase 12: Analytics / Visitor Intelligence
 
 export default apiRouter;

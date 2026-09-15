@@ -12,9 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function AdminTestimonialsPage() {
-  return (
-    <main style={{ minHeight: '80vh', paddingTop: 'var(--space-20)', paddingBottom: 'var(--space-20)' }}>
-      <TestimonialsManager />
-    </main>
-  );
+  return <TestimonialsManager />;
 }
