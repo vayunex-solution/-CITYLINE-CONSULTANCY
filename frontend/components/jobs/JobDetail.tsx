@@ -68,7 +68,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
       {/* Schema.org JobPosting */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
 
       {/* Breadcrumb Navigation */}

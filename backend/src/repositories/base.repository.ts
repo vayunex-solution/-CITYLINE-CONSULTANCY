@@ -103,7 +103,9 @@ export abstract class AbstractKnexRepository<T extends Record<string, unknown> &
       const totalCount = Number(total);
 
       if (options.sortBy) {
-        dataQuery = dataQuery.orderBy(options.sortBy, options.sortOrder || 'asc');
+        const safeSortBy = /^[a-zA-Z0-9_.]+$/.test(options.sortBy) ? options.sortBy : 'id';
+        const safeSortOrder = options.sortOrder?.toLowerCase() === 'desc' ? 'desc' : 'asc';
+        dataQuery = dataQuery.orderBy(safeSortBy, safeSortOrder);
       }
 
       const items = (await dataQuery.limit(limit).offset(offset)) as T[];

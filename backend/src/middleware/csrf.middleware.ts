@@ -28,11 +28,20 @@ export function csrfProtection(req: Request, _res: Response, next: NextFunction)
     return next();
   }
 
-  // 3. Extract CSRF token from header and cookie
+  // 3. Programmatic Bearer-token requests without cookies are exempt from CSRF
+  const hasAuthCookie = Boolean(req.cookies?.[env.AUTH_COOKIE_NAME]);
+  const hasCsrfCookie = Boolean(req.cookies?.[env.AUTH_CSRF_COOKIE_NAME]);
+  const isBearerAuth = Boolean(req.headers.authorization?.startsWith('Bearer '));
+
+  if (isBearerAuth && !hasAuthCookie && !hasCsrfCookie) {
+    return next();
+  }
+
+  // 4. Extract CSRF token from header and cookie
   const headerToken = (req.headers['x-csrf-token'] || req.headers['X-CSRF-Token']) as string | undefined;
   const cookieToken = req.cookies?.[env.AUTH_CSRF_COOKIE_NAME] as string | undefined;
 
-  // 4. Verify presence and constant-time match
+  // 5. Verify presence and constant-time match
   if (!cookieToken || !headerToken || !verifyCsrfToken(cookieToken, headerToken)) {
     return next(
       new AppError(

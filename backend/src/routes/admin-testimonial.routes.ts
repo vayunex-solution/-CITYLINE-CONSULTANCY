@@ -9,13 +9,15 @@
 
 import { Router } from 'express';
 import { requireAuthenticatedAdmin, requireRole } from '../middleware/auth.middleware';
+import { csrfProtection } from '../middleware/csrf.middleware';
 import { adminTestimonialController } from '../controllers/admin-testimonial.controller';
 
 const router = Router();
 
-// Require administrative authentication and role check
+// Require administrative authentication, role check, and CSRF protection
 router.use(requireAuthenticatedAdmin);
 router.use(requireRole('super_admin', 'admin_operator'));
+router.use(csrfProtection);
 
 // PUT /api/v1/admin/testimonials/reorder
 router.put('/reorder', (req, res, next) => {
@@ -42,8 +44,8 @@ router.patch('/:id', (req, res, next) => {
   void adminTestimonialController.updateTestimonial(req, res, next);
 });
 
-// DELETE /api/v1/admin/testimonials/:id
-router.delete('/:id', (req, res, next) => {
+// DELETE /api/v1/admin/testimonials/:id - strictly restricted to super_admin
+router.delete('/:id', requireRole('super_admin'), (req, res, next) => {
   void adminTestimonialController.deleteTestimonial(req, res, next);
 });
 

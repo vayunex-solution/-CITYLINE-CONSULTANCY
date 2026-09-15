@@ -86,6 +86,7 @@ describe('Phase 11 — Admin Dashboard & Management Test Suite', () => {
       t.string('nationality', 100).nullable();
       t.text('message').nullable();
       t.string('status', 50).defaultTo('new');
+      t.string('assigned_admin_id', 36).nullable();
       t.timestamp('deleted_at').nullable();
       t.timestamp('created_at').defaultTo(testKnex.fn.now());
       t.timestamp('updated_at').defaultTo(testKnex.fn.now());

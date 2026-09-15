@@ -34,6 +34,17 @@ export function createApp(): Express {
     helmet({
       contentSecurityPolicy: env.NODE_ENV === 'production',
       crossOriginEmbedderPolicy: env.NODE_ENV === 'production',
+      frameguard: { action: 'deny' },
+      hsts:
+        env.NODE_ENV === 'production'
+          ? {
+              maxAge: 31536000,
+              includeSubDomains: true,
+              preload: true,
+            }
+          : false,
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      noSniff: true,
     })
   );
 
@@ -41,14 +52,21 @@ export function createApp(): Express {
   const allowedOrigins = env.CORS_ORIGIN.split(',').map((o) => o.trim());
   const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server) in development/test
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
       if (!origin) {
         return callback(null, true);
       }
-      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      // Never allow wildcard with credentials in production
+      if (allowedOrigins.includes('*')) {
+        if (env.NODE_ENV === 'production') {
+          return callback(null, false);
+        }
         return callback(null, true);
       }
-      return callback(new Error(`Origin ${origin} is not allowed by CORS policy`));
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'x-request-id', 'X-CSRF-Token', 'x-csrf-token'],

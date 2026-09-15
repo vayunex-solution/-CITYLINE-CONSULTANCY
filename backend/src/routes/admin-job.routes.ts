@@ -9,13 +9,15 @@
 
 import { Router } from 'express';
 import { requireAuthenticatedAdmin, requireRole } from '../middleware/auth.middleware';
+import { csrfProtection } from '../middleware/csrf.middleware';
 import { adminJobController } from '../controllers/admin-job.controller';
 
 const router = Router();
 
-// Apply administrative authentication and RBAC guards to all routes
+// Apply administrative authentication, RBAC, and Double-Submit CSRF guards to all routes
 router.use(requireAuthenticatedAdmin);
 router.use(requireRole('super_admin', 'admin_operator'));
+router.use(csrfProtection);
 
 // Vacancy Management
 router.get('/jobs', (req, res, next) => {
@@ -34,7 +36,8 @@ router.put('/jobs/:id', (req, res, next) => {
   void adminJobController.updateJob(req, res, next);
 });
 
-router.delete('/jobs/:id', (req, res, next) => {
+// Permanent deletion strictly restricted to super_admin
+router.delete('/jobs/:id', requireRole('super_admin'), (req, res, next) => {
   void adminJobController.deleteJob(req, res, next);
 });
 

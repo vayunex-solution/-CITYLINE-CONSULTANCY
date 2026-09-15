@@ -9,13 +9,15 @@
 
 import { Router } from 'express';
 import { requireAuthenticatedAdmin, requireRole } from '../middleware/auth.middleware';
+import { csrfProtection } from '../middleware/csrf.middleware';
 import { adminManpowerController } from '../controllers/admin-manpower.controller';
 
 const router = Router();
 
-// Apply administrative authentication and RBAC guards to all routes
+// Apply administrative authentication, RBAC, and CSRF guards to all routes
 router.use(requireAuthenticatedAdmin);
 router.use(requireRole('super_admin', 'admin_operator'));
+router.use(csrfProtection);
 
 // GET /api/v1/admin/manpower-enquiries
 router.get('/', (req, res, next) => {

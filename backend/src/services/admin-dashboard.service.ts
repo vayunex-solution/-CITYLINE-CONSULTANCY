@@ -344,6 +344,7 @@ export class AdminDashboardService {
         .select(
           'enquiries.id',
           'enquiries.status',
+          'enquiries.assigned_admin_id as assignedAdminId',
           'enquiries.full_name as fullName',
           'enquiries.email',
           'enquiries.phone',

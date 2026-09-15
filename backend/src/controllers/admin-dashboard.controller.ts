@@ -20,6 +20,7 @@ import {
   adminNotificationQuerySchema,
   adminAuditLogQuerySchema,
 } from '../schemas/admin-dashboard.schema';
+import { assertAdminResourceAccess } from '../middleware/auth.middleware';
 import { AppError } from '../utils/app-error';
 
 export class AdminDashboardController {
@@ -87,6 +88,11 @@ export class AdminDashboardController {
     try {
       const { id } = req.params;
       const detail = await this.service.getVisaEnquiryById(id);
+
+      if (req.admin && !assertAdminResourceAccess(req.admin, (detail.enquiry as any)?.assignedAdminId)) {
+        throw new AppError('Access denied: Insufficient privileges for this enquiry.', 403, 'FORBIDDEN');
+      }
+
       res.status(200).json({
         success: true,
         data: detail,
@@ -108,6 +114,11 @@ export class AdminDashboardController {
         throw new AppError('Validation failed for visa status update.', 400, 'VALIDATION_ERROR', {
           fieldErrors: parseResult.error.flatten().fieldErrors,
         });
+      }
+
+      const existing = await this.service.getVisaEnquiryById(id);
+      if (req.admin && !assertAdminResourceAccess(req.admin, (existing.enquiry as any)?.assignedAdminId)) {
+        throw new AppError('Access denied: Insufficient privileges for this enquiry.', 403, 'FORBIDDEN');
       }
 
       const result = await this.service.updateVisaEnquiryStatus(id, parseResult.data, this.getActor(req));

@@ -5,12 +5,14 @@
 
 import { Router } from 'express';
 import { requireAuthenticatedAdmin, requireRole } from '../middleware/auth.middleware';
+import { csrfProtection } from '../middleware/csrf.middleware';
 import { adminDashboardController } from '../controllers/admin-dashboard.controller';
 
 const router = Router();
 
 router.use(requireAuthenticatedAdmin);
 router.use(requireRole('super_admin', 'admin_operator'));
+router.use(csrfProtection);
 
 router.get('/', (req, res, next) => {
   void adminDashboardController.listVisaEnquiries(req, res, next);
