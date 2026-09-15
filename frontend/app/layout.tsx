@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://citylineconsultancy.ae'),
@@ -75,6 +76,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
+        <AnalyticsTracker />
         <Navbar />
         <main id="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           {children}

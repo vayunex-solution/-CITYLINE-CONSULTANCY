@@ -118,6 +118,10 @@ export const envSchema = z.object({
   NOTIFICATION_SENT_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
   NOTIFICATION_EXHAUSTED_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
 
+  // --- Phase 12: Analytics Subsystem ---
+  ANALYTICS_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000), // 1 minute
+  ANALYTICS_RATE_LIMIT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(60), // 60 page views / min
+
   // Placeholders for future phases (optional)
   SESSION_SECRET: z.string().optional(),
 });

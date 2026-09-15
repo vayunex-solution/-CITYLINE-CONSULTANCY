@@ -8,6 +8,7 @@ import styles from './AdminShell.module.css';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/admin', icon: '📊' },
+  { label: 'Analytics', href: '/admin/analytics', icon: '📈' },
   { label: 'Visa Enquiries', href: '/admin/visa-enquiries', icon: '🛂' },
   { label: 'Job Vacancies', href: '/admin/jobs', icon: '💼' },
   { label: 'Job Applications', href: '/admin/applications', icon: '📋' },

@@ -242,6 +242,9 @@ export default function AdminDashboardPage() {
                 <Link href="/admin/testimonials" className={styles.btnSecondary}>
                   Curate Reviews
                 </Link>
+                <Link href="/admin/analytics" className={styles.btnSecondary}>
+                  Visitor Intelligence
+                </Link>
                 <Link href="/admin/audit-logs" className={styles.btnSecondary}>
                   Inspect Audit Logs
                 </Link>
