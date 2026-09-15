@@ -1,6 +1,13 @@
 'use client';
 
+/**
+ * CITYLINE CONSULTANCY — Testimonials Management Component
+ * Authenticated administration for client milestone accounts and reviews.
+ * Uses centralized adminFetch with HttpOnly cookies, CSRF protection, and zero localStorage secrets.
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
+import { adminFetch } from '@/lib/admin/admin-api';
 import styles from './TestimonialsAdmin.module.css';
 
 export interface AdminTestimonialItem {
@@ -43,9 +50,8 @@ const INITIAL_FORM: FormDataState = {
 };
 
 export function TestimonialsManager() {
-  const [authToken, setAuthToken] = useState<string>('');
   const [testimonials, setTestimonials] = useState<AdminTestimonialItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -64,60 +70,19 @@ export function TestimonialsManager() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<boolean>(false);
 
-  // Load token from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedToken = localStorage.getItem('clc_admin_token') || '';
-      setAuthToken(savedToken);
-    }
-  }, []);
-
-  const saveToken = (token: string) => {
-    setAuthToken(token);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('clc_admin_token', token);
-    }
-  };
-
-  const getHeaders = useCallback((): HeadersInit => {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (authToken.trim()) {
-      headers['Authorization'] = `Bearer ${authToken.trim()}`;
-    }
-    return headers;
-  }, [authToken]);
-
   const fetchTestimonials = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
       const params = new URLSearchParams();
       if (search.trim()) params.append('search', search.trim());
       if (statusFilter === 'published') params.append('status', 'published');
       if (statusFilter === 'unpublished') params.append('status', 'unpublished');
       params.append('limit', '50');
 
-      const res = await fetch(`${apiUrl}/admin/testimonials?${params.toString()}`, {
-        headers: getHeaders(),
-      });
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          throw new Error('Authentication required. Enter a valid admin operator/super_admin bearer token.');
-        }
-        if (res.status === 403) {
-          throw new Error('Insufficient permissions. Super Admin or Admin Operator role required.');
-        }
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || `Server returned ${res.status}`);
-      }
-
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        setTestimonials(json.data);
+      const res = await adminFetch<AdminTestimonialItem[]>(`/admin/testimonials?${params.toString()}`);
+      if (res.success && Array.isArray(res.data)) {
+        setTestimonials(res.data);
       } else {
         setTestimonials([]);
       }
@@ -127,7 +92,7 @@ export function TestimonialsManager() {
     } finally {
       setLoading(false);
     }
-  }, [getHeaders, search, statusFilter]);
+  }, [search, statusFilter]);
 
   useEffect(() => {
     fetchTestimonials();
@@ -135,9 +100,10 @@ export function TestimonialsManager() {
 
   const openCreateModal = () => {
     setEditingId(null);
-    const nextOrder = testimonials.length > 0 
-      ? Math.max(...testimonials.map(t => t.displayOrder)) + 1 
-      : 0;
+    const nextOrder =
+      testimonials.length > 0
+        ? Math.max(...testimonials.map((t) => t.displayOrder)) + 1
+        : 0;
     setFormData({
       ...INITIAL_FORM,
       displayOrder: nextOrder,
@@ -185,7 +151,6 @@ export function TestimonialsManager() {
 
     setFormSubmitting(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
       const payload = {
         clientName: formData.clientName.trim(),
         clientDesignation: formData.clientDesignation.trim() || null,
@@ -198,21 +163,16 @@ export function TestimonialsManager() {
         isPublished: Boolean(formData.isPublished),
       };
 
-      const url = editingId 
-        ? `${apiUrl}/admin/testimonials/${editingId}`
-        : `${apiUrl}/admin/testimonials`;
-
-      const method = editingId ? 'PATCH' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: getHeaders(),
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || `Request failed with status ${res.status}`);
+      if (editingId) {
+        await adminFetch(`/admin/testimonials/${editingId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await adminFetch('/admin/testimonials', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
       }
 
       setSuccess(editingId ? 'Testimonial successfully updated.' : 'Testimonial created.');
@@ -228,17 +188,10 @@ export function TestimonialsManager() {
 
   const handleTogglePublish = async (item: AdminTestimonialItem) => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-      const res = await fetch(`${apiUrl}/admin/testimonials/${item.id}`, {
+      await adminFetch(`/admin/testimonials/${item.id}`, {
         method: 'PATCH',
-        headers: getHeaders(),
         body: JSON.stringify({ isPublished: !item.isPublished }),
       });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || 'Failed to update publish state');
-      }
 
       setSuccess(`Testimonial ${!item.isPublished ? 'published' : 'unpublished'}.`);
       setTimeout(() => setSuccess(null), 3000);
@@ -264,24 +217,16 @@ export function TestimonialsManager() {
     newOrderList[index] = target;
     newOrderList[targetIndex] = current;
 
-    // Build reorder items array
     const items = newOrderList.map((item, idx) => ({
       id: item.id,
       displayOrder: idx,
     }));
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-      const res = await fetch(`${apiUrl}/admin/testimonials/reorder`, {
+      await adminFetch('/admin/testimonials/reorder', {
         method: 'PUT',
-        headers: getHeaders(),
         body: JSON.stringify({ items }),
       });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || 'Failed to reorder testimonials');
-      }
 
       setSuccess('Display order updated.');
       setTimeout(() => setSuccess(null), 3000);
@@ -295,16 +240,9 @@ export function TestimonialsManager() {
     if (!deleteConfirmId) return;
     setDeleting(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-      const res = await fetch(`${apiUrl}/admin/testimonials/${deleteConfirmId}`, {
+      await adminFetch(`/admin/testimonials/${deleteConfirmId}`, {
         method: 'DELETE',
-        headers: getHeaders(),
       });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error?.message || 'Failed to archive testimonial');
-      }
 
       setSuccess('Testimonial safely archived.');
       setTimeout(() => setSuccess(null), 3000);
@@ -329,25 +267,6 @@ export function TestimonialsManager() {
         </div>
         <button className={styles.btnPrimary} onClick={openCreateModal}>
           + Create Testimonial
-        </button>
-      </div>
-
-      {/* Auth Token Config Bar */}
-      <div className={styles.authBar}>
-        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-          Admin Bearer Token:
-        </span>
-        <input
-          type="password"
-          placeholder="Paste admin operator or super_admin JWT token..."
-          value={authToken}
-          onChange={(e) => saveToken(e.target.value)}
-        />
-        <button
-          className={styles.btnSecondary}
-          onClick={() => fetchTestimonials()}
-        >
-          Refresh Data
         </button>
       </div>
 

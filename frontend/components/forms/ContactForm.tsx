@@ -23,6 +23,8 @@ export function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const [reference, setReference] = useState('');
+
   const serviceOptions = [
     { value: 'freelance-visa', label: '2-Year Freelance Visa Dubai' },
     { value: 'visit-visa-30', label: '30-Day Visit Visa' },
@@ -60,8 +62,37 @@ export function ContactForm() {
     setErrorMessage('');
 
     try {
-      // Frontend-ready contract: Simulates asynchronous consultation request submission
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const res = await fetch('/api/v1/business-enquiries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone.trim(),
+          service: formData.service,
+          message: formData.message.trim(),
+          consent: formData.consent,
+        }),
+      });
+
+      const resData = await res.json();
+
+      if (!res.ok) {
+        const fieldErrs = resData.error?.details?.fieldErrors || resData.error?.fieldErrors;
+        if (fieldErrs) {
+          setErrors(fieldErrs);
+          setErrorMessage('Please correct the highlighted errors in the form.');
+        } else if (res.status === 429) {
+          setErrorMessage('Too many submissions received. Please wait a moment before trying again.');
+        } else {
+          setErrorMessage(resData.error?.message || resData.message || 'Submission failed. Please try again.');
+        }
+        return;
+      }
+
+      setReference(resData.data?.reference || '');
       setSubmitted(true);
     } catch {
       setErrorMessage('Unable to transmit enquiry. Please check your connection and try again.');
@@ -74,9 +105,14 @@ export function ContactForm() {
     return (
       <FormSuccess
         title="Consultation Request Received"
-        message="Thank you for contacting Cityline Consultancy. An advisory representative will review your enquiry and get in touch shortly."
+        message={
+          reference
+            ? `Thank you for contacting Cityline Consultancy. Your enquiry has been registered under Reference ID: ${reference}. An advisory representative will review your requirements and get in touch shortly.`
+            : 'Thank you for contacting Cityline Consultancy. An advisory representative will review your enquiry and get in touch shortly.'
+        }
         onReset={() => {
           setSubmitted(false);
+          setReference('');
           setFormData({ fullName: '', email: '', phone: '', service: '', message: '', consent: false });
         }}
       />

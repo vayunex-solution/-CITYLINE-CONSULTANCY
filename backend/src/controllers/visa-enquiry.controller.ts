@@ -7,10 +7,32 @@
 import { Request, Response, NextFunction } from 'express';
 import { visaEnquirySchema } from '../schemas/visa-enquiry.schema';
 import { visaEnquiryService, VisaEnquiryService } from '../services/visa-enquiry.service';
+import { visaServiceRepository, VisaServiceRepository } from '../repositories/visa-service.repository';
 import { AppError } from '../utils/app-error';
 
 export class VisaEnquiryController {
-  constructor(private service: VisaEnquiryService = visaEnquiryService) {}
+  constructor(
+    private service: VisaEnquiryService = visaEnquiryService,
+    private visaRepo: VisaServiceRepository = visaServiceRepository
+  ) {}
+
+  public async listServices(_req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const services = await this.visaRepo.findAllActive();
+      res.status(200).json({
+        success: true,
+        data: services.map((s) => ({
+          id: s.id,
+          serviceCode: s.service_code,
+          title: s.title,
+          slug: s.slug,
+          description: s.description,
+        })),
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
 
   public async submitEnquiry(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

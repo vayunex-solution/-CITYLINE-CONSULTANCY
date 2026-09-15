@@ -27,6 +27,16 @@ export interface SubmitApplicationResponse {
   message: string;
 }
 
+function getBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    return '';
+  }
+  if (process.env.BACKEND_URL) {
+    return process.env.BACKEND_URL.replace(/\/$/, '');
+  }
+  return 'http://127.0.0.1:5000';
+}
+
 /**
  * Normalizes backend DTO to frontend JobOpportunity interface
  */
@@ -78,7 +88,7 @@ export async function fetchPublishedJobs(params: {
   if (params.limit) query.set('limit', params.limit.toString());
 
   try {
-    const res = await fetch(`/api/v1/jobs?${query.toString()}`, {
+    const res = await fetch(`${getBaseUrl()}/api/v1/jobs?${query.toString()}`, {
       cache: 'no-store',
     });
 
@@ -143,7 +153,7 @@ export async function fetchPublishedJobs(params: {
  */
 export async function fetchJobBySlug(slug: string): Promise<JobDetailResponse | null> {
   try {
-    const res = await fetch(`/api/v1/jobs/${encodeURIComponent(slug)}`, {
+    const res = await fetch(`${getBaseUrl()}/api/v1/jobs/${encodeURIComponent(slug)}`, {
       cache: 'no-store',
     });
 
@@ -190,7 +200,7 @@ export async function submitJobApplication(
     headers['X-Idempotency-Key'] = idempotencyKey;
   }
 
-  const res = await fetch(`/api/v1/jobs/${encodeURIComponent(slug)}/apply`, {
+  const res = await fetch(`${getBaseUrl()}/api/v1/jobs/${encodeURIComponent(slug)}/apply`, {
     method: 'POST',
     body: formData,
     headers,

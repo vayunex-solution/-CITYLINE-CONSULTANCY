@@ -11,6 +11,7 @@ import jobRoutes from './job.routes';
 import adminJobRoutes from './admin-job.routes';
 import manpowerEnquiryRoutes from './manpower-enquiry.routes';
 import adminManpowerRoutes from './admin-manpower.routes';
+import businessEnquiryRoutes from './business-enquiry.routes';
 import testimonialRoutes from './testimonial.routes';
 import adminTestimonialRoutes from './admin-testimonial.routes';
 import adminDashboardRoutes from './admin-dashboard.routes';
@@ -30,6 +31,9 @@ apiRouter.use('/admin/auth', authRoutes);
 
 // Phase 6: Visa Enquiry + Document Upload System
 apiRouter.use('/visa-enquiries', visaEnquiryRoutes);
+
+// Business Setup Enquiries
+apiRouter.use('/business-enquiries', businessEnquiryRoutes);
 
 // Phase 8: Jobs & Recruitment System
 apiRouter.use('/jobs', jobRoutes);

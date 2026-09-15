@@ -10,6 +10,11 @@ import { visaEnquiryUploadMiddleware } from '../middleware/upload.middleware';
 
 const router = Router();
 
+// GET /api/v1/visa-enquiries/services
+router.get('/services', (req, res, next) => {
+  void visaEnquiryController.listServices(req, res, next);
+});
+
 // POST /api/v1/visa-enquiries
 router.post(
   '/',

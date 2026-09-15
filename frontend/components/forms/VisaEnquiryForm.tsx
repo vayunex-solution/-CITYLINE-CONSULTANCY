@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FormField } from './FormField';
 import { SelectField } from './SelectField';
 import { TextareaField } from './TextareaField';
@@ -39,11 +39,39 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
   const [referenceNumber, setReferenceNumber] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  const visaOptions = [
+  const [visaOptions, setVisaOptions] = useState([
     { value: 'freelance-visa', label: '2-Year Freelance Visa Dubai Assistance' },
     { value: 'visit-visa-30', label: '30-Day Visit Visa Assistance' },
     { value: 'visit-visa-60', label: '60-Day Visit Visa Assistance' },
-  ];
+  ]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadActiveServices() {
+      try {
+        const res = await fetch('/api/v1/visa-enquiries/services');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            if (isMounted) {
+              setVisaOptions(
+                json.data.map((s: any) => ({
+                  value: s.slug || s.serviceCode,
+                  label: s.title,
+                }))
+              );
+            }
+          }
+        }
+      } catch {
+        // Safe fallback to approved options
+      }
+    }
+    loadActiveServices();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const timelineOptions = [
     { value: 'immediate', label: 'Immediate (Within 2 weeks)' },

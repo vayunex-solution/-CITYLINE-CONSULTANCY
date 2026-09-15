@@ -1,17 +1,22 @@
 'use client';
 
+/**
+ * CITYLINE CONSULTANCY — Administrative Authentication Context & Provider
+ * Manages admin session lifecycle via HttpOnly cookie credentials and /admin/auth/me.
+ *
+ * GOVERNANCE:
+ * - ZERO storage of tokens in localStorage/sessionStorage.
+ * - Relies on server-controlled HttpOnly cookie session.
+ * - Handles 401 unauthenticated vs 403 unauthorized distinct states.
+ * - Authoritative server-side identity verification via /admin/auth/me.
+ */
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import {
-  AdminUser,
-  getStoredAdminToken,
-  setStoredAdminToken,
-  adminFetch,
-} from './admin-api';
+import { AdminUser, adminFetch } from './admin-api';
 
 interface AdminAuthContextType {
   user: AdminUser | null;
-  token: string;
   loading: boolean;
   login: (identity: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -23,7 +28,6 @@ const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefin
 
 export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
-  const [token, setToken] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -31,28 +35,16 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const isLoginPage = pathname === '/admin/login';
 
   const refreshProfile = useCallback(async () => {
-    const currentToken = getStoredAdminToken();
-    if (!currentToken) {
-      setUser(null);
-      setToken('');
-      setLoading(false);
-      return;
-    }
-
     try {
-      const res = await adminFetch<AdminUser>('/admin/auth/me');
-      if (res.success && res.data) {
-        setUser(res.data);
-        setToken(currentToken);
+      const res = await adminFetch<{ admin: AdminUser }>('/admin/auth/me');
+      if (res.success && res.data?.admin) {
+        setUser(res.data.admin);
       } else {
         setUser(null);
-        setToken('');
-        setStoredAdminToken('');
       }
     } catch {
+      // 401 or network failure implies unauthenticated session
       setUser(null);
-      setToken('');
-      setStoredAdminToken('');
     } finally {
       setLoading(false);
     }
@@ -83,11 +75,9 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
       if (res.success && res.data?.admin) {
         setUser(res.data.admin);
-        // If the server sets a cookie, or token is stored
-        // Note: For Authorization Bearer fallback we store any token
         router.push('/admin');
       } else {
-        throw new Error('Login failed: Invalid server response.');
+        throw new Error('Login failed: Invalid response payload.');
       }
     } finally {
       setLoading(false);
@@ -99,8 +89,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       await adminFetch('/admin/auth/logout', { method: 'POST' }).catch(() => {});
     } finally {
       setUser(null);
-      setToken('');
-      setStoredAdminToken('');
       router.push('/admin/login');
     }
   };
@@ -109,7 +97,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     <AdminAuthContext.Provider
       value={{
         user,
-        token,
         loading,
         login,
         logout,

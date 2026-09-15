@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getJobBySlug } from '@/lib/data/jobs';
+import { fetchJobBySlug } from '@/lib/jobs-api';
 import { Badge } from '@/components/ui/Badge';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
@@ -13,19 +13,20 @@ interface JobApplyPageProps {
   };
 }
 
-export function generateMetadata({ params }: JobApplyPageProps): Metadata {
-  const job = getJobBySlug(params.slug);
-  if (!job) return { title: 'Opportunity Not Found' };
+export async function generateMetadata({ params }: JobApplyPageProps): Promise<Metadata> {
+  const result = await fetchJobBySlug(params.slug);
+  if (!result?.job) return { title: 'Opportunity Not Found' };
 
   return {
-    title: `Apply: ${job.title}`,
-    description: `Submit your candidate profile for ${job.title} in ${job.location} via Cityline Consultancy.`,
+    title: `Apply: ${result.job.title}`,
+    description: `Submit your candidate profile for ${result.job.title} in ${result.job.location} via Cityline Consultancy.`,
   };
 }
 
-export default function JobApplyPage({ params }: JobApplyPageProps) {
-  const job = getJobBySlug(params.slug);
-  if (!job) notFound();
+export default async function JobApplyPage({ params }: JobApplyPageProps) {
+  const result = await fetchJobBySlug(params.slug);
+  if (!result?.job) notFound();
+  const job = result.job;
 
   return (
     <div style={{ paddingTop: 'var(--space-20)' }}>
