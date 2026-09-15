@@ -5,6 +5,8 @@ import { VisaCard } from '@/components/visa/VisaCard';
 import { Badge } from '@/components/ui/Badge';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
+
 export const metadata: Metadata = {
   title: 'UAE Visa Services & Residency Advisory',
   description:
@@ -16,31 +18,42 @@ export default function VisaServicesPage() {
     <div style={{ paddingTop: 'var(--space-20)' }}>
       <section className="section" style={{ background: 'var(--hero-mesh)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
-          <Badge variant="gold">Residency & Entry</Badge>
-          <h1
-            style={{
-              fontFamily: 'var(--font-family-display)',
-              fontSize: 'var(--text-4xl)',
-              fontWeight: 800,
-              color: 'var(--text-primary)',
-              marginTop: 'var(--space-4)',
-              marginBottom: 'var(--space-4)',
-            }}
-          >
-            UAE Visa Services & <span className="text-gradient-gold">Residency Advisory.</span>
-          </h1>
-          <p
-            style={{
-              fontSize: 'var(--text-lg)',
-              color: 'var(--text-secondary)',
-              maxWidth: '720px',
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              lineHeight: 1.7,
-            }}
-          >
-            Structured procedural support for skilled independent professionals seeking long-term 2-year Dubai residency, as well as flexible entry visit visas for exploratory and travel purposes.
-          </p>
+          <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'left' }}>
+            <Breadcrumb items={[{ label: 'Visa Services' }]} />
+          </div>
+
+          <div style={{ marginTop: 'var(--space-4)' }}>
+            <div style={{ display: 'inline-flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <Badge variant="gold">Residency & Entry</Badge>
+              <Badge variant="slate">Official Procedural Support</Badge>
+              <Badge variant="outline">Dubai & Northern Emirates</Badge>
+            </div>
+
+            <h1
+              style={{
+                fontFamily: 'var(--font-family-display)',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 800,
+                color: 'var(--text-primary)',
+                marginTop: 'var(--space-4)',
+                marginBottom: 'var(--space-4)',
+              }}
+            >
+              UAE Visa Services & <span className="text-gradient-gold">Residency Advisory.</span>
+            </h1>
+            <p
+              style={{
+                fontSize: 'var(--text-base)',
+                color: 'var(--text-secondary)',
+                maxWidth: '720px',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                lineHeight: 1.7,
+              }}
+            >
+              Structured procedural support for skilled independent professionals seeking long-term 2-year Dubai residency, as well as flexible entry visit visas for exploratory and travel purposes.
+            </p>
+          </div>
         </div>
       </section>
 

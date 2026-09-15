@@ -15,6 +15,11 @@ export const SEED_JOBS: JobOpportunity[] = [
     location: 'Dubai, UAE',
     type: 'Full-Time',
     isFeatured: true,
+    experienceYearsRequired: 2,
+    qualification: 'High School / Diploma in Hospitality Management',
+    salaryRange: 'AED 2,200 - 3,000 / Month',
+    benefits: 'Duty Meals + Accommodation + Medical Insurance + Transportation',
+    publishedAt: '2026-09-01',
     overview:
       'Opportunity for customer-oriented hospitality professionals to support guest arrival, check-in operations, and concierge coordination at a leading hospitality property in Dubai.',
     responsibilities: [
@@ -38,6 +43,11 @@ export const SEED_JOBS: JobOpportunity[] = [
     location: 'Abu Dhabi, UAE',
     type: 'Full-Time',
     isFeatured: true,
+    experienceYearsRequired: 1,
+    qualification: 'Basic Literacy / Secondary Education',
+    salaryRange: 'AED 1,300 - 1,700 / Month',
+    benefits: 'Company Accommodation + Transportation + Medical Insurance',
+    publishedAt: '2026-09-02',
     overview:
       'Seeking reliable hygiene and facility maintenance team members to maintain pristine standards across corporate offices and commercial complexes.',
     responsibilities: [
@@ -61,6 +71,11 @@ export const SEED_JOBS: JobOpportunity[] = [
     location: 'Dubai, UAE',
     type: 'Full-Time',
     isFeatured: true,
+    experienceYearsRequired: 2,
+    qualification: 'Trade Apprenticeship / Practical Masonry Certification',
+    salaryRange: 'AED 1,500 - 2,000 / Month',
+    benefits: 'Camp Accommodation + Site Transportation + Medical + Overtime',
+    publishedAt: '2026-09-03',
     overview:
       'Experienced masons required for active civil residential and commercial projects. Responsible for precise block laying, wall alignment, and exterior plastering.',
     responsibilities: [
@@ -84,6 +99,11 @@ export const SEED_JOBS: JobOpportunity[] = [
     location: 'Sharjah, UAE',
     type: 'Full-Time',
     isFeatured: false,
+    experienceYearsRequired: 2,
+    qualification: 'Vocational Trade Certificate (Steel Rebar / Civil)',
+    salaryRange: 'AED 1,500 - 2,100 / Month',
+    benefits: 'Camp Accommodation + Transport + PPE Kit + Medical Insurance',
+    publishedAt: '2026-09-04',
     overview:
       'Skilled steel reinforcement fixers needed for heavy structural foundations, columns, and elevated slabs on commercial development projects.',
     responsibilities: [
@@ -106,6 +126,11 @@ export const SEED_JOBS: JobOpportunity[] = [
     location: 'Dubai, UAE',
     type: 'Full-Time',
     isFeatured: false,
+    experienceYearsRequired: 2,
+    qualification: 'Practical Carpentry Trade Training / ITI Certificate',
+    salaryRange: 'AED 1,600 - 2,200 / Month',
+    benefits: 'Company Housing + Transport + Health Insurance + Gratuity',
+    publishedAt: '2026-09-05',
     overview:
       'Skilled formwork carpenters needed to construct, erect, and dismantle timber and system formwork for concrete columns, beams, and slabs.',
     responsibilities: [
@@ -128,6 +153,11 @@ export const SEED_JOBS: JobOpportunity[] = [
     location: 'Dubai, UAE',
     type: 'Full-Time',
     isFeatured: true,
+    experienceYearsRequired: 1,
+    qualification: 'Secondary School Certificate + Valid Motorcycle License',
+    salaryRange: 'AED 2,500 - 3,500 / Month',
+    benefits: 'Company Motorcycle + Fuel Allowance + SIM Card + Health Insurance',
+    publishedAt: '2026-09-06',
     overview:
       'Active opportunity for delivery riders to execute time-sensitive parcel, document, and retail deliveries across metropolitan Dubai delivery zones.',
     responsibilities: [
@@ -151,6 +181,11 @@ export const SEED_JOBS: JobOpportunity[] = [
     location: 'Dubai, UAE',
     type: 'Full-Time',
     isFeatured: false,
+    experienceYearsRequired: 2,
+    qualification: 'High School Certificate + Valid Driving License',
+    salaryRange: 'AED 3,000 - 4,500 / Month',
+    benefits: 'RTA Driver Permit Training + Fleet Vehicle + Medical Coverage',
+    publishedAt: '2026-09-07',
     overview:
       'Professional drivers seeking passenger transportation careers across Dubai. Comprehensive training and licensing coordination provided for qualified applicants.',
     responsibilities: [
@@ -174,6 +209,11 @@ export const SEED_JOBS: JobOpportunity[] = [
     location: 'Abu Dhabi / Dubai, UAE',
     type: 'Full-Time',
     isFeatured: false,
+    experienceYearsRequired: 3,
+    qualification: 'Heavy Transport Vehicle (Category 4) License',
+    salaryRange: 'AED 2,800 - 3,800 / Month',
+    benefits: 'Accommodation + National Highway Trip Allowances + Medical',
+    publishedAt: '2026-09-08',
     overview:
       'Long-haul and industrial transport drivers required for heavy goods vehicles, flatbeds, and container transport across UAE industrial and port corridors.',
     responsibilities: [

@@ -9,6 +9,8 @@ import { FAQAccordion } from '@/components/faq/FAQAccordion';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import { VisaCard } from '@/components/visa/VisaCard';
 
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
+
 export const metadata: Metadata = {
   title: '30-Day Visit Visa UAE Assistance',
   description:
@@ -26,39 +28,74 @@ export default function VisitVisa30DaysPage() {
       {/* Hero */}
       <section className="section" style={{ background: 'var(--hero-mesh)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
-          <Badge variant="gold">{service.tag}</Badge>
-          <h1
-            style={{
-              fontFamily: 'var(--font-family-display)',
-              fontSize: 'var(--text-4xl)',
-              fontWeight: 800,
-              color: 'var(--text-primary)',
-              marginTop: 'var(--space-4)',
-              marginBottom: 'var(--space-3)',
-            }}
-          >
-            {service.title}
-          </h1>
-          <p
-            style={{
-              fontSize: 'var(--text-lg)',
-              color: 'var(--text-secondary)',
-              maxWidth: '700px',
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              lineHeight: 1.6,
-              marginBottom: 'var(--space-6)',
-            }}
-          >
-            {service.description}
-          </p>
-          <div style={{ display: 'flex', gap: 'var(--space-4)', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Button href="/visa-enquiry" size="lg" variant="primary">
-              {service.ctaText}
-            </Button>
-            <Button href="/contact" size="lg" variant="glass">
-              Speak with an Advisor
-            </Button>
+          <div style={{ maxWidth: '850px', margin: '0 auto', textAlign: 'left' }}>
+            <Breadcrumb
+              items={[
+                { label: 'Visa Services', href: '/visa-services' },
+                { label: '30-Day Visit Visa' },
+              ]}
+            />
+          </div>
+
+          <div style={{ marginTop: 'var(--space-4)' }}>
+            <div style={{ display: 'inline-flex', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <Badge variant="gold">{service.tag}</Badge>
+              <Badge variant="slate">Short-Term Tourism & Visits</Badge>
+              <Badge variant="outline">Fast Document Vetting</Badge>
+            </div>
+
+            <h1
+              style={{
+                fontFamily: 'var(--font-family-display)',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 800,
+                color: 'var(--text-primary)',
+                marginTop: 'var(--space-4)',
+                marginBottom: 'var(--space-3)',
+              }}
+            >
+              {service.title}
+            </h1>
+            <p
+              style={{
+                fontSize: 'var(--text-base)',
+                color: 'var(--text-secondary)',
+                maxWidth: '700px',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                lineHeight: 1.6,
+                marginBottom: 'var(--space-6)',
+              }}
+            >
+              {service.description}
+            </p>
+            <div style={{ display: 'flex', gap: 'var(--space-4)', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Button href="/visa-enquiry" size="lg" variant="primary">
+                {service.ctaText}
+              </Button>
+              <a
+                href="https://wa.me/971501234567?text=Hello%20Cityline,%20I%20am%20inquiring%20about%20the%2030-Day%20UAE%20Visit%20Visa."
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.85rem 1.8rem',
+                  borderRadius: 'var(--radius-full)',
+                  background: '#25d366',
+                  color: '#0b1e13',
+                  fontWeight: 700,
+                  fontSize: 'var(--text-base)',
+                  textDecoration: 'none',
+                }}
+              >
+                <span>💬</span> WhatsApp Enquiry
+              </a>
+              <Button href="/contact" size="lg" variant="glass">
+                Speak with an Advisor
+              </Button>
+            </div>
           </div>
         </div>
       </section>
