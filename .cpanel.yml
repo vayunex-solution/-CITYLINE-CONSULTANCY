@@ -14,7 +14,7 @@
 deployment:
   tasks:
     # Set deployment target path to public_html (main domain document root)
-    - export DEPLOYPATH=${DEPLOYPATH:-$HOME/public_html}
+    - export DEPLOYPATH=/home/cityline/public_html
     - /bin/mkdir -p $DEPLOYPATH
 
     # Copy exclusively the static UI production build into public_html
