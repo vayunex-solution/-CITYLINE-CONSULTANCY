@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/Badge';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
@@ -11,17 +11,11 @@ export const metadata: Metadata = {
     'Browse verified UAE job opportunities across hospitality, cleaning, construction trades, delivery, and professional transport fleets.',
 };
 
-export default function JobsPage({
-  searchParams,
-}: {
-  searchParams: { category?: string };
-}) {
-  const initialCategory = searchParams.category || '';
-
+export default function JobsPage() {
   return (
-    <div style={{ paddingTop: 'var(--space-20)' }}>
+    <div style={{ paddingTop: '72px' }}>
       {/* Hero */}
-      <section className="section" style={{ background: 'var(--hero-mesh)' }}>
+      <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'left' }}>
             <Breadcrumb items={[{ label: 'Current Jobs' }]} />
@@ -65,7 +59,9 @@ export default function JobsPage({
       {/* Main Listing Experience */}
       <section className="section">
         <div className="container">
-          <JobList initialCategory={initialCategory} showFilters={true} />
+          <Suspense fallback={<div className="container" style={{ minHeight: '300px' }} />}>
+            <JobList showFilters={true} />
+          </Suspense>
         </div>
       </section>
 

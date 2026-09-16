@@ -1,12 +1,15 @@
 import { NavItem } from '../types/website.types';
 
 export const PRIMARY_NAV_ITEMS: NavItem[] = [
-  { label: 'Home', href: '/' },
-  { label: 'About', href: '/about' },
   {
-    label: 'Visa Services',
+    label: 'Services',
     href: '/visa-services',
     children: [
+      {
+        label: 'All Visa Services',
+        href: '/visa-services',
+        description: 'Explore all residency and visit visa options.',
+      },
       {
         label: '2-Year Freelance Visa',
         href: '/visa-services/freelance-visa',
@@ -22,13 +25,22 @@ export const PRIMARY_NAV_ITEMS: NavItem[] = [
         href: '/visa-services/visit-visa-60-days',
         description: 'Extended stay for career and business exploration.',
       },
+      {
+        label: 'Business Setup in UAE',
+        href: '/business-setup',
+        description: '100% foreign ownership company formation & PRO.',
+      },
+      {
+        label: 'Manpower Recruitment',
+        href: '/recruitment',
+        description: 'Volume manpower deployment for UAE employers.',
+      },
     ],
   },
-  { label: 'Recruitment', href: '/recruitment' },
   { label: 'Jobs', href: '/jobs' },
+  { label: 'Recruitment', href: '/recruitment' },
   { label: 'Business Setup', href: '/business-setup' },
-  { label: 'Testimonials', href: '/testimonials' },
-  { label: 'FAQ', href: '/faq' },
+  { label: 'About Us', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
 

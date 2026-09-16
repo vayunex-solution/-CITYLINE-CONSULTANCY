@@ -44,9 +44,9 @@ export default function AboutPage() {
   ];
 
   return (
-    <div style={{ paddingTop: 'var(--space-20)' }}>
+    <div style={{ paddingTop: '72px' }}>
       {/* Hero Section */}
-      <section className="section" style={{ background: 'var(--hero-mesh)' }}>
+      <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <Badge variant="gold">About Cityline</Badge>
           <h1

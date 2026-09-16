@@ -50,7 +50,9 @@ export async function TestimonialsSection() {
               border: '1px solid var(--border-glass)',
             }}
           >
-            <span style={{ fontSize: '2.5rem' }} aria-hidden="true">🌟</span>
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
             <h3
               style={{
                 fontFamily: 'var(--font-family-display)',

@@ -375,15 +375,13 @@ export default function AdminJobsPage() {
             </div>
 
             <form onSubmit={handleFormSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                    Job Title *
-                  </label>
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Job Title *</label>
                   <input
                     type="text"
                     required
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-default)', background: 'var(--surface-base)', color: 'var(--text-primary)' }}
+                    className={styles.formInput}
                     value={formData.title}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -396,25 +394,21 @@ export default function AdminJobsPage() {
                   />
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                    URL Slug *
-                  </label>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>URL Slug *</label>
                   <input
                     type="text"
                     required
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-default)', background: 'var(--surface-base)', color: 'var(--text-primary)' }}
+                    className={styles.formInput}
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                   />
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                    Category *
-                  </label>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Category *</label>
                   <select
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-default)', background: 'var(--surface-base)', color: 'var(--text-primary)' }}
+                    className={styles.formSelect}
                     value={formData.categoryId}
                     onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value) })}
                   >
@@ -424,25 +418,34 @@ export default function AdminJobsPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                    Location *
-                  </label>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Location *</label>
                   <input
                     type="text"
                     required
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-default)', background: 'var(--surface-base)', color: 'var(--text-primary)' }}
+                    className={styles.formInput}
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   />
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                    Status *
-                  </label>
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Employment Type</label>
                   <select
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-default)', background: 'var(--surface-base)', color: 'var(--text-primary)' }}
+                    className={styles.formSelect}
+                    value={formData.employmentType}
+                    onChange={(e) => setFormData({ ...formData, employmentType: e.target.value })}
+                  >
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Contract">Contract</option>
+                  </select>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Status *</label>
+                  <select
+                    className={styles.formSelect}
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
@@ -453,8 +456,8 @@ export default function AdminJobsPage() {
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', paddingTop: '20px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                <div className={styles.formGrid1col}>
+                  <label className={styles.formCheckboxLabel}>
                     <input
                       type="checkbox"
                       checked={formData.isFeatured}
@@ -465,27 +468,23 @@ export default function AdminJobsPage() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: 'var(--space-4)' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                  Description *
-                </label>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Description *</label>
                 <textarea
                   rows={3}
                   required
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-default)', background: 'var(--surface-base)', color: 'var(--text-primary)' }}
+                  className={styles.formTextarea}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
 
-              <div style={{ marginBottom: 'var(--space-4)' }}>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '4px' }}>
-                  Requirements *
-                </label>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Requirements *</label>
                 <textarea
                   rows={3}
                   required
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-default)', background: 'var(--surface-base)', color: 'var(--text-primary)' }}
+                  className={styles.formTextarea}
                   value={formData.requirements}
                   onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
                 />

@@ -5,9 +5,15 @@ node_modules/
 
 # Build Outputs
 dist/
+!shared/dist/
+!shared/dist/**
+!backend/dist/
+!backend/dist/**
 build/
 .next/
 out/
+!frontend/out/
+!frontend/out/**
 *.tsbuildinfo
 
 # Environment & Secrets (Never commit credentials)
@@ -52,3 +58,5 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+scratch/
+frontend/scratch/

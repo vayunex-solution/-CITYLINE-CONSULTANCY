@@ -167,7 +167,9 @@ export default function ContactPage() {
                         flexShrink: 0,
                       }}
                     >
-                      🏢
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h1M9 11h1M9 15h1M14 7h1M14 11h1M14 15h1" />
+                      </svg>
                     </div>
                     <div>
                       <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--color-fg)', margin: 0 }}>
@@ -208,7 +210,9 @@ export default function ContactPage() {
                         flexShrink: 0,
                       }}
                     >
-                      🛡️
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                      </svg>
                     </div>
                     <div>
                       <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--color-fg)', margin: 0 }}>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { JobFilters } from './JobFilters';
 import { JobCard } from './JobCard';
 import { Button } from '@/components/ui/Button';
@@ -18,8 +19,10 @@ export function JobList({
   limit = 12,
   showFilters = true,
 }: JobListProps) {
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams ? searchParams.get('category') || '' : '';
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory || categoryFromUrl);
   const [selectedLocation, setSelectedLocation] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -132,7 +135,10 @@ export function JobList({
             gap: 'var(--space-4)',
           }}
         >
-          <span style={{ fontSize: '2.5rem' }} aria-hidden="true">⚠️</span>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
           <h3 style={{ fontSize: 'var(--text-xl)', fontWeight: 700 }}>Unable to Load Opportunities</h3>
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', maxWidth: '460px' }}>
             We encountered a temporary connection issue while retrieving vacancies. Please try again.
@@ -201,7 +207,10 @@ export function JobList({
             gap: 'var(--space-4)',
           }}
         >
-          <span style={{ fontSize: '2.5rem' }} aria-hidden="true">🔍</span>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
           <h3 style={{ fontSize: 'var(--text-xl)', fontWeight: 700 }}>No Opportunities Found</h3>
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', maxWidth: '460px' }}>
             No active vacancies currently match your search criteria. Try modifying your search keywords or resetting filters.

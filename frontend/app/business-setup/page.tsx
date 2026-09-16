@@ -20,9 +20,9 @@ export default function BusinessSetupPage() {
   const businessFaqs = getFAQsByCategory('business');
 
   return (
-    <div style={{ paddingTop: 'var(--space-20)' }}>
+    <div style={{ paddingTop: '72px' }}>
       {/* Hero */}
-      <section className="section" style={{ background: 'var(--hero-mesh)' }}>
+      <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <Badge variant="gold">Commercial Advisory</Badge>
           <h1

@@ -438,7 +438,7 @@ export default function AdminManpowerPage() {
                   </h3>
                   <textarea
                     rows={3}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid var(--border-default)', background: 'var(--surface-base)', color: 'var(--text-primary)', fontSize: '12px' }}
+                    className={styles.formTextarea}
                     value={adminNotes}
                     onChange={(e) => setAdminNotes(e.target.value)}
                     placeholder="Internal recruiter coordination notes..."

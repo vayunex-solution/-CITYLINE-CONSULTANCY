@@ -1,11 +1,10 @@
 /** @type {import('next').NextConfig} */
+const isExport = process.env.NEXT_EXPORT === 'true';
+
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   transpilePackages: ['@cityline/shared'],
-  // Note: 'output: export' can be activated if cPanel requires pure static HTML hosting.
-  // Kept as standard Next.js build during development pending cPanel host inspection.
-  // output: process.env.NEXT_EXPORT === 'true' ? 'export' : undefined,
   eslint: {
     // Avoid blocking build during CI if non-critical lint rules trigger
     ignoreDuringBuilds: false,
@@ -14,40 +13,50 @@ const nextConfig = {
     // Strictly fail builds on type errors
     ignoreBuildErrors: false,
   },
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
-          },
-        ],
-      },
-    ];
-  },
-  async rewrites() {
-    const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:5000';
-    return [
-      {
-        source: '/api/v1/:path*',
-        destination: `${backendUrl}/api/v1/:path*`,
-      },
-    ];
-  },
+  ...(isExport
+    ? {
+        output: 'export',
+        trailingSlash: true,
+        images: {
+          unoptimized: true,
+        },
+      }
+    : {
+        async headers() {
+          return [
+            {
+              source: '/(.*)',
+              headers: [
+                {
+                  key: 'X-Frame-Options',
+                  value: 'DENY',
+                },
+                {
+                  key: 'X-Content-Type-Options',
+                  value: 'nosniff',
+                },
+                {
+                  key: 'Referrer-Policy',
+                  value: 'strict-origin-when-cross-origin',
+                },
+                {
+                  key: 'Permissions-Policy',
+                  value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
+                },
+              ],
+            },
+          ];
+        },
+        async rewrites() {
+          const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:5000';
+          return [
+            {
+              source: '/api/v1/:path*',
+              destination: `${backendUrl}/api/v1/:path*`,
+            },
+          ];
+        },
+      }),
 };
 
 export default nextConfig;

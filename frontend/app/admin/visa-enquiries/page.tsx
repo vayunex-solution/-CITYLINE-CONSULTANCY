@@ -135,8 +135,23 @@ export default function AdminVisaEnquiriesPage() {
         </div>
       </div>
 
-      {error && <div className={styles.errorBanner}>⚠️ {error}</div>}
-      {success && <div className={styles.successBanner}>✓ {success}</div>}
+      {error && (
+        <div className={styles.errorBanner}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className={styles.successBanner}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          {success}
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className={styles.toolbar}>
@@ -213,8 +228,11 @@ export default function AdminVisaEnquiriesPage() {
                   <td>{item.applicantCount}</td>
                   <td>{item.nationality || '—'}</td>
                   <td>
-                    <span className={styles.badge} style={{ background: 'var(--surface-subtle)' }}>
-                      📎 {item.documentCount} {item.documentCount === 1 ? 'file' : 'files'}
+                    <span className={styles.badge} style={{ background: 'var(--surface-subtle)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                      </svg>
+                      {item.documentCount} {item.documentCount === 1 ? 'file' : 'files'}
                     </span>
                   </td>
                   <td>
@@ -374,8 +392,12 @@ export default function AdminVisaEnquiriesPage() {
                       ))}
                     </div>
                   )}
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: 'var(--space-2)' }}>
-                    🔒 Document filesystem keys are protected in accordance with privacy and storage policies. Public download access is prohibited.
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: 'var(--space-2)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span>Document filesystem keys are protected in accordance with privacy and storage policies. Public download access is prohibited.</span>
                   </p>
                 </div>
 

@@ -17,9 +17,9 @@ export const metadata: Metadata = {
 
 export default function RecruitmentPage() {
   return (
-    <div style={{ paddingTop: 'var(--space-20)' }}>
+    <div style={{ paddingTop: '72px' }}>
       {/* Hero */}
-      <section className="section" style={{ background: 'var(--hero-mesh)' }}>
+      <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <Badge variant="gold">Workforce Mobility</Badge>
           <h1

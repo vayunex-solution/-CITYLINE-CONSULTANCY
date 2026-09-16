@@ -28,17 +28,20 @@ export class BusinessEnquiryController {
         });
       }
 
-      const result = await this.service.submitEnquiry(parseResult.data, {
+      const rawFiles = (req.files as Express.Multer.File[]) || [];
+
+      const result = await this.service.submitEnquiry(parseResult.data, rawFiles, {
         clientIp: req.ip || req.socket.remoteAddress,
         requestId: (req.headers['x-request-id'] as string) || undefined,
       });
 
       res.status(201).json({
         success: true,
-        message: 'Your business setup consultation enquiry has been submitted successfully.',
+        message: 'Your consultation enquiry has been submitted successfully.',
         data: {
           reference: result.reference,
           service: result.service,
+          documentsCount: result.documentsCount,
         },
       });
     } catch (err) {

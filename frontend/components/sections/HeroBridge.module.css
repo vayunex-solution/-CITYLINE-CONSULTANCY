@@ -1,0 +1,128 @@
+.wrapper {
+  background: var(--surface-elevated);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.bridgeBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.origin,
+.destination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.flagRoundel {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.countryName {
+  font-family: var(--font-family-display);
+  font-size: var(--text-base);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.countryTag {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.connector {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.connectorLine {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-gold-primary), transparent);
+}
+
+.connectorCenter {
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.connectorLogo {
+  font-family: var(--font-family-display);
+  font-size: var(--text-sm);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--accent-gold-primary);
+}
+
+.connectorTag {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.connectorSub {
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-gold-primary);
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.stat {
+  flex: 1;
+  padding: var(--space-4) var(--space-4);
+  text-align: center;
+  border-right: 1px solid var(--border-subtle);
+  transition: background 0.2s ease;
+}
+
+.stat:last-child {
+  border-right: none;
+}
+
+.stat:hover {
+  background: rgba(179, 135, 27, 0.04);
+}
+
+.statValue {
+  font-family: var(--font-family-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--accent-gold-primary);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+}

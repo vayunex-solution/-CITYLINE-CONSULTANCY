@@ -15,9 +15,22 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  if (pathname?.startsWith('/admin')) {
-    return null;
-  }
+  const dropdownTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const dropdownContainerRef = React.useRef<HTMLDivElement | null>(null);
+
+  const handleDropdownEnter = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
+    setDropdownOpen(true);
+  };
+
+  const handleDropdownLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setDropdownOpen(false);
+    }, 200);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,6 +44,38 @@ export function Navbar() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownContainerRef.current &&
+        !dropdownContainerRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (dropdownTimeoutRef.current) {
+        clearTimeout(dropdownTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Close dropdown when route changes
+  useEffect(() => {
+    setDropdownOpen(false);
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
+  }, [pathname]);
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <>
@@ -57,9 +102,10 @@ export function Navbar() {
                   return (
                     <div
                       key={item.label}
+                      ref={dropdownContainerRef}
                       className={styles.dropdownWrapper}
-                      onMouseEnter={() => setDropdownOpen(true)}
-                      onMouseLeave={() => setDropdownOpen(false)}
+                      onMouseEnter={handleDropdownEnter}
+                      onMouseLeave={handleDropdownLeave}
                     >
                       <button
                         type="button"
@@ -68,14 +114,34 @@ export function Navbar() {
                         }`}
                         aria-expanded={dropdownOpen}
                         aria-haspopup="true"
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        onClick={() => {
+                          if (dropdownTimeoutRef.current) {
+                            clearTimeout(dropdownTimeoutRef.current);
+                          }
+                          setDropdownOpen((prev) => !prev);
+                        }}
                       >
                         <span>{item.label}</span>
-                        <span aria-hidden="true" style={{ fontSize: '0.65rem' }}>▼</span>
+                        <svg
+                          className={`${styles.dropdownChevron} ${dropdownOpen ? styles.dropdownChevronOpen : ''}`}
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <polyline points="2,4 6,8 10,4" />
+                        </svg>
                       </button>
 
                       {dropdownOpen && (
-                        <div className={styles.dropdownMenu}>
+                        <div
+                          className={styles.dropdownMenu}
+                          onMouseEnter={handleDropdownEnter}
+                          onMouseLeave={handleDropdownLeave}
+                        >
                           <Link
                             href={item.href}
                             className={styles.dropdownItem}

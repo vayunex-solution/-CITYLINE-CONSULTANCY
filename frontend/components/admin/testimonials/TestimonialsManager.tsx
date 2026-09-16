@@ -255,46 +255,139 @@ export function TestimonialsManager() {
     }
   };
 
+  const totalCount = testimonials.length;
+  const publishedCount = testimonials.filter((t) => t.isPublished).length;
+  const draftCount = testimonials.filter((t) => !t.isPublished).length;
+  const avgRating = totalCount > 0
+    ? (testimonials.reduce((sum, t) => sum + (t.rating || 5), 0) / totalCount).toFixed(1)
+    : '5.0';
+
   return (
-    <div className={styles.adminContainer}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div className={styles.titleGroup}>
-          <h1>Testimonials Management</h1>
+    <div className={styles.pageContainer}>
+      {/* Page Header */}
+      <div className={styles.pageHeader}>
+        <div className={styles.titleArea}>
+          <div className={styles.headerBadge}>
+            <span>⭐ Client Feedback</span>
+          </div>
+          <h1 className={styles.title}>Testimonials Management</h1>
           <p className={styles.subtitle}>
-            Admin curation for client milestone accounts and reviews. Strictly verified content only.
+            Curate and publish authentic, verified client reviews and company success milestones across UAE services.
           </p>
         </div>
         <button className={styles.btnPrimary} onClick={openCreateModal}>
-          + Create Testimonial
+          <span>+</span> Add Testimonial
         </button>
       </div>
 
-      {/* Notifications */}
-      {error && <div className={styles.alertError}>⚠️ {error}</div>}
-      {success && <div className={styles.alertSuccess}>✓ {success}</div>}
-
-      {/* Toolbar / Filters */}
-      <div className={styles.toolbar}>
-        <div className={styles.searchGroup}>
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="Search by client, company, content..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <select
-            className={styles.selectInput}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-          >
-            <option value="all">All Statuses</option>
-            <option value="published">Published Only</option>
-            <option value="unpublished">Draft / Unpublished</option>
-          </select>
+      {/* KPI Stats Ribbon */}
+      <div className={styles.kpiGrid}>
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiIconBox}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+            </svg>
+          </div>
+          <div className={styles.kpiContent}>
+            <span className={styles.kpiLabel}>Total Reviews</span>
+            <span className={styles.kpiValue}>{totalCount}</span>
+          </div>
         </div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiIconBox} style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--status-success)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div className={styles.kpiContent}>
+            <span className={styles.kpiLabel}>Published Live</span>
+            <span className={styles.kpiValue}>{publishedCount}</span>
+          </div>
+        </div>
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiIconBox} style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--status-warning)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </div>
+          <div className={styles.kpiContent}>
+            <span className={styles.kpiLabel}>Average Rating</span>
+            <span className={styles.kpiValue}>{avgRating} / 5.0</span>
+          </div>
+        </div>
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiIconBox} style={{ background: 'rgba(148, 163, 184, 0.1)', color: 'var(--text-muted)' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+          </div>
+          <div className={styles.kpiContent}>
+            <span className={styles.kpiLabel}>Draft / Pending</span>
+            <span className={styles.kpiValue}>{draftCount}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Alerts */}
+      {error && (
+        <div className={styles.alertError}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className={styles.alertSuccess}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          {success}
+        </div>
+      )}
+
+      {/* Toolbar & Filters */}
+      <div className={styles.toolbar}>
+        <div className={styles.filterControls}>
+          <div className={styles.searchBox}>
+            <span className={styles.searchIcon} aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="Search by client, company, quote..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.statusFilterTabs}>
+            <button
+              className={`${styles.filterTab} ${statusFilter === 'all' ? styles.filterTabActive : ''}`}
+              onClick={() => setStatusFilter('all')}
+            >
+              All ({totalCount})
+            </button>
+            <button
+              className={`${styles.filterTab} ${statusFilter === 'published' ? styles.filterTabActive : ''}`}
+              onClick={() => setStatusFilter('published')}
+            >
+              Published ({publishedCount})
+            </button>
+            <button
+              className={`${styles.filterTab} ${statusFilter === 'unpublished' ? styles.filterTabActive : ''}`}
+              onClick={() => setStatusFilter('unpublished')}
+            >
+              Drafts ({draftCount})
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.recordsCount}>
           Showing {testimonials.length} {testimonials.length === 1 ? 'record' : 'records'}
         </div>
       </div>
@@ -305,119 +398,151 @@ export function TestimonialsManager() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th style={{ width: '80px' }}>Order</th>
-                <th>Client / Company</th>
-                <th>Category</th>
-                <th style={{ minWidth: '240px' }}>Testimonial Quote</th>
+                <th style={{ width: '70px' }}>Order</th>
+                <th>Client / Organization</th>
+                <th>Service Category</th>
+                <th>Client Testimonial</th>
                 <th>Rating</th>
                 <th>Status</th>
-                <th style={{ textAlign: 'right', minWidth: '180px' }}>Actions</th>
+                <th style={{ textAlign: 'right', width: '190px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading && testimonials.length === 0 ? (
                 <tr>
                   <td colSpan={7} className={styles.emptyState}>
-                    Loading testimonials...
+                    Loading client testimonials from database...
                   </td>
                 </tr>
               ) : testimonials.length === 0 ? (
                 <tr>
                   <td colSpan={7} className={styles.emptyState}>
-                    No testimonials found. Click &quot;+ Create Testimonial&quot; to add genuine, verified client feedback.
+                    No testimonials found. Click &quot;+ Add Testimonial&quot; to publish verified client feedback.
                   </td>
                 </tr>
               ) : (
-                testimonials.map((item, index) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className={styles.orderControls}>
-                        <button
-                          className={styles.orderBtn}
-                          disabled={index === 0}
-                          onClick={() => handleMoveOrder(index, 'up')}
-                          title="Move up"
-                        >
-                          ▲
-                        </button>
-                        <span style={{ fontSize: '11px', fontWeight: 600, minWidth: '16px', textAlign: 'center' }}>
-                          {item.displayOrder}
+                testimonials.map((item, index) => {
+                  const initials = item.clientName
+                    .split(' ')
+                    .map((n) => n[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase() || 'CL';
+
+                  return (
+                    <tr key={item.id}>
+                      {/* Order Controls */}
+                      <td>
+                        <div className={styles.orderCell}>
+                          <span className={styles.orderBadge}>#{item.displayOrder}</span>
+                          <div className={styles.orderControls}>
+                            <button
+                              className={styles.orderBtn}
+                              disabled={index === 0}
+                              onClick={() => handleMoveOrder(index, 'up')}
+                              title="Move up"
+                              aria-label="Move up"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              className={styles.orderBtn}
+                              disabled={index === testimonials.length - 1}
+                              onClick={() => handleMoveOrder(index, 'down')}
+                              title="Move down"
+                              aria-label="Move down"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Client Info */}
+                      <td>
+                        <div className={styles.clientCell}>
+                          <div className={styles.clientAvatar}>
+                            {initials}
+                          </div>
+                          <div className={styles.clientInfo}>
+                            <span className={styles.clientName}>{item.clientName}</span>
+                            <span className={styles.clientSubtitle}>
+                              {[item.clientDesignation, item.companyName].filter(Boolean).join(' • ') || 'Verified Client'}
+                            </span>
+                            {item.clientLocation && (
+                              <span className={styles.clientLocation}>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                                </svg>
+                                {item.clientLocation}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Service Category */}
+                      <td>
+                        <span className={styles.categoryBadge}>
+                          {item.serviceCategory || 'General'}
                         </span>
-                        <button
-                          className={styles.orderBtn}
-                          disabled={index === testimonials.length - 1}
-                          onClick={() => handleMoveOrder(index, 'down')}
-                          title="Move down"
-                        >
-                          ▼
-                        </button>
-                      </div>
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{item.clientName}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        {[item.clientDesignation, item.companyName, item.clientLocation]
-                          .filter(Boolean)
-                          .join(' • ') || '—'}
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {item.serviceCategory || 'General'}
-                      </span>
-                    </td>
-                    <td>
-                      <p
-                        style={{
-                          fontSize: '12px',
-                          color: 'var(--text-muted)',
-                          lineHeight: 1.4,
-                          maxWidth: '360px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                        }}
-                      >
-                        &ldquo;{item.testimonialText}&rdquo;
-                      </p>
-                    </td>
-                    <td>
-                      <span style={{ color: 'var(--accent-gold-primary)', fontWeight: 600, fontSize: '12px' }}>
-                        {'★'.repeat(item.rating || 5)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={item.isPublished ? styles.badgePublished : styles.badgeDraft}>
-                        {item.isPublished ? '● Published' : '○ Draft'}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div className={styles.actionGroup} style={{ justifyContent: 'flex-end' }}>
-                        <button
-                          className={styles.btnSecondary}
-                          onClick={() => handleTogglePublish(item)}
-                          title={item.isPublished ? 'Unpublish' : 'Publish'}
-                        >
-                          {item.isPublished ? 'Unpublish' : 'Publish'}
-                        </button>
-                        <button
-                          className={styles.btnSecondary}
-                          onClick={() => openEditModal(item)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className={styles.btnDanger}
-                          onClick={() => setDeleteConfirmId(item.id)}
-                        >
-                          Archive
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+
+                      {/* Quote */}
+                      <td>
+                        <div className={styles.quoteCell}>
+                          <p className={styles.quoteText} title={item.testimonialText}>
+                            &ldquo;{item.testimonialText}&rdquo;
+                          </p>
+                        </div>
+                      </td>
+
+                      {/* Rating */}
+                      <td>
+                        <div className={styles.ratingCell}>
+                          <span className={styles.stars}>{'★'.repeat(item.rating || 5)}</span>
+                          <span className={styles.ratingScore}>{item.rating || 5}.0</span>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td>
+                        <span className={item.isPublished ? styles.badgePublished : styles.badgeDraft}>
+                          <span className={styles.statusDotLive} />
+                          {item.isPublished ? 'Published' : 'Draft'}
+                        </span>
+                      </td>
+
+                      {/* Action Buttons */}
+                      <td style={{ textAlign: 'right' }}>
+                        <div className={styles.actionGroup}>
+                          <button
+                            className={styles.btnActionToggle}
+                            onClick={() => handleTogglePublish(item)}
+                            title={item.isPublished ? 'Unpublish from website' : 'Publish to website'}
+                          >
+                            {item.isPublished ? 'Hide' : 'Publish'}
+                          </button>
+                          <button
+                            className={styles.btnActionEdit}
+                            onClick={() => openEditModal(item)}
+                            title="Edit details"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className={styles.btnActionDelete}
+                            onClick={() => setDeleteConfirmId(item.id)}
+                            title="Archive"
+                          >
+                            Archive
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -430,116 +555,113 @@ export function TestimonialsManager() {
           <div className={styles.modalDialog} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2 className={styles.modalTitle}>
-                {editingId ? 'Edit Testimonial' : 'New Testimonial'}
+                {editingId ? 'Edit Testimonial' : 'New Client Testimonial'}
               </h2>
               <button className={styles.closeBtn} onClick={closeModal}>
                 ✕
               </button>
             </div>
 
-            {formError && <div className={styles.alertError}>⚠️ {formError}</div>}
+            {formError && (
+              <div className={styles.alertError}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                {formError}
+              </div>
+            )}
 
             <form onSubmit={handleFormSubmit}>
               <div className={styles.formGrid}>
-                <div>
-                  <label className={styles.formLabel}>Client Name *</label>
+                <div className={styles.formGroup}>
+                  <label>Client Full Name *</label>
                   <input
                     type="text"
                     required
-                    className={styles.formInput}
-                    placeholder="e.g., Rajesh Sharma"
+                    placeholder="e.g. Rajesh Sharma"
                     value={formData.clientName}
                     onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className={styles.formLabel}>Designation / Role</label>
+                <div className={styles.formGroup}>
+                  <label>Client Designation / Role</label>
                   <input
                     type="text"
-                    className={styles.formInput}
-                    placeholder="e.g., Managing Partner"
+                    placeholder="e.g. Operations Director"
                     value={formData.clientDesignation}
                     onChange={(e) => setFormData({ ...formData, clientDesignation: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className={styles.formLabel}>Company Name</label>
+              </div>
+
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label>Company / Organization</label>
                   <input
                     type="text"
-                    className={styles.formInput}
-                    placeholder="e.g., Apex Logistics LLC"
+                    placeholder="e.g. Apex Facilities Management LLC"
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className={styles.formLabel}>Location</label>
+                <div className={styles.formGroup}>
+                  <label>Location / City</label>
                   <input
                     type="text"
-                    className={styles.formInput}
-                    placeholder="e.g., Dubai, UAE / Mumbai, India"
+                    placeholder="e.g. Business Bay, Dubai"
                     value={formData.clientLocation}
                     onChange={(e) => setFormData({ ...formData, clientLocation: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className={styles.formLabel}>Service Category</label>
+              </div>
+
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label>Service Category</label>
                   <input
                     type="text"
-                    className={styles.formInput}
-                    placeholder="e.g., UAE Residency / Enterprise Setup"
+                    placeholder="e.g. Manpower Recruitment / 2-Year Freelance Visa"
                     value={formData.serviceCategory}
                     onChange={(e) => setFormData({ ...formData, serviceCategory: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className={styles.formLabel}>Rating (1 - 5)</label>
+                <div className={styles.formGroup}>
+                  <label>Client Rating</label>
                   <select
-                    className={styles.formSelect}
                     value={formData.rating}
                     onChange={(e) => setFormData({ ...formData, rating: Number(e.target.value) })}
                   >
-                    <option value={5}>★★★★★ (5 Stars)</option>
-                    <option value={4}>★★★★☆ (4 Stars)</option>
-                    <option value={3}>★★★☆☆ (3 Stars)</option>
-                    <option value={2}>★★☆☆☆ (2 Stars)</option>
-                    <option value={1}>★☆☆☆☆ (1 Star)</option>
+                    <option value={5}>★★★★★ (5 Stars - Exceptional)</option>
+                    <option value={4}>★★★★☆ (4 Stars - Highly Satisfied)</option>
+                    <option value={3}>★★★☆☆ (3 Stars - Satisfied)</option>
                   </select>
-                </div>
-                <div>
-                  <label className={styles.formLabel}>Display Order</label>
-                  <input
-                    type="number"
-                    min={0}
-                    className={styles.formInput}
-                    value={formData.displayOrder}
-                    onChange={(e) => setFormData({ ...formData, displayOrder: Number(e.target.value) })}
-                  />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
-                      checked={formData.isPublished}
-                      onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                    />
-                    Publish immediately on public website
-                  </label>
-                </div>
-                <div className={styles.formFull}>
-                  <label className={styles.formLabel}>Testimonial Content *</label>
-                  <textarea
-                    required
-                    rows={4}
-                    className={styles.formTextarea}
-                    placeholder="Enter the authentic, client-approved quote verbatim..."
-                    value={formData.testimonialText}
-                    onChange={(e) => setFormData({ ...formData, testimonialText: e.target.value })}
-                  />
                 </div>
               </div>
 
-              <div className={styles.formActions}>
+              <div className={styles.formGroup}>
+                <label>Testimonial Quote / Verification Text *</label>
+                <textarea
+                  required
+                  placeholder="Enter the authentic, approved client review verbatim..."
+                  value={formData.testimonialText}
+                  onChange={(e) => setFormData({ ...formData, testimonialText: e.target.value })}
+                />
+              </div>
+
+              <div className={styles.checkboxRow}>
+                <input
+                  type="checkbox"
+                  id="publishLiveCheck"
+                  checked={formData.isPublished}
+                  onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                />
+                <label htmlFor="publishLiveCheck" style={{ cursor: 'pointer' }}>
+                  Publish live immediately on the public website
+                </label>
+              </div>
+
+              <div className={styles.modalFooter}>
                 <button
                   type="button"
                   className={styles.btnSecondary}
@@ -553,7 +675,7 @@ export function TestimonialsManager() {
                   className={styles.btnPrimary}
                   disabled={formSubmitting}
                 >
-                  {formSubmitting ? 'Saving...' : editingId ? 'Save Changes' : 'Create Testimonial'}
+                  {formSubmitting ? 'Saving...' : editingId ? 'Update Testimonial' : 'Publish Testimonial'}
                 </button>
               </div>
             </form>
@@ -561,7 +683,7 @@ export function TestimonialsManager() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Archive Confirmation Modal */}
       {deleteConfirmId && (
         <div className={styles.modalOverlay} onClick={() => setDeleteConfirmId(null)}>
           <div className={styles.modalDialog} style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
@@ -570,9 +692,9 @@ export function TestimonialsManager() {
               <button className={styles.closeBtn} onClick={() => setDeleteConfirmId(null)}>✕</button>
             </div>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Are you sure you want to archive this testimonial? It will be safely removed from public visibility and marked as soft-deleted in the database.
+              Are you sure you want to archive this testimonial? It will be safely removed from public visibility on the website.
             </p>
-            <div className={styles.formActions}>
+            <div className={styles.modalFooter}>
               <button
                 className={styles.btnSecondary}
                 onClick={() => setDeleteConfirmId(null)}
@@ -581,7 +703,7 @@ export function TestimonialsManager() {
                 Cancel
               </button>
               <button
-                className={styles.btnDanger}
+                className={styles.btnDangerConfirm}
                 onClick={handleDelete}
                 disabled={deleting}
               >

@@ -289,3 +289,20 @@ export const jobApplicationUploadMiddleware = (
   });
 };
 
+/**
+ * Optional multipart document upload middleware for Business Setup & Consultation Enquiries.
+ * If multipart/form-data is detected, applies bounded memory storage limits and parses 'documents'.
+ * Otherwise, cleanly delegates through for JSON-based submissions.
+ */
+export const businessEnquiryUploadMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const contentType = req.headers['content-type'] || '';
+  if (contentType.includes('multipart/form-data')) {
+    return visaEnquiryUploadMiddleware(req, res, next);
+  }
+  return next();
+};
+

@@ -235,7 +235,14 @@ export default function FAQPage() {
             {/* Regulatory Disclaimer Card */}
             <GlassCard padding="md" hoverable={false}>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: '1.5rem', flexShrink: 0 }}>📋</div>
+                <div style={{ flexShrink: 0, marginTop: '2px' }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-gold)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                    <rect x="8" y="2" width="8" height="4" rx="1" />
+                    <line x1="9" y1="12" x2="15" y2="12" />
+                    <line x1="9" y1="16" x2="13" y2="16" />
+                  </svg>
+                </div>
                 <div>
                   <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--color-fg)', margin: 0 }}>
                     Official Advisory & Governance Notice

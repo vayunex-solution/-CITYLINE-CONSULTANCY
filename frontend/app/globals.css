@@ -61,6 +61,14 @@
   --hero-mesh: radial-gradient(circle at 50% 20%, rgba(212, 175, 55, 0.12) 0%, transparent 60%),
                linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
   --hero-overlay: rgba(255, 255, 255, 0.3);
+
+  /* Convenience Aliases */
+  --nav-height: 72px;
+  --color-bg: var(--surface-base);
+  --color-fg: var(--text-primary);
+  --color-fg-muted: var(--text-muted);
+  --color-border: var(--border-default);
+  --color-card-bg: var(--surface-card);
 }
 
 [data-theme="dark"] {
@@ -117,6 +125,14 @@
   --hero-mesh: radial-gradient(circle at 50% 25%, rgba(212, 175, 55, 0.16) 0%, transparent 65%),
                linear-gradient(180deg, #060b14 0%, #0a1120 100%);
   --hero-overlay: rgba(6, 11, 20, 0.65);
+
+  /* Convenience Aliases */
+  --nav-height: 72px;
+  --color-bg: var(--surface-base);
+  --color-fg: var(--text-primary);
+  --color-fg-muted: var(--text-muted);
+  --color-border: var(--border-default);
+  --color-card-bg: var(--surface-card);
 }
 
 /* Global Fixed Tokens */
@@ -124,6 +140,7 @@
   /* Typography Scale */
   --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-family-display: 'Georgia', serif;
+  --font-display: var(--font-family-display);
 
   --text-xs: 0.75rem;     /* 12px */
   --text-sm: 0.875rem;    /* 14px */
@@ -274,7 +291,8 @@ body {
 }
 
 /* Typography Gradient Utilities */
-.text-gradient-gold {
+.text-gradient-gold,
+.gold-gradient-text {
   background: linear-gradient(135deg, var(--accent-gold-light) 0%, var(--accent-gold-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

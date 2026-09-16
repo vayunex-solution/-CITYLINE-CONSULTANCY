@@ -4,11 +4,18 @@ import { notFound } from 'next/navigation';
 import { fetchJobBySlug } from '@/lib/jobs-api';
 import { JobDetail } from '@/components/jobs/JobDetail';
 import { FinalCTA } from '@/components/sections/FinalCTA';
+import { SEED_JOBS } from '@/lib/data/jobs';
 
 interface JobPageProps {
   params: {
     slug: string;
   };
+}
+
+export async function generateStaticParams() {
+  return SEED_JOBS.map((job) => ({
+    slug: job.slug,
+  }));
 }
 
 export async function generateMetadata({ params }: JobPageProps): Promise<Metadata> {
@@ -30,8 +37,8 @@ export default async function SingleJobPage({ params }: JobPageProps) {
   if (!result?.job) notFound();
 
   return (
-    <div style={{ paddingTop: 'var(--space-20)' }}>
-      <section className="section">
+    <div style={{ paddingTop: '72px' }}>
+      <section className="section-sm">
         <div className="container">
           <JobDetail job={result.job} relatedJobs={result.relatedJobs} />
         </div>

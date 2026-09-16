@@ -16,9 +16,9 @@ export default async function TestimonialsPage() {
   const testimonials = await fetchPublishedTestimonials();
 
   return (
-    <div style={{ paddingTop: 'var(--space-20)' }}>
+    <div style={{ paddingTop: '72px' }}>
       {/* Hero */}
-      <section className="section" style={{ background: 'var(--hero-mesh)' }}>
+      <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <Badge variant="gold">Milestone Accounts</Badge>
           <h1
@@ -78,7 +78,9 @@ export default async function TestimonialsPage() {
                 gap: 'var(--space-4)',
               }}
             >
-              <span style={{ fontSize: '3rem' }} aria-hidden="true">🌟</span>
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
               <h2
                 style={{
                   fontFamily: 'var(--font-family-display)',

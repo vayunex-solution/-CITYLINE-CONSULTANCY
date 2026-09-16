@@ -6,11 +6,18 @@ import { Badge } from '@/components/ui/Badge';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { JobApplicationForm } from '@/components/forms/JobApplicationForm';
+import { SEED_JOBS } from '@/lib/data/jobs';
 
 interface JobApplyPageProps {
   params: {
     slug: string;
   };
+}
+
+export async function generateStaticParams() {
+  return SEED_JOBS.map((job) => ({
+    slug: job.slug,
+  }));
 }
 
 export async function generateMetadata({ params }: JobApplyPageProps): Promise<Metadata> {
@@ -29,9 +36,9 @@ export default async function JobApplyPage({ params }: JobApplyPageProps) {
   const job = result.job;
 
   return (
-    <div style={{ paddingTop: 'var(--space-20)' }}>
+    <div style={{ paddingTop: '72px' }}>
       {/* Hero */}
-      <section className="section" style={{ background: 'var(--hero-mesh)' }}>
+      <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
             <Breadcrumb
@@ -109,7 +116,13 @@ export default async function JobApplyPage({ params }: JobApplyPageProps) {
               lineHeight: 1.6,
             }}
           >
-            🔒 <strong>Candidate Data Confidentiality:</strong> Your information is handled securely and used solely for lawful UAE employment evaluation by Cityline Consultancy and verified sponsoring employers. Zero placement fees are ever collected from candidates.
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ verticalAlign: 'middle' }}>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span><strong>Candidate Data Confidentiality:</strong> Your information is handled securely and used solely for lawful UAE employment evaluation by Cityline Consultancy and verified sponsoring employers. Zero placement fees are ever collected from candidates.</span>
+            </div>
           </div>
         </div>
       </section>

@@ -1,294 +1,440 @@
-import React from 'react';
+import React, { Suspense } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { CinematicHero } from '@/components/hero/CinematicHero';
-import { TrustStrip } from '@/components/sections/TrustStrip';
-import { SectionHeading } from '@/components/ui/SectionHeading';
-import { ServiceGrid } from '@/components/services/ServiceGrid';
-import { VisaJourney } from '@/components/visa/VisaJourney';
-import { RecruitmentCategories } from '@/components/recruitment/RecruitmentCategories';
-import { BUSINESS_SETUP_SERVICES } from '@/lib/data/business-setup';
+import { HeroBridge } from '@/components/sections/HeroBridge';
 import { JobList } from '@/components/jobs/JobList';
-import { WhyCityline } from '@/components/sections/WhyCityline';
 import { TestimonialsSection } from '@/components/testimonials/TestimonialsSection';
 import { FAQAccordion } from '@/components/faq/FAQAccordion';
 import { getFAQsByCategory } from '@/lib/data/faq';
-import { FinalCTA } from '@/components/sections/FinalCTA';
 import { Button } from '@/components/ui/Button';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { Badge } from '@/components/ui/Badge';
+import { InlineManpowerForm } from '@/components/forms/InlineManpowerForm';
+import styles from './HomePageStyles.module.css';
+
+/* ── SVG Icon primitives (no emojis) ── */
+const IconVisa = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+  </svg>
+);
+const IconJobs = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+  </svg>
+);
+const IconManpower = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+);
+const IconBusiness = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+);
+const IconArrow = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+  </svg>
+);
+const IconCheck = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+
+const SERVICES = [
+  {
+    Icon: IconVisa,
+    title: 'Visa',
+    subtitle: 'Fast, reliable & hassle-free visa solutions.',
+    href: '/visa-services',
+    cta: 'Explore Visa',
+  },
+  {
+    Icon: IconJobs,
+    title: 'Jobs',
+    subtitle: 'Find the right job opportunities in UAE.',
+    href: '/jobs',
+    cta: 'Explore Jobs',
+  },
+  {
+    Icon: IconManpower,
+    title: 'Manpower',
+    subtitle: 'Hire skilled & reliable manpower for your business.',
+    href: '/recruitment',
+    cta: 'Explore Manpower',
+  },
+  {
+    Icon: IconBusiness,
+    title: 'Business',
+    subtitle: 'Start & grow your business in the UAE with confidence.',
+    href: '/business-setup',
+    cta: 'Explore Business',
+  },
+];
+
+const VISA_TYPES = [
+  {
+    tag: '2 YEAR',
+    title: 'Freelance Visa',
+    desc: 'Live, work, and grow independently in UAE',
+  },
+  {
+    tag: '30 DAY',
+    title: 'Visit Visa',
+    desc: 'Short stay for business or leisure',
+  },
+  {
+    tag: '60 DAY',
+    title: 'Visit Visa',
+    desc: 'Extended stay with flexible options',
+  },
+];
+
+const RECRUITMENT_STEPS = [
+  { num: '01', title: 'Source', desc: 'We source quality candidates from India' },
+  { num: '02', title: 'Screen', desc: 'Skills assessment & background verification' },
+  { num: '03', title: 'Select', desc: 'Shortlisting the best talent for you' },
+  { num: '04', title: 'Deploy', desc: 'Smooth appointments to UAE employer' },
+];
+
+const BUSINESS_SERVICES = [
+  {
+    Icon: IconBusiness,
+    title: 'Company Formation',
+    desc: '100% ownership & full compliance',
+    items: ['Trade License', 'Mainland & Freezone', 'Legal Structuring'],
+  },
+  {
+    Icon: IconManpower,
+    title: 'Company Setup',
+    desc: 'Hassle-free setup with expert support',
+    items: ['Bank Account Opening', 'PRO Services', 'Office Solutions'],
+  },
+  {
+    Icon: IconVisa,
+    title: 'Business Support',
+    desc: 'Ongoing support for your business growth',
+    items: ['Investor Visa', 'Renewal & Amendments', 'Advisory'],
+  },
+];
+
+const WHY_ITEMS = [
+  {
+    Icon: IconCheck,
+    title: 'Verified Candidates',
+    desc: 'Every candidate is background-checked',
+  },
+  {
+    Icon: IconCheck,
+    title: 'Fast Deployment',
+    desc: 'Rapid mobilization to UAE employers',
+  },
+  {
+    Icon: IconCheck,
+    title: 'Flexible Workforce',
+    desc: 'Full-time, part-time, contract hiring',
+  },
+  {
+    Icon: IconCheck,
+    title: 'End-to-End Support',
+    desc: 'From sourcing to onboarding in UAE',
+  },
+];
 
 export default function HomePage() {
   const previewFaqs = getFAQsByCategory('general').slice(0, 5);
 
   return (
     <>
-      {/* 1. Cinematic Hero */}
-      <CinematicHero />
+      {/* ═══════════════════════════════
+          1. CINEMATIC HERO (video-ready)
+      ═══════════════════════════════ */}
+      <CinematicHero
+        posterSrc="/media/landing/hero-dubai.jpg"
+        eyebrow="FROM INDIA TO THE UAE"
+        headline="YOUR JOURNEY TO THE UAE STARTS HERE."
+        supportingText="Visa solutions, recruitment support and business setup services for individuals, entrepreneurs and businesses."
+        primaryCtaText="Start Your Journey"
+        primaryCtaHref="/visa-enquiry"
+        secondaryCtaText="Explore Services"
+        secondaryCtaHref="#services"
+      />
 
-      {/* 2. Trust / Positioning Strip */}
-      <TrustStrip />
+      {/* ═══════════════════════════════
+          2. INDIA → CITYLINE → UAE BRIDGE
+      ═══════════════════════════════ */}
+      <div className="container">
+        <HeroBridge />
+      </div>
 
-      {/* 3. "Your Journey Starts Here" Introduction */}
-      <section className="section" id="journey-intro">
+      {/* ═══════════════════════════════
+          3. WHAT BRINGS YOU TO UAE — Services
+      ═══════════════════════════════ */}
+      <section id="services" className={styles.servicesSection}>
         <div className="container">
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr',
-              gap: 'var(--space-10)',
-              alignItems: 'center',
-            }}
-          >
-            <div style={{ maxWidth: '800px', marginLeft: 'auto', marginRight: 'auto', textAlign: 'center' }}>
-              <span
-                style={{
-                  fontSize: 'var(--text-xs)',
-                  fontWeight: 700,
-                  letterSpacing: '0.15em',
-                  textTransform: 'uppercase',
-                  color: 'var(--accent-gold-primary)',
-                  display: 'block',
-                  marginBottom: 'var(--space-2)',
-                }}
-              >
-                India → UAE Career & Enterprise Bridge
-              </span>
-              <h2
-                style={{
-                  fontFamily: 'var(--font-family-display)',
-                  fontSize: 'var(--text-3xl)',
-                  fontWeight: 700,
-                  lineHeight: 1.25,
-                  color: 'var(--text-primary)',
-                  marginBottom: 'var(--space-4)',
-                }}
-              >
-                Connecting ambition with <span className="text-gradient-gold">UAE opportunity.</span>
-              </h2>
-              <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                The United Arab Emirates represents one of the world’s most dynamic hubs for professional growth, enterprise establishment, and skilled careers. Cityline Consultancy bridges the path between India and the UAE by providing reliable procedural advisory, structured documentation, and lawful facilitation across independent residency, business incorporation, and essential manpower sectors.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Services Overview */}
-      <section className="section" id="services" style={{ background: 'var(--surface-subtle)' }}>
-        <div className="container">
-          <SectionHeading
-            eyebrow="Core Competencies"
-            title={
-              <>
-                Integrated solutions for <span className="text-gradient-gold">every milestone.</span>
-              </>
-            }
-            description="Whether launching an independent career in Dubai, forming an enterprise, or securing verified manpower, explore our specialized service divisions."
-            align="center"
-          />
-
-          <ServiceGrid />
-        </div>
-      </section>
-
-      {/* 5. Visa Journey Section */}
-      <VisaJourney />
-
-      {/* 6. Recruitment & Manpower Section */}
-      <section className="section" id="recruitment">
-        <div className="container">
-          <SectionHeading
-            eyebrow="Workforce & Employment"
-            title={
-              <>
-                Operational manpower, <span className="text-gradient-gold">professionally deployed.</span>
-              </>
-            }
-            description="Facilitating lawful, skills-verified employment across eight essential operational and technical trades connecting candidates with vetted UAE employers."
-            align="center"
-          />
-
-          <RecruitmentCategories />
-
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 'var(--space-4)',
-              flexWrap: 'wrap',
-              marginTop: 'var(--space-10)',
-            }}
-          >
-            <Button href="/jobs" size="lg" variant="primary">
-              Explore Active Jobs
-            </Button>
-            <Button href="/employer-enquiry" size="lg" variant="glass">
-              Need Manpower?
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. Business Setup Section */}
-      <section className="section" id="business-setup" style={{ background: 'var(--surface-subtle)' }}>
-        <div className="container">
-          <SectionHeading
-            eyebrow="Enterprise Formation"
-            title={
-              <>
-                Launch your business in the <span className="text-gradient-gold">Emirates.</span>
-              </>
-            }
-            description="Structured advisory for commercial trade licensing, statutory filings, establishment cards, and investor residency coordination."
-            align="center"
-          />
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: 'var(--space-8)',
-            }}
-          >
-            {BUSINESS_SETUP_SERVICES.map((biz) => (
-              <GlassCard key={biz.id} padding="lg">
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', height: '100%', justifyContent: 'space-between' }}>
-                  <div>
-                    <Badge variant="gold">{biz.tag}</Badge>
-                    <h3
-                      style={{
-                        fontFamily: 'var(--font-family-display)',
-                        fontSize: 'var(--text-xl)',
-                        fontWeight: 700,
-                        marginTop: 'var(--space-3)',
-                        marginBottom: 'var(--space-2)',
-                      }}
-                    >
-                      {biz.title}
-                    </h3>
-                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
-                      {biz.description}
-                    </p>
-
-                    <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                      {biz.highlights.map((h, idx) => (
-                        <li key={idx} style={{ display: 'flex', gap: '0.5rem', fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
-                          <span style={{ color: 'var(--accent-gold-primary)', fontWeight: 700 }}>•</span>
-                          <span>{h}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div style={{ marginTop: 'var(--space-6)', paddingTop: 'var(--space-4)', borderTop: '1px solid var(--border-subtle)' }}>
-                    <Button href="/business-setup" variant="glass" size="md" style={{ width: '100%' }}>
-                      Explore {biz.title}
-                    </Button>
-                  </div>
+          <div className={styles.eyebrow}>WHAT BRINGS YOU TO UAE?</div>
+          <h2 className={styles.sectionTitle}>
+            We Have the <span className="text-gradient-gold">Right Solution for You</span>
+          </h2>
+          <div className={styles.servicesGrid}>
+            {SERVICES.map(({ Icon, title, subtitle, href, cta }) => (
+              <Link key={title} href={href} className={styles.serviceCard}>
+                <div className={styles.serviceIconWrap}>
+                  <Icon />
                 </div>
-              </GlassCard>
+                <h3 className={styles.serviceCardTitle}>{title}</h3>
+                <p className={styles.serviceCardDesc}>{subtitle}</p>
+                <span className={styles.serviceCardCta}>
+                  {cta} <IconArrow />
+                </span>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 8. UAE Opportunity / Journey Section */}
-      <section className="section" id="uae-opportunity">
+      {/* ═══════════════════════════════
+          4. VISA SOLUTIONS
+      ═══════════════════════════════ */}
+      <section id="visa-solutions" className={styles.visaSection}>
         <div className="container">
-          <div
-            className="glass-panel"
-            style={{
-              padding: 'var(--space-12) var(--space-8)',
-              borderRadius: 'var(--radius-2xl)',
-              background: 'radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.1) 0%, transparent 60%), var(--surface-card)',
-            }}
-          >
-            <div style={{ maxWidth: '720px' }}>
-              <Badge variant="gold">A Destination for Excellence</Badge>
-              <h2
-                style={{
-                  fontFamily: 'var(--font-family-display)',
-                  fontSize: 'var(--text-3xl)',
-                  fontWeight: 800,
-                  color: 'var(--text-primary)',
-                  lineHeight: 1.25,
-                  marginTop: 'var(--space-4)',
-                  marginBottom: 'var(--space-4)',
-                }}
-              >
-                Dubai as a career & business destination.
+          <div className={styles.visaLayout}>
+            <div className={styles.visaImageCol}>
+              <div className={styles.visaImageWrap}>
+                <Image
+                  src="/media/landing/visa-passport.jpg"
+                  alt="UAE Passport with visa stamps and Dubai skyline"
+                  fill
+                  className={styles.visaImage}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+                <div className={styles.visaImageOverlay} />
+              </div>
+            </div>
+            <div className={styles.visaContent}>
+              <div className={styles.eyebrow}>VISA SOLUTIONS</div>
+              <h2 className={styles.visaHeadline}>
+                Simple.<br />Transparent.<br />
+                <span className="text-gradient-gold">Hassle-Free.</span>
               </h2>
-              <p style={{ fontSize: 'var(--text-base)', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 'var(--space-6)' }}>
-                The UAE represents more than a modern skyline—it is an internationally recognized ecosystem of economic stability, forward-thinking regulatory infrastructure, and merit-based career mobility. From technical trades to corporate enterprises, individuals choose the Emirates for competitive compensation, world-class living standards, and new beginnings.
-              </p>
-              <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
-                <Button href="/about" size="md" variant="primary">
-                  Learn About Cityline
-                </Button>
-                <Button href="/visa-enquiry" size="md" variant="glass">
-                  Begin Your Consultation
-                </Button>
+              <p className={styles.visaDesc}>Choose the visa that fits your needs.</p>
+              <div className={styles.visaTypes}>
+                {VISA_TYPES.map((v) => (
+                  <Link key={v.title + v.tag} href="/visa-services" className={styles.visaTypeRow}>
+                    <div>
+                      <span className={styles.visaTag}>{v.tag}</span>
+                      <span className={styles.visaTypeName}>{v.title}</span>
+                    </div>
+                    <span className={styles.visaTypeDesc}>{v.desc}</span>
+                    <IconArrow />
+                  </Link>
+                ))}
+              </div>
+              <div className={styles.visaCtas}>
+                <Button href="/visa-enquiry" variant="primary" size="md">Start Enquiry</Button>
+                <Button href="/visa-services" variant="glass" size="md">Learn More</Button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 9. Jobs Preview Section */}
-      <section className="section" id="jobs-preview" style={{ background: 'var(--surface-subtle)' }}>
+      {/* ═══════════════════════════════
+          5. JOBS — Real API Data
+      ═══════════════════════════════ */}
+      <section id="jobs-preview" className={styles.jobsSection}>
         <div className="container">
-          <SectionHeading
-            eyebrow="Active Vacancies"
-            title={
-              <>
-                Current opportunities <span className="text-gradient-gold">in the UAE.</span>
-              </>
-            }
-            description="Explore representative vacancies across verified hospitality, trade, and logistics employers in Dubai and the Northern Emirates."
-            align="center"
-          />
-
-          <JobList limit={4} showFilters={false} />
-
-          <div style={{ textAlign: 'center', marginTop: 'var(--space-10)' }}>
-            <Button href="/jobs" size="lg" variant="secondary">
-              View All Opportunities
-            </Button>
+          <div className={styles.eyebrow}>JOBS &amp; OPPORTUNITIES</div>
+          <h2 className={styles.sectionTitle}>
+            Find Your <span className="text-gradient-gold">Next Opportunity</span>
+          </h2>
+          {/* JobList fetches real jobs from backend */}
+          <Suspense fallback={<div style={{ minHeight: '300px' }} />}>
+            <JobList limit={6} showFilters={true} />
+          </Suspense>
+          <div className={styles.centeredCta}>
+            <Button href="/jobs" variant="glass" size="lg">View All Jobs</Button>
           </div>
         </div>
       </section>
 
-      {/* 10. Why Cityline */}
-      <WhyCityline />
-
-      {/* 11. Testimonials */}
-      <TestimonialsSection />
-
-      {/* 12. FAQ Preview */}
-      <section className="section" id="faq-preview" style={{ background: 'var(--surface-subtle)' }}>
-        <div className="container">
-          <SectionHeading
-            eyebrow="Clarity & Answers"
-            title={
-              <>
-                Frequently Asked <span className="text-gradient-gold">Questions.</span>
-              </>
-            }
-            description="Essential guidance regarding our advisory scope, visa facilitation standards, and recruitment protocols."
-            align="center"
+      {/* ═══════════════════════════════
+          6. RECRUITMENT PROCESS (India Gate BG)
+      ═══════════════════════════════ */}
+      <section id="recruitment" className={styles.recruitmentSection}>
+        <div className={styles.recruitmentBg}>
+          <Image
+            src="/media/landing/india-gate.jpg"
+            alt="India Gate — recruitment bridge from India to UAE"
+            fill
+            className={styles.recruitmentBgImg}
+            sizes="100vw"
           />
+          <div className={styles.recruitmentOverlay} />
+        </div>
+        <div className="container" style={{ position: 'relative', zIndex: 2 }}>
+          <div className={styles.eyebrowLight}>INDIA TO UAE RECRUITMENT</div>
+          <h2 className={styles.sectionTitleLight}>
+            We Make <span className="text-gradient-gold">Hiring Simple</span>
+          </h2>
+          <div className={styles.stepsGrid}>
+            {RECRUITMENT_STEPS.map((step) => (
+              <div key={step.num} className={styles.stepCard}>
+                <div className={styles.stepNum}>{step.num}</div>
+                <div className={styles.stepTitle}>{step.title}</div>
+                <div className={styles.stepDesc}>{step.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
+      {/* ═══════════════════════════════
+          7. BUSINESS SETUP
+      ═══════════════════════════════ */}
+      <section id="business-setup" className={styles.businessSection}>
+        <div className="container">
+          <div className={styles.businessLayout}>
+            <div className={styles.businessLeft}>
+              <div className={styles.eyebrow}>BUSINESS SETUP IN UAE</div>
+              <h2 className={styles.businessHeadline}>
+                Start Your Business<br />
+                <span className="text-gradient-gold">The Smart Way</span>
+              </h2>
+              <p className={styles.businessDesc}>
+                From company formation to PRO services — we guide you through every step.
+              </p>
+              <Button href="/business-setup" variant="primary" size="md">Explore Business Setup</Button>
+              <Link href="/contact" className={styles.consultLink}>Get a Free Consultation</Link>
+            </div>
+            <div className={styles.businessCards}>
+              {BUSINESS_SERVICES.map(({ Icon, title, desc, items }) => (
+                <div key={title} className={styles.businessCard}>
+                  <div className={styles.businessCardIcon}><Icon /></div>
+                  <h3 className={styles.businessCardTitle}>{title}</h3>
+                  <p className={styles.businessCardDesc}>{desc}</p>
+                  <ul className={styles.businessCardList}>
+                    {items.map((item) => (
+                      <li key={item} className={styles.businessCardItem}>
+                        <span className={styles.checkIcon}><IconCheck /></span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════
+          8. BUILD YOUR UAE TEAM (Live Requisition Form)
+      ═══════════════════════════════ */}
+      <section id="manpower" className={styles.manpowerSection}>
+        <div className={styles.manpowerBg}>
+          <Image
+            src="/media/landing/consultant.jpg"
+            alt="Cityline corporate workforce advisory in Dubai"
+            fill
+            className={styles.manpowerBgImg}
+            sizes="100vw"
+          />
+          <div className={styles.manpowerBgOverlay} />
+        </div>
+        <div className="container" style={{ position: 'relative', zIndex: 2 }}>
+          <div className={styles.manpowerLayout}>
+            <div className={styles.manpowerLeft}>
+              <div className={styles.eyebrowLight}>MANPOWER SOLUTIONS</div>
+              <h2 className={styles.manpowerHeadline}>
+                BUILD YOUR<br />
+                <span className="text-gradient-gold">UAE TEAM</span>
+              </h2>
+              <p className={styles.manpowerDesc}>
+                Tell us your requirements and we&apos;ll find the right people for your business.
+              </p>
+              <div className={styles.whyGrid}>
+                {WHY_ITEMS.map(({ title, desc }) => (
+                  <div key={title} className={styles.whyItem}>
+                    <div className={styles.whyCheck}><IconCheck /></div>
+                    <div>
+                      <div className={styles.whyTitle}>{title}</div>
+                      <div className={styles.whyDesc}>{desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className={styles.manpowerRight}>
+              <InlineManpowerForm />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════
+          9. TESTIMONIALS — Real DB Data
+      ═══════════════════════════════ */}
+      <section id="testimonials" className={styles.testimonialsSection}>
+        <div className="container">
+          <div className={styles.eyebrow}>WHY CHOOSE CITYLINE</div>
+          <h2 className={styles.sectionTitle}>
+            Trusted. Reliable. <span className="text-gradient-gold">Results Driven.</span>
+          </h2>
+          {/* Real testimonials from backend DB */}
+          <TestimonialsSection />
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════
+          10. FAQ
+      ═══════════════════════════════ */}
+      <section id="faq-preview" className={styles.faqSection}>
+        <div className="container">
+          <div className={styles.eyebrow}>FREQUENTLY ASKED QUESTIONS</div>
+          <h2 className={styles.sectionTitle}>
+            What do you <span className="text-gradient-gold">want to know?</span>
+          </h2>
           <FAQAccordion items={previewFaqs} />
-
-          <div style={{ textAlign: 'center', marginTop: 'var(--space-10)' }}>
-            <Button href="/faq" size="md" variant="glass">
-              Browse Complete Knowledge Base
-            </Button>
+          <div className={styles.centeredCta}>
+            <Button href="/faq" variant="glass" size="md">View All FAQs</Button>
           </div>
         </div>
       </section>
 
-      {/* 13. Final Call to Action */}
-      <FinalCTA />
+      {/* ═══════════════════════════════
+          11. FINAL CTA
+      ═══════════════════════════════ */}
+      <section className={styles.finalCTA}>
+        <div className={styles.finalCTABg}>
+          <Image
+            src="/media/landing/hero-dubai.jpg"
+            alt="Dubai skyline at golden hour"
+            fill
+            className={styles.finalCTAImg}
+            sizes="100vw"
+          />
+          <div className={styles.finalCTAOverlay} />
+        </div>
+        <div className="container" style={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
+          <div className={styles.eyebrowLight}>YOUR NEXT MOVE</div>
+          <h2 className={styles.finalCTAHeadline}>
+            STARTS <span className="text-gradient-gold">HERE.</span>
+          </h2>
+          <p className={styles.finalCTADesc}>
+            All it takes is one conversation to change your life.
+          </p>
+          <div className={styles.finalCTAButtons}>
+            <Button href="/visa-enquiry" variant="primary" size="lg">Start Your Journey</Button>
+            <Button href="https://wa.me/971XXXXXXXXX" variant="glass" size="lg">Chat on WhatsApp</Button>
+          </div>
+        </div>
+      </section>
     </>
   );
 }

@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 
 export default function VisaServicesPage() {
   return (
-    <div style={{ paddingTop: 'var(--space-20)' }}>
-      <section className="section" style={{ background: 'var(--hero-mesh)' }}>
+    <div style={{ paddingTop: '72px' }}>
+      <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'left' }}>
             <Breadcrumb items={[{ label: 'Visa Services' }]} />

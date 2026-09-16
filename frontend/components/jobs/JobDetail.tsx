@@ -7,6 +7,78 @@ import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { JobCard } from '@/components/jobs/JobCard';
 import styles from './JobDetail.module.css';
 
+/* ── Professional 2D SVG Icons (No Emojis) ── */
+const IconPin = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+  </svg>
+);
+const IconMoney = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="3" /><path d="M6 12h.01M18 12h.01" />
+  </svg>
+);
+const IconWrench = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+  </svg>
+);
+const IconDoc = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" />
+  </svg>
+);
+const IconClock = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+const IconClipboard = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" />
+  </svg>
+);
+const IconTarget = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
+  </svg>
+);
+const IconShield = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+const IconHome = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+const IconBus = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="14" rx="2" /><path d="M3 10h18" /><circle cx="7" cy="15" r="1" /><circle cx="17" cy="15" r="1" /><path d="M5 17v3M19 17v3" />
+  </svg>
+);
+const IconHospital = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="2" y="4" width="20" height="16" rx="2" /><path d="M12 8v8M8 12h8" />
+  </svg>
+);
+const IconPlane = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.5-.1-.9.1-1.1.5l-.7 1.4 5.3 3.6L6 15l-2.4-.6c-.4-.1-.8.1-.9.5l-.4.8 2.6 1.8 1.8 2.6c.4.6.9.6 1.3.2l.6-2.4 2.8-2.8 3.6 5.3c.4.6 1 .6 1.4.1l1.4-.7c.4-.2.6-.6.5-1.1z" />
+  </svg>
+);
+const IconScale = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 3v18M6 8l6-5 6 5M3 14l3-6 3 6a3 3 0 0 1-6 0zM15 14l3-6 3 6a3 3 0 0 1-6 0z" />
+  </svg>
+);
+const IconChat = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+  </svg>
+);
+
 interface JobDetailProps {
   job: JobOpportunity;
   relatedJobs?: JobOpportunity[];
@@ -58,36 +130,38 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
     };
   }
 
-  const whatsappText = encodeURIComponent(
-    `Hello Cityline Consultancy, I am interested in applying for "${job.title}" (${job.location}). Please guide me through the trade credentials assessment process.`
+  const breadcrumbs = [
+    { label: 'Home', href: '/' },
+    { label: 'Jobs & Openings', href: '/jobs' },
+    { label: job.title },
+  ];
+
+  const whatsappMessage = encodeURIComponent(
+    `Hello Cityline Consultancy, I am interested in applying for: ${job.title} (${job.location}). Please share details on next mobilization steps.`
   );
-  const whatsappUrl = `https://wa.me/971501234567?text=${whatsappText}`;
+  const whatsappUrl = `https://wa.me/971500000000?text=${whatsappMessage}`;
 
   return (
-    <div className={styles.wrapper}>
+    <article className={styles.page}>
       {/* Schema.org JobPosting */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
       {/* Breadcrumb Navigation */}
-      <Breadcrumb
-        items={[
-          { label: 'Current Jobs', href: '/jobs' },
-          { label: job.category, href: `/jobs?category=${encodeURIComponent(job.category)}` },
-          { label: job.title },
-        ]}
-      />
+      <div className={styles.breadcrumbWrap}>
+        <Breadcrumb items={breadcrumbs} />
+      </div>
 
-      {/* Hero Card */}
-      <header className={styles.heroCard}>
+      {/* Hero Header */}
+      <header className={styles.heroHeader}>
         <div className={styles.heroContent}>
           <div className={styles.badgesRow}>
             <Badge variant="gold">{job.category}</Badge>
             <Badge variant="slate">{job.type}</Badge>
-            <Badge variant="outline">📍 {job.location}</Badge>
-            <Badge variant="success">✓ Verified Employer Opening</Badge>
+            <Badge variant="outline"><IconPin />{job.location}</Badge>
+            <Badge variant="success">Verified Employer Opening</Badge>
           </div>
 
           <h1 className={styles.title}>{job.title}</h1>
@@ -97,7 +171,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
           {/* Quick Specs Ribbon */}
           <div className={styles.specsRibbon}>
             <div className={styles.specItem}>
-              <span className={styles.specIcon} aria-hidden="true">💰</span>
+              <span className={styles.specIcon} aria-hidden="true"><IconMoney /></span>
               <div className={styles.specText}>
                 <span className={styles.specLabel}>Remuneration</span>
                 <span className={styles.specValue}>{job.salaryRange || 'Competitive Market Rate'}</span>
@@ -105,7 +179,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
             </div>
 
             <div className={styles.specItem}>
-              <span className={styles.specIcon} aria-hidden="true">🛠️</span>
+              <span className={styles.specIcon} aria-hidden="true"><IconWrench /></span>
               <div className={styles.specText}>
                 <span className={styles.specLabel}>Required Experience</span>
                 <span className={styles.specValue}>
@@ -115,7 +189,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
             </div>
 
             <div className={styles.specItem}>
-              <span className={styles.specIcon} aria-hidden="true">📄</span>
+              <span className={styles.specIcon} aria-hidden="true"><IconDoc /></span>
               <div className={styles.specText}>
                 <span className={styles.specLabel}>Visa Sponsorship</span>
                 <span className={styles.specValue}>2-Year UAE Employment Visa</span>
@@ -123,7 +197,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
             </div>
 
             <div className={styles.specItem}>
-              <span className={styles.specIcon} aria-hidden="true">⏱️</span>
+              <span className={styles.specIcon} aria-hidden="true"><IconClock /></span>
               <div className={styles.specText}>
                 <span className={styles.specLabel}>Work Shift</span>
                 <span className={styles.specValue}>8 Hrs/Day + Overtime (UAE Law)</span>
@@ -140,7 +214,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
           {/* Trade Responsibilities */}
           <section className={styles.sectionCard} aria-labelledby="resp-heading">
             <div className={styles.sectionHeader}>
-              <span className={styles.sectionIcon} aria-hidden="true">📋</span>
+              <span className={styles.sectionIcon} aria-hidden="true"><IconClipboard /></span>
               <h2 id="resp-heading" className={styles.sectionTitle}>
                 Key Trade Responsibilities
               </h2>
@@ -158,7 +232,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
           {/* Candidate Requirements */}
           <section className={styles.sectionCard} aria-labelledby="req-heading">
             <div className={styles.sectionHeader}>
-              <span className={styles.sectionIcon} aria-hidden="true">🎯</span>
+              <span className={styles.sectionIcon} aria-hidden="true"><IconTarget /></span>
               <h2 id="req-heading" className={styles.sectionTitle}>
                 Candidate Requirements & Eligibility
               </h2>
@@ -186,17 +260,17 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
           {/* Statutory Benefits Grid */}
           <section className={styles.sectionCard} aria-labelledby="benefits-heading">
             <div className={styles.sectionHeader}>
-              <span className={styles.sectionIcon} aria-hidden="true">🛡️</span>
+              <span className={styles.sectionIcon} aria-hidden="true"><IconShield /></span>
               <h2 id="benefits-heading" className={styles.sectionTitle}>
                 Statutory Working Conditions & Benefits
               </h2>
             </div>
             <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>
-              All benefits are provided in strict compliance with the United Arab Emirates Ministry of Human Resources & Emiratisation (MOHRE) regulatory standard:
+              All benefits are provided in strict compliance with the United Arab Emirates Ministry of Human Resources &amp; Emiratisation (MOHRE) regulatory standard:
             </p>
             <div className={styles.benefitsGrid}>
               <div className={styles.benefitCard}>
-                <span className={styles.benefitIcon} aria-hidden="true">🏠</span>
+                <span className={styles.benefitIcon} aria-hidden="true"><IconHome /></span>
                 <div>
                   <h3 className={styles.benefitTitle}>Company Accommodation</h3>
                   <p className={styles.benefitDesc}>Clean, safe corporate accommodation provided by employer.</p>
@@ -204,7 +278,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
               </div>
 
               <div className={styles.benefitCard}>
-                <span className={styles.benefitIcon} aria-hidden="true">🚌</span>
+                <span className={styles.benefitIcon} aria-hidden="true"><IconBus /></span>
                 <div>
                   <h3 className={styles.benefitTitle}>Daily Transportation</h3>
                   <p className={styles.benefitDesc}>AC commute buses between accommodation and work sites.</p>
@@ -212,7 +286,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
               </div>
 
               <div className={styles.benefitCard}>
-                <span className={styles.benefitIcon} aria-hidden="true">🏥</span>
+                <span className={styles.benefitIcon} aria-hidden="true"><IconHospital /></span>
                 <div>
                   <h3 className={styles.benefitTitle}>Health Insurance</h3>
                   <p className={styles.benefitDesc}>Mandatory UAE corporate medical insurance cover.</p>
@@ -220,7 +294,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
               </div>
 
               <div className={styles.benefitCard}>
-                <span className={styles.benefitIcon} aria-hidden="true">✈️</span>
+                <span className={styles.benefitIcon} aria-hidden="true"><IconPlane /></span>
                 <div>
                   <h3 className={styles.benefitTitle}>Return Flight Allowance</h3>
                   <p className={styles.benefitDesc}>Biennial round-trip airfare upon contract completion.</p>
@@ -231,7 +305,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
 
           {/* Ethical Recruitment Compliance Notice */}
           <div className={styles.complianceNotice}>
-            <span className={styles.complianceIcon} aria-hidden="true">⚖️</span>
+            <span className={styles.complianceIcon} aria-hidden="true"><IconScale /></span>
             <div className={styles.complianceText}>
               <h3 className={styles.complianceHeading}>Zero Placement Fee Guarantee</h3>
               <p className={styles.compliancePara}>
@@ -267,7 +341,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
                   rel="noopener noreferrer"
                   className={styles.whatsappButton}
                 >
-                  <span aria-hidden="true">💬</span>
+                  <span aria-hidden="true"><IconChat /></span>
                   <span>Enquire via WhatsApp</span>
                 </a>
               </div>
@@ -346,6 +420,6 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
           </div>
         </section>
       )}
-    </div>
+    </article>
   );
 }

@@ -1,0 +1,674 @@
+/* ═══════════════════════════════════════════════════
+   CITYLINE — HOME PAGE SECTION STYLES
+   Premium cinematic aesthetic, gold accent system
+═══════════════════════════════════════════════════ */
+
+/* ── Shared Eyebrow / Heading Utilities ── */
+.eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-gold-primary);
+  margin-bottom: var(--space-3);
+}
+
+.eyebrowLight {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-gold-primary);
+  margin-bottom: var(--space-3);
+}
+
+.sectionTitle {
+  font-family: var(--font-family-display);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin-bottom: var(--space-10);
+}
+
+.sectionTitleLight {
+  font-family: var(--font-family-display);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #ffffff;
+  margin-bottom: var(--space-10);
+}
+
+.centeredCta {
+  text-align: center;
+  margin-top: var(--space-10);
+}
+
+/* ═══════════════════════════════
+   3. SERVICES SECTION
+═══════════════════════════════ */
+.servicesSection {
+  padding: var(--space-20) 0;
+  background: var(--surface-subtle);
+}
+
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  margin-top: 0;
+}
+
+@media (max-width: 1024px) {
+  .servicesGrid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .servicesGrid { grid-template-columns: 1fr; }
+}
+
+.serviceCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.serviceCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-gold-primary), rgba(179,135,27,0.2));
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.serviceCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(179, 135, 27, 0.12), var(--shadow-xl);
+  border-color: rgba(179, 135, 27, 0.3);
+}
+
+.serviceCard:hover::before { opacity: 1; }
+
+.serviceIconWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(179,135,27,0.15), rgba(179,135,27,0.05));
+  border: 1px solid rgba(179, 135, 27, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-gold-primary);
+  flex-shrink: 0;
+}
+
+.serviceCardTitle {
+  font-family: var(--font-family-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.serviceCardDesc {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.serviceCardCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent-gold-primary);
+  margin-top: var(--space-2);
+  transition: gap 0.2s ease;
+}
+
+.serviceCard:hover .serviceCardCta { gap: 10px; }
+
+/* ═══════════════════════════════
+   4. VISA SOLUTIONS
+═══════════════════════════════ */
+.visaSection {
+  padding: var(--space-20) 0;
+  background: var(--surface-base);
+}
+
+.visaLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .visaLayout { grid-template-columns: 1fr; }
+}
+
+.visaImageCol {
+  position: relative;
+}
+
+.visaImageWrap {
+  position: relative;
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  aspect-ratio: 4/3;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.18), 0 0 0 1px rgba(179,135,27,0.2);
+}
+
+.visaImage {
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.visaImageWrap:hover .visaImage { transform: scale(1.03); }
+
+.visaImageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.2), transparent 60%);
+}
+
+.visaContent {}
+
+.visaHeadline {
+  font-family: var(--font-family-display);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.visaDesc {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin-bottom: var(--space-8);
+}
+
+.visaTypes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: var(--space-8);
+}
+
+.visaTypeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-subtle);
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  color: var(--text-primary);
+}
+
+.visaTypeRow:hover {
+  background: rgba(179,135,27,0.06);
+  border-color: rgba(179,135,27,0.25);
+  transform: translateX(4px);
+}
+
+.visaTag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent-gold-primary);
+  background: rgba(179,135,27,0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: var(--space-3);
+  white-space: nowrap;
+}
+
+.visaTypeName {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.visaTypeDesc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.visaCtas {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════
+   5. JOBS SECTION
+═══════════════════════════════ */
+.jobsSection {
+  padding: var(--space-20) 0;
+  background: var(--surface-subtle);
+}
+
+/* ═══════════════════════════════
+   6. RECRUITMENT — India Gate BG
+═══════════════════════════════ */
+.recruitmentSection {
+  position: relative;
+  padding: var(--space-24) 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.recruitmentBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.recruitmentBgImg {
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.recruitmentOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(6, 11, 20, 0.88) 0%,
+    rgba(6, 11, 20, 0.72) 50%,
+    rgba(6, 11, 20, 0.6) 100%
+  );
+}
+
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+}
+
+@media (max-width: 900px) { .stepsGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .stepsGrid { grid-template-columns: 1fr; } }
+
+.stepCard {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.stepCard:hover {
+  background: rgba(179,135,27,0.12);
+  border-color: rgba(179,135,27,0.35);
+  transform: translateY(-3px);
+}
+
+.stepNum {
+  font-family: var(--font-family-display);
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--accent-gold-primary);
+  opacity: 0.6;
+  line-height: 1;
+  margin-bottom: var(--space-2);
+}
+
+.stepTitle {
+  font-family: var(--font-family-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: var(--space-2);
+}
+
+.stepDesc {
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,0.65);
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════
+   7. BUSINESS SETUP
+═══════════════════════════════ */
+.businessSection {
+  padding: var(--space-20) 0;
+  background: var(--surface-base);
+}
+
+.businessLayout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .businessLayout { grid-template-columns: 1fr; }
+}
+
+.businessHeadline {
+  font-family: var(--font-family-display);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 900;
+  line-height: 1.15;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.businessDesc {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: var(--space-6);
+}
+
+.consultLink {
+  display: block;
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent-gold-primary);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.consultLink:hover { opacity: 0.75; }
+
+.businessCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .businessCards { grid-template-columns: 1fr; }
+}
+
+.businessCard {
+  padding: var(--space-6);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.businessCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-xl);
+  border-color: rgba(179,135,27,0.25);
+}
+
+.businessCardIcon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, rgba(179,135,27,0.12), rgba(179,135,27,0.04));
+  border: 1px solid rgba(179,135,27,0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-gold-primary);
+  margin-bottom: var(--space-4);
+}
+
+.businessCardTitle {
+  font-family: var(--font-family-display);
+  font-size: var(--text-base);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.businessCardDesc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+}
+
+.businessCardList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.businessCardItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.checkIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--status-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════
+   8. MANPOWER — Dark Section
+═══════════════════════════════ */
+.manpowerSection {
+  padding: var(--space-24) 0;
+  background: #060b14;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.manpowerBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.manpowerBgImg {
+  object-fit: cover;
+  object-position: right 30%;
+  opacity: 0.3;
+}
+
+.manpowerBgOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 75% 50%, rgba(6, 11, 20, 0.4) 0%, rgba(6, 11, 20, 0.9) 65%, #060b14 100%);
+}
+
+.manpowerLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .manpowerLayout { grid-template-columns: 1fr; }
+}
+
+.manpowerHeadline {
+  font-family: var(--font-family-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.manpowerDesc {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: var(--space-8);
+}
+
+.whyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+@media (max-width: 640px) {
+  .whyGrid { grid-template-columns: 1fr; }
+}
+
+.whyItem {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.whyCheck {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(179,135,27,0.12);
+  border: 1px solid rgba(179,135,27,0.25);
+  color: var(--accent-gold-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.whyTitle {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.whyDesc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.manpowerRight {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.consultantImageWrap {
+  position: relative;
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  aspect-ratio: 4/5;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.2), 0 0 0 1px rgba(179,135,27,0.15);
+}
+
+.consultantImage {
+  object-fit: cover;
+  object-position: center top;
+}
+
+.consultantOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(6,11,20,0.4) 0%, transparent 50%);
+}
+
+.manpowerCta {
+  display: flex;
+  justify-content: center;
+}
+
+/* ═══════════════════════════════
+   9. TESTIMONIALS
+═══════════════════════════════ */
+.testimonialsSection {
+  padding: var(--space-20) 0;
+  background: var(--surface-subtle);
+}
+
+/* TestimonialsSection renders its own inner content */
+.testimonialsSection > .container > section { padding: 0 !important; }
+
+/* ═══════════════════════════════
+   10. FAQ
+═══════════════════════════════ */
+.faqSection {
+  padding: var(--space-20) 0;
+  background: var(--surface-base);
+}
+
+/* ═══════════════════════════════
+   11. FINAL CTA
+═══════════════════════════════ */
+.finalCTA {
+  position: relative;
+  padding: var(--space-24) 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.finalCTABg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.finalCTAImg {
+  object-fit: cover;
+  object-position: center 40%;
+}
+
+.finalCTAOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(6,11,20,0.88) 0%, rgba(6,11,20,0.7) 100%);
+}
+
+.finalCTAHeadline {
+  font-family: var(--font-family-display);
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 900;
+  line-height: 1.0;
+  color: #ffffff;
+  margin-bottom: var(--space-4);
+  letter-spacing: -0.01em;
+}
+
+.finalCTADesc {
+  font-size: var(--text-lg);
+  color: rgba(255,255,255,0.7);
+  margin-bottom: var(--space-8);
+}
+
+.finalCTAButtons {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}

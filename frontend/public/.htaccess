@@ -1,0 +1,97 @@
+# ==============================================================================
+# CITYLINE CONSULTANCY — Production Apache / cPanel Configuration
+# Document Root: /public_html (citylineconsultancy.com)
+# ==============================================================================
+
+RewriteEngine On
+
+# ------------------------------------------------------------------------------
+# 1. FORCE HTTPS
+# ------------------------------------------------------------------------------
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ------------------------------------------------------------------------------
+# 2. SECURITY HEADERS
+# ------------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    Header set Permissions-Policy "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" env=HTTPS
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# 3. BACKEND API ROUTING (api.citylineconsultancy.com)
+# ------------------------------------------------------------------------------
+# Route relative /api/v1 requests directly to backend subdomain
+<IfModule mod_proxy.c>
+    SSLProxyEngine On
+    RewriteCond %{REQUEST_URI} ^/api/v1/(.*)$
+    RewriteRule ^api/v1/(.*)$ https://api.citylineconsultancy.com/api/v1/$1 [P,L]
+</IfModule>
+
+# Fallback redirect if mod_proxy is not enabled on host
+<IfModule !mod_proxy.c>
+    RewriteCond %{REQUEST_URI} ^/api/v1/(.*)$
+    RewriteRule ^api/v1/(.*)$ https://api.citylineconsultancy.com/api/v1/$1 [R=307,L]
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# 4. CLEAN URLS & STATIC EXPORT ROUTING
+# ------------------------------------------------------------------------------
+DirectorySlash On
+DirectoryIndex index.html index.php
+
+# Serve existing files and directories directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Redirect /path to /path/ if /path/index.html exists (ensures trailing slash matching)
+RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
+RewriteRule ^(.*[^/])$ /$1/ [R=301,L]
+
+# Fallback to Next.js 404 error page
+ErrorDocument 404 /404.html
+
+# ------------------------------------------------------------------------------
+# 5. GZIP / BROTLI COMPRESSION
+# ------------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ------------------------------------------------------------------------------
+# 6. BROWSER CACHING & PERFORMANCE
+# ------------------------------------------------------------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # Static Next.js compiled chunks and media: 1 year (immutable)
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+
+    # HTML documents: immediate revalidation so updates reflect instantly
+    ExpiresByType text/html "access plus 0 seconds"
+</IfModule>

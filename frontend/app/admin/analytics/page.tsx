@@ -171,7 +171,7 @@ export default function AdminAnalyticsPage() {
             <div className={common.tableCard}>
               <div style={{ padding: 'var(--space-4) var(--space-5)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  📄 Top Visited Pages
+                  Top Visited Pages
                 </h3>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ranked by view volume</span>
               </div>
@@ -207,7 +207,7 @@ export default function AdminAnalyticsPage() {
             <div className={common.tableCard}>
               <div style={{ padding: 'var(--space-4) var(--space-5)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  🌐 Traffic & Referrer Sources
+                  Traffic &amp; Referrer Sources
                 </h3>
                 <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sanitized domain origins</span>
               </div>
@@ -246,7 +246,7 @@ export default function AdminAnalyticsPage() {
             <div className={common.tableCard}>
               <div style={{ padding: 'var(--space-4) var(--space-5)', borderBottom: '1px solid var(--border-subtle)' }}>
                 <h3 style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  📱 Device Breakdown
+                  Device Breakdown
                 </h3>
               </div>
               {data.deviceBreakdown.length === 0 ? (
@@ -262,7 +262,7 @@ export default function AdminAnalyticsPage() {
                       <div key={idx}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
                           <span style={{ textTransform: 'capitalize', fontWeight: 600, color: 'var(--text-primary)' }}>
-                            {d.device === 'desktop' ? '💻 Desktop' : d.device === 'mobile' ? '📱 Mobile' : '📟 Tablet'} ({d.device})
+                            {d.device === 'desktop' ? 'Desktop' : d.device === 'mobile' ? 'Mobile' : 'Tablet'} ({d.device})
                           </span>
                           <span style={{ color: 'var(--text-muted)' }}>
                             {d.count.toLocaleString()} ({pct}%)
@@ -282,13 +282,13 @@ export default function AdminAnalyticsPage() {
             <div className={common.tableCard}>
               <div style={{ padding: 'var(--space-4) var(--space-5)', borderBottom: '1px solid var(--border-subtle)' }}>
                 <h3 style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  🎯 Conversion Channels (Persisted Records)
+                  Conversion Channels (Persisted Records)
                 </h3>
               </div>
               <div style={{ padding: 'var(--space-5)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)' }}>
                 <div style={{ background: 'var(--surface-sunken)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                    🛂 VISA ENQUIRIES
+                    VISA ENQUIRIES
                   </span>
                   <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {data.conversions.visaEnquiries.toLocaleString()}
@@ -297,7 +297,7 @@ export default function AdminAnalyticsPage() {
 
                 <div style={{ background: 'var(--surface-sunken)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                    🏢 MANPOWER
+                    MANPOWER
                   </span>
                   <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {data.conversions.manpowerEnquiries.toLocaleString()}
@@ -306,7 +306,7 @@ export default function AdminAnalyticsPage() {
 
                 <div style={{ background: 'var(--surface-sunken)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
                   <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                    💼 JOB APPS
+                    JOB APPS
                   </span>
                   <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--text-primary)' }}>
                     {data.conversions.jobApplications.toLocaleString()}
@@ -317,7 +317,7 @@ export default function AdminAnalyticsPage() {
               {/* Notice */}
               <div style={{ padding: 'var(--space-4) var(--space-5)', borderTop: '1px solid var(--border-subtle)', background: 'var(--surface-sunken)' }}>
                 <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)' }}>
-                  ℹ️ Conversion figures strictly reflect verified database submissions. Mere button clicks without submission are excluded.
+                  Conversion figures strictly reflect verified database submissions. Mere button clicks without submission are excluded.
                 </p>
               </div>
             </div>
@@ -327,7 +327,7 @@ export default function AdminAnalyticsPage() {
           <div className={common.tableCard}>
             <div style={{ padding: 'var(--space-4) var(--space-5)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-primary)' }}>
-                📈 Daily Telemetry Trend
+                Daily Telemetry Trend
               </h3>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Page views & unique sessions</span>
             </div>

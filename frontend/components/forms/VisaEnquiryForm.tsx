@@ -339,7 +339,14 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
             className={styles.fileInputHidden}
             onChange={(e) => handleFilesAdded(e.target.files)}
           />
-          <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>📄</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="12" y1="18" x2="12" y2="12" />
+              <line x1="9" y1="15" x2="15" y2="15" />
+            </svg>
+          </div>
           <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)' }}>
             Drag and drop documents here, or <span style={{ color: 'var(--accent-gold-primary)' }}>browse files</span>
           </div>
@@ -356,7 +363,9 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
               {files.map((file, idx) => (
                 <li key={`${file.name}-${idx}`} className={styles.fileItem}>
                   <div className={styles.fileInfo}>
-                    <span>📎</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
                     <span className={styles.fileName}>{file.name}</span>
                     <span className={styles.fileSize}>
                       ({(file.size / (1024 * 1024)).toFixed(2)} MB)
@@ -371,7 +380,10 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
                     }}
                     aria-label={`Remove ${file.name}`}
                   >
-                    ✕
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                   </button>
                 </li>
               ))}

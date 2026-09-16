@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 import styles from './ServiceCard.module.css';
 
 interface ServiceCardProps {
-  icon: string;
+  icon: React.ReactNode;
   tag: string;
   title: string;
   description: string;
