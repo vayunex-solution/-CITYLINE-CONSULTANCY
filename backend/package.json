@@ -16,7 +16,8 @@
     "db:validate": "tsx --test tests/database.test.ts",
     "db:test": "node ../scripts/test-db-connection.js",
     "admin:create": "node dist/scripts/create-admin.js",
-    "queue:process": "node dist/scripts/process-notification-queue.js"
+    "queue:process": "node dist/scripts/process-notification-queue.js",
+    "smtp:test": "node scripts/send-test-email.js"
   },
   "dependencies": {
     "argon2": "^0.45.1",
