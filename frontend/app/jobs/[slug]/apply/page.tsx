@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { fetchJobBySlug } from '@/lib/jobs-api';
@@ -36,7 +36,7 @@ export default async function JobApplyPage({ params }: JobApplyPageProps) {
   const job = result.job;
 
   return (
-    <div style={{ paddingTop: '72px' }}>
+    <div className="page-wrapper">
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>

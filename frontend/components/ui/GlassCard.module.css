@@ -7,7 +7,9 @@
   box-shadow: var(--shadow-md);
   transition: transform var(--transition-smooth), box-shadow var(--transition-smooth), border-color var(--transition-smooth);
   position: relative;
-  overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .paddingSm {
@@ -20,6 +22,15 @@
 
 .paddingLg {
   padding: var(--space-8);
+}
+
+@media (max-width: 640px) {
+  .paddingLg {
+    padding: var(--space-5);
+  }
+  .paddingMd {
+    padding: var(--space-4);
+  }
 }
 
 .hoverable:hover {

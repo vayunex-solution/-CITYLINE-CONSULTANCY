@@ -10,13 +10,30 @@
  * - Dummy hash verification mitigates user enumeration timing attacks.
  */
 
-import argon2 from 'argon2';
+import type argon2Type from 'argon2';
+import crypto from 'crypto';
+import { argon2id as wasmArgon2id, argon2Verify as wasmArgon2Verify } from 'hash-wasm';
+
+// Attempt to load native argon2 C++ driver; fall back to WebAssembly Argon2id if blocked by host OS policy
+let nativeArgon2: typeof argon2Type | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  nativeArgon2 = require('argon2');
+} catch {
+  // Host OS Application Control (e.g. Windows Smart App Control) blocked unsigned .node binary;
+  // RFC 9106 WebAssembly Argon2id will execute securely without native dlopen.
+}
 
 /**
  * Standard OWASP-recommended Argon2id parameters for interactive logins.
  */
-export const ARGON2_CONFIG: argon2.HashOptions = {
-  type: argon2.argon2id,
+export const ARGON2_CONFIG: {
+  type: 0 | 1 | 2;
+  memoryCost: number;
+  timeCost: number;
+  parallelism: number;
+} = {
+  type: 2,           // argon2id enum value
   memoryCost: 19456, // 19 MB
   timeCost: 2,       // 2 passes
   parallelism: 1,    // 1 lane
@@ -41,10 +58,22 @@ let dummyHashPromise: Promise<string> | null = null;
 
 async function getDummyHash(): Promise<string> {
   if (!dummyHashPromise) {
-    dummyHashPromise = argon2.hash('__clc_timing_safe_dummy_password_constant__', {
-      ...ARGON2_CONFIG,
-      raw: false,
-    });
+    if (nativeArgon2) {
+      dummyHashPromise = nativeArgon2.hash('__clc_timing_safe_dummy_password_constant__', {
+        ...ARGON2_CONFIG,
+        raw: false,
+      });
+    } else {
+      dummyHashPromise = wasmArgon2id({
+        password: '__clc_timing_safe_dummy_password_constant__',
+        salt: crypto.randomBytes(16),
+        memorySize: ARGON2_CONFIG.memoryCost,
+        iterations: ARGON2_CONFIG.timeCost,
+        parallelism: ARGON2_CONFIG.parallelism,
+        hashLength: 32,
+        outputType: 'encoded',
+      });
+    }
   }
   return await dummyHashPromise;
 }
@@ -91,7 +120,20 @@ export async function hashPassword(password: string): Promise<string> {
     throw new Error(policyCheck.message || 'Password fails policy validation.');
   }
 
-  return argon2.hash(password, { ...ARGON2_CONFIG, raw: false });
+  if (nativeArgon2) {
+    return nativeArgon2.hash(password, { ...ARGON2_CONFIG, raw: false });
+  }
+
+  const salt = crypto.randomBytes(16);
+  return wasmArgon2id({
+    password,
+    salt,
+    memorySize: ARGON2_CONFIG.memoryCost,
+    iterations: ARGON2_CONFIG.timeCost,
+    parallelism: ARGON2_CONFIG.parallelism,
+    hashLength: 32,
+    outputType: 'encoded',
+  });
 }
 
 /**
@@ -103,7 +145,10 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   }
 
   try {
-    return await argon2.verify(hash, password);
+    if (nativeArgon2) {
+      return await nativeArgon2.verify(hash, password);
+    }
+    return await wasmArgon2Verify({ password, hash });
   } catch {
     // Malformed hash or driver failure returns false safely
     return false;
@@ -118,7 +163,11 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 export async function verifyDummyPassword(password: string): Promise<boolean> {
   try {
     const dummy = await getDummyHash();
-    await argon2.verify(dummy, password || 'dummy_attempt');
+    if (nativeArgon2) {
+      await nativeArgon2.verify(dummy, password || 'dummy_attempt');
+    } else {
+      await wasmArgon2Verify({ password: password || 'dummy_attempt', hash: dummy });
+    }
   } catch {
     // Ignore verification errors
   }

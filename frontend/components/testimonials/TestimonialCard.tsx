@@ -11,14 +11,14 @@ export function TestimonialCard({ testimonial }: TestimonialCardProps) {
   return (
     <GlassCard padding="lg" subtleGlow>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', height: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
           {testimonial.serviceCategory ? (
             <Badge variant="gold">{testimonial.serviceCategory}</Badge>
           ) : <span />}
           {testimonial.rating ? (
-            <div style={{ display: 'flex', gap: '3px' }} aria-label={`${testimonial.rating} out of 5 stars`}>
+            <div style={{ display: 'flex', gap: '2px', flexShrink: 0 }} aria-label={`${testimonial.rating} out of 5 stars`}>
               {Array.from({ length: Math.min(5, Math.max(1, testimonial.rating)) }).map((_, i) => (
-                <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="var(--accent-gold-primary)" stroke="none" aria-hidden="true">
+                <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="var(--accent-gold-primary)" stroke="none" aria-hidden="true">
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
               ))}

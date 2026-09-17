@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+﻿import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/Badge';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function JobsPage() {
   return (
-    <div style={{ paddingTop: '72px' }}>
+    <div className="page-wrapper">
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>

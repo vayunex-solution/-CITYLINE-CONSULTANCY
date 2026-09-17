@@ -1,24 +1,50 @@
+/* ===== HERO BRIDGE — INDIA → CITYLINE → UAE ===== */
+
 .wrapper {
   background: var(--surface-elevated);
   border-top: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
+  overflow: hidden;
+  width: 100%;
 }
 
+/* ── Bridge Bar ── */
 .bridgeBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-5) 0;
-  max-width: 900px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4);
+  max-width: 860px;
   margin: 0 auto;
+  flex-wrap: nowrap;
 }
 
+/* On very small screens collapse to vertical pill layout */
+@media (max-width: 480px) {
+  .bridgeBar {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-3);
+  }
+}
+
+/* ── Origin / Destination ── */
 .origin,
 .destination {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .origin,
+  .destination {
+    flex-direction: row;
+    justify-content: center;
+  }
 }
 
 .flagRoundel {
@@ -36,70 +62,107 @@
 
 .countryName {
   font-family: var(--font-family-display);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: 800;
   letter-spacing: 0.05em;
   color: var(--text-primary);
+  white-space: nowrap;
 }
 
 .countryTag {
-  font-size: var(--text-xs);
+  font-size: 0.65rem;
   color: var(--text-muted);
-  margin-top: 2px;
+  margin-top: 1px;
+  white-space: nowrap;
 }
 
+/* ── Connector (middle) ── */
 .connector {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .connector {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .connectorLine {
   flex: 1;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--accent-gold-primary), transparent);
+  min-width: 12px;
+}
+
+@media (max-width: 480px) {
+  .connectorLine {
+    display: none;
+  }
 }
 
 .connectorCenter {
   text-align: center;
   flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  background: rgba(179, 135, 27, 0.06);
+  border: 1px solid rgba(179, 135, 27, 0.2);
+  border-radius: var(--radius-md);
 }
 
 .connectorLogo {
   font-family: var(--font-family-display);
-  font-size: var(--text-sm);
+  font-size: 0.8rem;
   font-weight: 900;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--accent-gold-primary);
+  white-space: nowrap;
 }
 
 .connectorTag {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .connectorSub {
-  font-size: 0.55rem;
-  letter-spacing: 0.18em;
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent-gold-primary);
-  margin-top: 2px;
+  margin-top: 1px;
   opacity: 0.8;
+  white-space: nowrap;
 }
 
+/* ── Stats Row ── */
 .statsRow {
-  display: flex;
-  justify-content: center;
-  gap: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   border-top: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .statsRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 360px) {
+  .statsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .stat {
-  flex: 1;
-  padding: var(--space-4) var(--space-4);
+  padding: var(--space-3) var(--space-2);
   text-align: center;
   border-right: 1px solid var(--border-subtle);
   transition: background 0.2s ease;
@@ -109,20 +172,36 @@
   border-right: none;
 }
 
+/* On 3-col layout, hide the 4th and 5th items bottom border */
+@media (max-width: 640px) {
+  .stat:nth-child(3) {
+    border-right: none;
+  }
+  .stat:nth-child(4),
+  .stat:nth-child(5) {
+    border-top: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
+  }
+  .stat:last-child {
+    border-right: none;
+  }
+}
+
 .stat:hover {
   background: rgba(179, 135, 27, 0.04);
 }
 
 .statValue {
   font-family: var(--font-family-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 800;
   color: var(--accent-gold-primary);
   line-height: 1;
 }
 
 .statLabel {
-  font-size: var(--text-xs);
+  font-size: 0.65rem;
   color: var(--text-muted);
   margin-top: var(--space-1);
+  line-height: 1.3;
 }

@@ -20,7 +20,7 @@ export default function BusinessSetupPage() {
   const businessFaqs = getFAQsByCategory('business');
 
   return (
-    <div style={{ paddingTop: '72px' }}>
+    <div className="page-wrapper">
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
@@ -81,7 +81,7 @@ export default function BusinessSetupPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
               gap: 'var(--space-8)',
               marginBottom: 'var(--space-12)',
             }}

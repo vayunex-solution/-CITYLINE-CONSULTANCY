@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { fetchJobBySlug } from '@/lib/jobs-api';
@@ -37,7 +37,7 @@ export default async function SingleJobPage({ params }: JobPageProps) {
   if (!result?.job) notFound();
 
   return (
-    <div style={{ paddingTop: '72px' }}>
+    <div className="page-wrapper">
       <section className="section-sm">
         <div className="container">
           <JobDetail job={result.job} relatedJobs={result.relatedJobs} />

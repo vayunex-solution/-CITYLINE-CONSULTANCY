@@ -44,7 +44,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div style={{ paddingTop: '72px' }}>
+    <div className="page-wrapper">
       {/* Hero Section */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
@@ -84,7 +84,7 @@ export default function AboutPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
               gap: 'var(--space-8)',
               alignItems: 'center',
             }}
@@ -158,7 +158,7 @@ export default function AboutPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
               gap: 'var(--space-6)',
             }}
           >

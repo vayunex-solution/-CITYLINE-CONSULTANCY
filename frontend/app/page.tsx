@@ -168,9 +168,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════
           2. INDIA → CITYLINE → UAE BRIDGE
       ═══════════════════════════════ */}
-      <div className="container">
-        <HeroBridge />
-      </div>
+      <HeroBridge />
 
       {/* ═══════════════════════════════
           3. WHAT BRINGS YOU TO UAE — Services

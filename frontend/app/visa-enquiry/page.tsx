@@ -66,7 +66,7 @@ export default function VisaEnquiryPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
               gap: '3rem',
               alignItems: 'start',
             }}

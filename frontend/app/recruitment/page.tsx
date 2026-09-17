@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import type { Metadata } from 'next';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Badge } from '@/components/ui/Badge';
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RecruitmentPage() {
   return (
-    <div style={{ paddingTop: '72px' }}>
+    <div className="page-wrapper">
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>

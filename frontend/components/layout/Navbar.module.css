@@ -5,46 +5,95 @@
   top: 0;
   left: 0;
   right: 0;
+  width: 100%;
   z-index: 900;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(179, 135, 27, 0.18);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .header {
+  background: rgba(6, 11, 20, 0.88);
+  border-bottom: 1px solid rgba(179, 135, 27, 0.25);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Left and Right border accent lines */
+.header::before,
+.header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(179, 135, 27, 0.6) 30%,
+    rgba(179, 135, 27, 0.6) 70%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.header::before {
+  left: 0;
+}
+
+.header::after {
+  right: 0;
+}
+
+.scrolled::before,
+.scrolled::after {
+  opacity: 1;
 }
 
 /* After scroll — full glassmorphism */
 .scrolled {
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid rgba(179, 135, 27, 0.2);
+  border-bottom: 1px solid rgba(179, 135, 27, 0.25);
   box-shadow:
-    0 1px 40px rgba(0, 0, 0, 0.06),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+    0 4px 30px rgba(0, 0, 0, 0.08),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.4);
 }
 
 [data-theme='dark'] .scrolled {
-  background: rgba(14, 14, 20, 0.78);
-  border-bottom: 1px solid rgba(179, 135, 27, 0.2);
+  background: rgba(8, 14, 24, 0.94);
+  border-bottom: 1px solid rgba(179, 135, 27, 0.3);
   box-shadow:
-    0 1px 40px rgba(0, 0, 0, 0.3),
-    inset 0 -1px 0 rgba(179, 135, 27, 0.08);
+    0 6px 36px rgba(0, 0, 0, 0.55),
+    inset 0 -1px 0 rgba(179, 135, 27, 0.12);
 }
 
 .inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  height: 68px;
+  gap: var(--space-2);
+  height: 64px;
+  width: 100%;
+  min-width: 0;
 }
+
 
 /* ===== BRAND ===== */
 .brand {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   text-decoration: none;
   color: var(--text-primary);
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .logoIcon {
@@ -335,22 +384,34 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   flex-shrink: 0;
+}
+
+/* Hide full CTA text on small mobile — show only icon/short */
+.ctaFull {
+  display: none;
+}
+
+@media (min-width: 400px) {
+  .ctaFull {
+    display: inline-flex;
+  }
 }
 
 .mobileMenuBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-md);
   background: rgba(179, 135, 27, 0.06);
   border: 1px solid rgba(179, 135, 27, 0.15);
   color: var(--text-primary);
   cursor: pointer;
   padding: 0;
+  flex-shrink: 0;
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
@@ -365,3 +426,31 @@
   }
 }
 
+/* ===== DARK MODE EXPLICIT CONTRAST ===== */
+[data-theme='dark'] .brandName {
+  color: #f8fafc;
+}
+
+[data-theme='dark'] .navLink {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .navLink:hover {
+  color: #ffffff;
+  background: rgba(212, 175, 55, 0.12);
+}
+
+[data-theme='dark'] .dropdownTrigger {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .dropdownTrigger:hover {
+  color: #ffffff;
+  background: rgba(212, 175, 55, 0.12);
+}
+
+[data-theme='dark'] .mobileMenuBtn {
+  color: #f8fafc;
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.25);
+}

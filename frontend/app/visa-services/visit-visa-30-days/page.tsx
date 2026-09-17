@@ -24,7 +24,7 @@ export default function VisitVisa30DaysPage() {
   const relatedServices = VISA_SERVICES.filter((s) => s.slug !== 'visit-visa-30-days');
 
   return (
-    <div style={{ paddingTop: '72px' }}>
+    <div className="page-wrapper">
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
@@ -109,7 +109,7 @@ export default function VisitVisa30DaysPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
               gap: 'var(--space-8)',
               alignItems: 'start',
             }}
@@ -145,7 +145,7 @@ export default function VisitVisa30DaysPage() {
       {/* Process & FAQ */}
       <section className="section" style={{ background: 'var(--surface-subtle)' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-8)', marginBottom: 'var(--space-12)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 'var(--space-8)', marginBottom: 'var(--space-12)' }}>
             <GlassCard padding="lg">
               <h3 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, marginBottom: 'var(--space-4)' }}>
                 Target Applicants
@@ -201,7 +201,7 @@ export default function VisitVisa30DaysPage() {
           <h3 style={{ fontFamily: 'var(--font-family-display)', fontSize: 'var(--text-2xl)', fontWeight: 700, textAlign: 'center', marginBottom: 'var(--space-8)' }}>
             Alternative Visa Options
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-6)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 'var(--space-6)' }}>
             {relatedServices.map((rel) => (
               <VisaCard key={rel.id} service={rel} />
             ))}

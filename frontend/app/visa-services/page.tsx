@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function VisaServicesPage() {
   return (
-    <div style={{ paddingTop: '72px' }}>
+    <div className="page-wrapper">
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'left' }}>
@@ -62,7 +62,7 @@ export default function VisaServicesPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
               gap: 'var(--space-8)',
               marginBottom: 'var(--space-12)',
             }}
