@@ -10,13 +10,13 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
-    "db:migrate": "node --import tsx ../node_modules/knex/bin/cli.js --knexfile src/config/knex.config.ts migrate:latest",
-    "db:rollback": "node --import tsx ../node_modules/knex/bin/cli.js --knexfile src/config/knex.config.ts migrate:rollback",
-    "db:seed": "node --import tsx ../node_modules/knex/bin/cli.js --knexfile src/config/knex.config.ts seed:run",
+    "db:migrate": "knex --knexfile dist/config/knex.config.js migrate:latest",
+    "db:rollback": "knex --knexfile dist/config/knex.config.js migrate:rollback",
+    "db:seed": "knex --knexfile dist/config/knex.config.js seed:run",
     "db:validate": "tsx --test tests/database.test.ts",
     "db:test": "node ../scripts/test-db-connection.js",
-    "admin:create": "tsx src/scripts/create-admin.ts",
-    "queue:process": "tsx src/scripts/process-notification-queue.ts"
+    "admin:create": "node dist/scripts/create-admin.js",
+    "queue:process": "node dist/scripts/process-notification-queue.js"
   },
   "dependencies": {
     "argon2": "^0.45.1",
