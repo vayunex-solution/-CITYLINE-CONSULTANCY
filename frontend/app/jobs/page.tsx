@@ -1,19 +1,35 @@
-﻿import React, { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/Badge';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { JobList } from '@/components/jobs/JobList';
 import { FinalCTA } from '@/components/sections/FinalCTA';
+import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Current Job Opportunities in the UAE',
   description:
     'Browse verified UAE job opportunities across hospitality, cleaning, construction trades, delivery, and professional transport fleets.',
+  alternates: {
+    canonical: '/jobs/',
+  },
+  openGraph: {
+    title: 'Current Job Opportunities in the UAE | Cityline Consultancy',
+    description:
+      'Browse verified UAE job opportunities across hospitality, cleaning, construction, and transport.',
+    url: '/jobs/',
+  },
 };
 
 export default function JobsPage() {
   return (
     <div className="page-wrapper">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Current Jobs', url: '/jobs/' },
+        ]}
+      />
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>

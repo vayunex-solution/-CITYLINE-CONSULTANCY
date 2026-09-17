@@ -2,5 +2,20 @@ User-Agent: *
 Allow: /
 Disallow: /api/
 Disallow: /admin/
+Disallow: /storage/
 
+User-Agent: GPTBot
+User-Agent: ChatGPT-User
+User-Agent: ClaudeBot
+User-Agent: anthropic-ai
+User-Agent: PerplexityBot
+User-Agent: Google-Extended
+User-Agent: Applebot-Extended
+User-Agent: CCBot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /storage/
+
+Host: https://citylineconsultancy.com
 Sitemap: https://citylineconsultancy.com/sitemap.xml

@@ -9,11 +9,21 @@ import { FAQAccordion } from '@/components/faq/FAQAccordion';
 import { getFAQsByCategory } from '@/lib/data/faq';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import { JourneyIndicator } from '@/components/hero/JourneyIndicator';
+import { BreadcrumbJsonLd, ServiceJsonLd, FaqJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'UAE Company Formation & Business Setup Advisory',
   description:
     'Turnkey corporate formation and business setup advisory across Dubai and the UAE. Licensing, registration, and investor visa coordination by Cityline Consultancy.',
+  alternates: {
+    canonical: '/business-setup/',
+  },
+  openGraph: {
+    title: 'UAE Company Formation & Business Setup Advisory | Cityline Consultancy',
+    description:
+      'Turnkey corporate formation and business setup advisory across Dubai and the UAE. Mainland and Freezone solutions.',
+    url: '/business-setup/',
+  },
 };
 
 export default function BusinessSetupPage() {
@@ -21,6 +31,19 @@ export default function BusinessSetupPage() {
 
   return (
     <div className="page-wrapper">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Business Setup', url: '/business-setup/' },
+        ]}
+      />
+      <ServiceJsonLd
+        name="UAE Company Formation & Business Setup Advisory"
+        description="Turnkey corporate formation, commercial licensing (Mainland & Freezone), and investor visa coordination."
+        serviceType="Corporate Formation Advisory"
+        url="/business-setup/"
+      />
+      <FaqJsonLd faqs={businessFaqs.map((f) => ({ question: f.question, answer: f.answer }))} />
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>

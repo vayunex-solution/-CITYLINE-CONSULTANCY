@@ -5,11 +5,21 @@ import { TestimonialCard } from '@/components/testimonials/TestimonialCard';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { FinalCTA } from '@/components/sections/FinalCTA';
+import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Client Experiences & Testimonials',
   description:
     'Verified client milestone accounts and experiences with Cityline Consultancy across visas, business incorporation, and UAE career mobility.',
+  alternates: {
+    canonical: '/testimonials/',
+  },
+  openGraph: {
+    title: 'Client Experiences & Testimonials | Cityline Consultancy',
+    description:
+      'Verified client milestone accounts and experiences with Cityline Consultancy across visas, business setup, and recruitment.',
+    url: '/testimonials/',
+  },
 };
 
 export default async function TestimonialsPage() {
@@ -17,6 +27,12 @@ export default async function TestimonialsPage() {
 
   return (
     <div className="page-wrapper">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Testimonials', url: '/testimonials/' },
+        ]}
+      />
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>

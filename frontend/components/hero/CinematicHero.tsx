@@ -56,6 +56,7 @@ export function CinematicHero({
           alt=""
           className={styles.posterFallback}
           loading="eager"
+          fetchPriority="high"
         />
 
         {/* Video Element (Loads gracefully without blocking page interaction) */}

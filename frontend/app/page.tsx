@@ -9,6 +9,7 @@ import { FAQAccordion } from '@/components/faq/FAQAccordion';
 import { getFAQsByCategory } from '@/lib/data/faq';
 import { Button } from '@/components/ui/Button';
 import { InlineManpowerForm } from '@/components/forms/InlineManpowerForm';
+import { FaqJsonLd } from '@/components/seo/JsonLd';
 import styles from './HomePageStyles.module.css';
 
 /* ── SVG Icon primitives (no emojis) ── */
@@ -151,6 +152,7 @@ export default function HomePage() {
 
   return (
     <>
+      <FaqJsonLd faqs={previewFaqs.map((f) => ({ question: f.question, answer: f.answer }))} />
       {/* ═══════════════════════════════
           1. CINEMATIC HERO (video-ready)
       ═══════════════════════════════ */}

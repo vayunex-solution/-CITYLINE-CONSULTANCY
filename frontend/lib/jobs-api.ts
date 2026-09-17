@@ -89,7 +89,7 @@ export async function fetchPublishedJobs(params: {
 
   try {
     const res = await fetch(`${getBaseUrl()}/api/v1/jobs?${query.toString()}`, {
-      cache: 'no-store',
+      next: { revalidate: 60 },
     });
 
     if (res.ok) {
@@ -154,7 +154,7 @@ export async function fetchPublishedJobs(params: {
 export async function fetchJobBySlug(slug: string): Promise<JobDetailResponse | null> {
   try {
     const res = await fetch(`${getBaseUrl()}/api/v1/jobs/${encodeURIComponent(slug)}`, {
-      cache: 'no-store',
+      next: { revalidate: 60 },
     });
 
     if (res.ok) {

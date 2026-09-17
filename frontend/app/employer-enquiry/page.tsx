@@ -8,11 +8,21 @@ import { FAQAccordion } from '@/components/faq/FAQAccordion';
 import { FAQS } from '@/lib/data/faq';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import Link from 'next/link';
+import { BreadcrumbJsonLd, FaqJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Employer Manpower Enquiry | Cityline Consultancy',
   description:
     'UAE corporate workforce and manpower recruitment solutions. Source skilled and semi-skilled personnel across hospitality, facility management, construction, and logistics.',
+  alternates: {
+    canonical: '/employer-enquiry/',
+  },
+  openGraph: {
+    title: 'Employer Manpower Enquiry | Cityline Consultancy',
+    description:
+      'UAE corporate workforce and manpower recruitment solutions connecting vetted Indian talent with UAE employers.',
+    url: '/employer-enquiry/',
+  },
 };
 
 export default function EmployerEnquiryPage() {
@@ -54,6 +64,14 @@ export default function EmployerEnquiryPage() {
 
   return (
     <main>
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Recruitment', url: '/recruitment/' },
+          { name: 'Employer Enquiry', url: '/employer-enquiry/' },
+        ]}
+      />
+      <FaqJsonLd faqs={recruitmentFaqs.map((f) => ({ question: f.question, answer: f.answer }))} />
       {/* Hero Section */}
       <section
         style={{

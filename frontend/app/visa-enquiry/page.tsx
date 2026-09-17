@@ -7,11 +7,21 @@ import { FAQAccordion } from '@/components/faq/FAQAccordion';
 import { FAQS } from '@/lib/data/faq';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import Link from 'next/link';
+import { BreadcrumbJsonLd, FaqJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Visa Services Enquiry | Cityline Consultancy',
   description:
     'Submit an official visa consultation enquiry for 2-Year Freelance Visas, 30-day visit visas, and 60-day visit visas in the UAE.',
+  alternates: {
+    canonical: '/visa-enquiry/',
+  },
+  openGraph: {
+    title: 'Visa Services Enquiry | Cityline Consultancy',
+    description:
+      'Submit an official visa consultation enquiry for 2-Year Freelance Visas and Visit Visas in the UAE.',
+    url: '/visa-enquiry/',
+  },
 };
 
 export default function VisaEnquiryPage() {
@@ -19,6 +29,14 @@ export default function VisaEnquiryPage() {
 
   return (
     <main>
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Visa Services', url: '/visa-services/' },
+          { name: 'Visa Enquiry', url: '/visa-enquiry/' },
+        ]}
+      />
+      <FaqJsonLd faqs={visaFaqs.map((f) => ({ question: f.question, answer: f.answer }))} />
       {/* Hero Section */}
       <section
         style={{

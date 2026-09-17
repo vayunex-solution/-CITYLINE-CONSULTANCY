@@ -8,9 +8,24 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin/'],
+        disallow: ['/api/', '/admin/', '/storage/'],
+      },
+      {
+        userAgent: [
+          'GPTBot',
+          'ChatGPT-User',
+          'ClaudeBot',
+          'anthropic-ai',
+          'PerplexityBot',
+          'Google-Extended',
+          'Applebot-Extended',
+          'CCBot',
+        ],
+        allow: '/',
+        disallow: ['/api/', '/admin/', '/storage/'],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }

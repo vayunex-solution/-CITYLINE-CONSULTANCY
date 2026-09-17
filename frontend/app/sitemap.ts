@@ -21,23 +21,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/faq',
     '/visa-enquiry',
     '/employer-enquiry',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: currentDate,
-    changeFrequency: 'weekly' as const,
-    priority: route === '' ? 1.0 : route.startsWith('/visa-services') ? 0.9 : 0.8,
-  }));
+  ].map((route) => {
+    const formattedRoute = route === '' ? '/' : `${route}/`;
+    return {
+      url: `${baseUrl}${formattedRoute}`,
+      lastModified: currentDate,
+      changeFrequency: route === '' ? ('daily' as const) : route.startsWith('/visa-services') || route === '/jobs' ? ('weekly' as const) : ('monthly' as const),
+      priority: route === '' ? 1.0 : route.startsWith('/visa-services') || route === '/business-setup' ? 0.9 : 0.8,
+    };
+  });
 
   // Dynamic job listing and apply routes
   const jobRoutes = SEED_JOBS.flatMap((job) => [
     {
-      url: `${baseUrl}/jobs/${job.slug}`,
+      url: `${baseUrl}/jobs/${job.slug}/`,
       lastModified: currentDate,
       changeFrequency: 'weekly' as const,
-      priority: 0.7,
+      priority: 0.8,
     },
     {
-      url: `${baseUrl}/jobs/${job.slug}/apply`,
+      url: `${baseUrl}/jobs/${job.slug}/apply/`,
       lastModified: currentDate,
       changeFrequency: 'monthly' as const,
       priority: 0.6,

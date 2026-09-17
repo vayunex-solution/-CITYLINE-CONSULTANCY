@@ -6,16 +6,32 @@ import { Badge } from '@/components/ui/Badge';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'UAE Visa Services & Residency Advisory',
   description:
     'Explore 2-year Freelance Visa Dubai assistance and 30/60-day Visit Visas facilitated by Cityline Consultancy with transparent procedural guidance.',
+  alternates: {
+    canonical: '/visa-services/',
+  },
+  openGraph: {
+    title: 'UAE Visa Services & Residency Advisory | Cityline Consultancy',
+    description:
+      'Explore 2-year Freelance Visa Dubai assistance and 30/60-day Visit Visas with transparent procedural guidance.',
+    url: '/visa-services/',
+  },
 };
 
 export default function VisaServicesPage() {
   return (
     <div className="page-wrapper">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Visa Services', url: '/visa-services/' },
+        ]}
+      />
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
           <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'left' }}>

@@ -6,11 +6,21 @@ import { FAQAccordion } from '@/components/faq/FAQAccordion';
 import { FAQS } from '@/lib/data/faq';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import Link from 'next/link';
+import { BreadcrumbJsonLd, FaqJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions | Cityline Consultancy',
   description:
     'Verified procedural information and guidance regarding UAE Visa Services, Company Formation, and Manpower Recruitment.',
+  alternates: {
+    canonical: '/faq/',
+  },
+  openGraph: {
+    title: 'Frequently Asked Questions | Cityline Consultancy',
+    description:
+      'Verified procedural information and guidance regarding UAE Visa Services, Company Formation, and Manpower Recruitment.',
+    url: '/faq/',
+  },
 };
 
 export default function FAQPage() {
@@ -21,6 +31,13 @@ export default function FAQPage() {
 
   return (
     <main>
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Frequently Asked Questions', url: '/faq/' },
+        ]}
+      />
+      <FaqJsonLd faqs={FAQS.map((f) => ({ question: f.question, answer: f.answer }))} />
       {/* Hero Section */}
       <section
         style={{

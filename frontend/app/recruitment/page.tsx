@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import type { Metadata } from 'next';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Badge } from '@/components/ui/Badge';
@@ -8,16 +8,38 @@ import { CandidateJourney } from '@/components/recruitment/CandidateJourney';
 import { EmployerJourney } from '@/components/recruitment/EmployerJourney';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import { JourneyIndicator } from '@/components/hero/JourneyIndicator';
+import { BreadcrumbJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'UAE Manpower Sourcing & Recruitment Solutions',
   description:
     'Bridging skilled Indian manpower with verified UAE corporate employers across hospitality, construction, logistics, and facility management.',
+  alternates: {
+    canonical: '/recruitment/',
+  },
+  openGraph: {
+    title: 'UAE Manpower Sourcing & Recruitment Solutions | Cityline Consultancy',
+    description:
+      'Bridging skilled Indian manpower with verified UAE corporate employers across hospitality, construction, and logistics.',
+    url: '/recruitment/',
+  },
 };
 
 export default function RecruitmentPage() {
   return (
     <div className="page-wrapper">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Recruitment', url: '/recruitment/' },
+        ]}
+      />
+      <ServiceJsonLd
+        name="UAE Manpower Sourcing & Recruitment Solutions"
+        description="Cross-border recruitment solutions connecting vetted Indian talent with UAE employers."
+        serviceType="Manpower Recruitment & Staffing"
+        url="/recruitment/"
+      />
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>

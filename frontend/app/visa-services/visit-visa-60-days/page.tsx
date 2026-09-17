@@ -10,11 +10,21 @@ import { FinalCTA } from '@/components/sections/FinalCTA';
 import { VisaCard } from '@/components/visa/VisaCard';
 
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { BreadcrumbJsonLd, ServiceJsonLd, FaqJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: '60-Day Visit Visa UAE Assistance',
   description:
     'Extended stay 60-day UAE visit visa application support. Comprehensive advisory for interview exploration, commercial networking, and relocation planning.',
+  alternates: {
+    canonical: '/visa-services/visit-visa-60-days/',
+  },
+  openGraph: {
+    title: '60-Day Visit Visa UAE Assistance | Cityline Consultancy',
+    description:
+      'Extended stay 60-day UAE visit visa application support. Ideal for interviews and business networking.',
+    url: '/visa-services/visit-visa-60-days/',
+  },
 };
 
 export default function VisitVisa60DaysPage() {
@@ -25,6 +35,20 @@ export default function VisitVisa60DaysPage() {
 
   return (
     <div className="page-wrapper">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Visa Services', url: '/visa-services/' },
+          { name: '60-Day Visit Visa', url: '/visa-services/visit-visa-60-days/' },
+        ]}
+      />
+      <ServiceJsonLd
+        name="60-Day Visit Visa UAE Assistance"
+        description={service.description}
+        serviceType="Travel & Visit Visa Facilitation"
+        url="/visa-services/visit-visa-60-days/"
+      />
+      <FaqJsonLd faqs={service.faqs} />
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>

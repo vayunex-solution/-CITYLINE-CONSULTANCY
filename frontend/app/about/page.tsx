@@ -5,11 +5,21 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { Badge } from '@/components/ui/Badge';
 import { FinalCTA } from '@/components/sections/FinalCTA';
 import { JourneyIndicator } from '@/components/hero/JourneyIndicator';
+import { BreadcrumbJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: 'About Cityline Consultancy',
   description:
     'Learn about Cityline Consultancy — your strategic advisory bridge connecting India and the UAE across visas, business formation, and manpower recruitment.',
+  alternates: {
+    canonical: '/about/',
+  },
+  openGraph: {
+    title: 'About Cityline Consultancy | Gateway to UAE Opportunity',
+    description:
+      'Learn about Cityline Consultancy — connecting India and the UAE across visas, business setup, and recruitment.',
+    url: '/about/',
+  },
 };
 
 export default function AboutPage() {
@@ -45,6 +55,12 @@ export default function AboutPage() {
 
   return (
     <div className="page-wrapper">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'About Us', url: '/about/' },
+        ]}
+      />
       {/* Hero Section */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>

@@ -58,8 +58,25 @@ RewriteRule ^(.*[^/])$ /$1/ [R=301,L]
 ErrorDocument 404 /404.html
 
 # ------------------------------------------------------------------------------
-# 5. GZIP / BROTLI COMPRESSION
+# 5. BROTLI & GZIP COMPRESSION
 # ------------------------------------------------------------------------------
+# Brotli Compression (High Efficiency)
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html
+    AddOutputFilterByType BROTLI_COMPRESS text/plain
+    AddOutputFilterByType BROTLI_COMPRESS text/xml
+    AddOutputFilterByType BROTLI_COMPRESS text/css
+    AddOutputFilterByType BROTLI_COMPRESS text/javascript
+    AddOutputFilterByType BROTLI_COMPRESS application/javascript
+    AddOutputFilterByType BROTLI_COMPRESS application/x-javascript
+    AddOutputFilterByType BROTLI_COMPRESS application/json
+    AddOutputFilterByType BROTLI_COMPRESS application/xml
+    AddOutputFilterByType BROTLI_COMPRESS application/xhtml+xml
+    AddOutputFilterByType BROTLI_COMPRESS application/rss+xml
+    AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+</IfModule>
+
+# Gzip Deflate Fallback
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/html
     AddOutputFilterByType DEFLATE text/plain
@@ -76,7 +93,7 @@ ErrorDocument 404 /404.html
 </IfModule>
 
 # ------------------------------------------------------------------------------
-# 6. BROWSER CACHING & PERFORMANCE
+# 6. BROWSER CACHING & PERFORMANCE HEADERS
 # ------------------------------------------------------------------------------
 <IfModule mod_expires.c>
     ExpiresActive On
@@ -92,6 +109,34 @@ ErrorDocument 404 /404.html
     ExpiresByType font/woff2 "access plus 1 year"
     ExpiresByType font/woff "access plus 1 year"
 
+    # AI context documents and sitemaps: 1 hour
+    ExpiresByType text/plain "access plus 1 hour"
+    ExpiresByType text/xml "access plus 1 hour"
+    ExpiresByType application/xml "access plus 1 hour"
+
     # HTML documents: immediate revalidation so updates reflect instantly
     ExpiresByType text/html "access plus 0 seconds"
 </IfModule>
+
+<IfModule mod_headers.c>
+    # 1-year immutable caching for static bundles and media
+    <FilesMatch "\.(js|css|woff2|woff|ttf|svg|png|jpg|jpeg|webp|ico)$">
+        Header set Cache-Control "max-age=31536000, public, immutable"
+    </FilesMatch>
+
+    # Instant revalidation for HTML
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "max-age=0, must-revalidate, public"
+    </FilesMatch>
+
+    # Structured data, sitemaps, and LLM text files
+    <FilesMatch "\.(txt|xml|json)$">
+        Header set Cache-Control "max-age=3600, must-revalidate, public"
+    </FilesMatch>
+
+    # Cross-Origin Resource Sharing (CORS) for Web Fonts
+    <FilesMatch "\.(woff|woff2|eot|ttf|otf)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
+

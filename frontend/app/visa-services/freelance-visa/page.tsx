@@ -10,11 +10,21 @@ import { FinalCTA } from '@/components/sections/FinalCTA';
 import { VisaCard } from '@/components/visa/VisaCard';
 
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { BreadcrumbJsonLd, ServiceJsonLd, FaqJsonLd } from '@/components/seo/JsonLd';
 
 export const metadata: Metadata = {
   title: '2-Year Freelance Visa Dubai Assistance',
   description:
     'Comprehensive advisory and facilitation for 2-year Freelance Visa Dubai residency. Operate legally and independently in the UAE with structured guidance.',
+  alternates: {
+    canonical: '/visa-services/freelance-visa/',
+  },
+  openGraph: {
+    title: '2-Year Freelance Visa Dubai Assistance | Cityline Consultancy',
+    description:
+      'Comprehensive advisory and facilitation for 2-year Freelance Visa Dubai residency. Live and work independently in the UAE.',
+    url: '/visa-services/freelance-visa/',
+  },
 };
 
 export default function FreelanceVisaPage() {
@@ -25,6 +35,20 @@ export default function FreelanceVisaPage() {
 
   return (
     <div className="page-wrapper">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: '/' },
+          { name: 'Visa Services', url: '/visa-services/' },
+          { name: '2-Year Freelance Visa', url: '/visa-services/freelance-visa/' },
+        ]}
+      />
+      <ServiceJsonLd
+        name="2-Year Freelance Visa Dubai Assistance"
+        description={service.description}
+        serviceType="Residency Visa Assistance"
+        url="/visa-services/freelance-visa/"
+      />
+      <FaqJsonLd faqs={service.faqs} />
       {/* Hero */}
       <section className="section-sm" style={{ background: 'var(--hero-mesh)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="container" style={{ textAlign: 'center' }}>
