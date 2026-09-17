@@ -32,7 +32,8 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const isLoginPage = pathname === '/admin/login';
+  const normalizedPath = pathname?.replace(/\/$/, '') || '';
+  const isLoginPage = normalizedPath === '/admin/login' || pathname?.startsWith('/admin/login');
 
   const refreshProfile = useCallback(async () => {
     try {
@@ -57,13 +58,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   // Route protection redirect
   useEffect(() => {
     if (!loading) {
-      if (!user && !isLoginPage && pathname.startsWith('/admin')) {
-        router.push('/admin/login');
+      if (!user && !isLoginPage && normalizedPath.startsWith('/admin')) {
+        router.push('/admin/login/');
       } else if (user && isLoginPage) {
-        router.push('/admin');
+        router.push('/admin/');
       }
     }
-  }, [user, loading, isLoginPage, pathname, router]);
+  }, [user, loading, isLoginPage, normalizedPath, router]);
 
   const login = async (identity: string, password: string): Promise<void> => {
     setLoading(true);

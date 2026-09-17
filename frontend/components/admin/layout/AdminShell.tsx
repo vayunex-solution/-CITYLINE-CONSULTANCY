@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
@@ -106,8 +106,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const { user, loading, logout, isAuthenticated } = useAdminAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
-
-  if (pathname === '/admin/login') {
+  const normalizedPath = pathname?.replace(/\/$/, '') || '';
+  if (normalizedPath === '/admin/login' || pathname?.startsWith('/admin/login')) {
     return <>{children}</>;
   }
 

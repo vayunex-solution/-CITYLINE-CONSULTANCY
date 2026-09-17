@@ -16,8 +16,11 @@ export function getPublicApiBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
   }
-  // In browser, relative /api/v1 routes through Next.js proxy rewrite
+  // In production browser, route directly to the backend subdomain
   if (typeof window !== 'undefined') {
+    if (window.location.hostname.includes('citylineconsultancy.com')) {
+      return 'https://api.citylineconsultancy.com/api/v1';
+    }
     return '/api/v1';
   }
   return process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api/v1` : 'http://127.0.0.1:5000/api/v1';
