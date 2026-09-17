@@ -10,7 +10,11 @@
   text-decoration: none;
   transition: all var(--transition-base);
   position: relative;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.35;
+  box-sizing: border-box;
+  max-width: 100%;
   border: 1px solid transparent;
 }
 
@@ -28,13 +32,24 @@
 }
 
 .sizeMd {
-  padding: 0.65rem 1.4rem;
+  padding: 0.65rem 1.2rem;
   font-size: var(--text-sm);
 }
 
 .sizeLg {
   padding: 0.85rem 1.8rem;
   font-size: var(--text-base);
+}
+
+@media (max-width: 640px) {
+  .sizeLg {
+    padding: 0.75rem 1.25rem;
+    font-size: var(--text-sm);
+  }
+  .sizeMd {
+    padding: 0.6rem 1rem;
+    font-size: var(--text-xs);
+  }
 }
 
 /* Variants */

@@ -152,7 +152,7 @@ export default function BusinessSetupPage() {
                 </div>
 
                 <Button href="/contact" size="md" variant="primary" style={{ width: '100%' }}>
-                  Request Consultation on {biz.title}
+                  Request Consultation
                 </Button>
               </GlassCard>
             ))}
