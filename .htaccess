@@ -23,21 +23,6 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" env=HTTPS
 </IfModule>
 
-# ------------------------------------------------------------------------------
-# 3. BACKEND API ROUTING (api.citylineconsultancy.com)
-# ------------------------------------------------------------------------------
-# Route relative /api/v1 requests directly to backend subdomain
-<IfModule mod_proxy.c>
-    SSLProxyEngine On
-    RewriteCond %{REQUEST_URI} ^/api/v1/(.*)$
-    RewriteRule ^api/v1/(.*)$ https://api.citylineconsultancy.com/api/v1/$1 [P,L]
-</IfModule>
-
-# Fallback redirect if mod_proxy is not enabled on host
-<IfModule !mod_proxy.c>
-    RewriteCond %{REQUEST_URI} ^/api/v1/(.*)$
-    RewriteRule ^api/v1/(.*)$ https://api.citylineconsultancy.com/api/v1/$1 [R=307,L]
-</IfModule>
 
 # ------------------------------------------------------------------------------
 # 4. CLEAN URLS & STATIC EXPORT ROUTING
