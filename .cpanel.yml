@@ -1,28 +1,5 @@
 ---
-# ==============================================================================
-# CITYLINE CONSULTANCY — cPanel Git Versioning Automated Deployment Configuration
-# Target Domain: citylineconsultancy.com (Main Domain)
-# Target Document Root: /home/$USER/public_html
-# ==============================================================================
-# WORKFLOW:
-# 1. Build UI locally via `npm run build:cpanel` (outputs static files to frontend/out)
-# 2. Commit all code (including frontend/out) and push to Git repository
-# 3. In cPanel > Git™ Versioning, pull changes and click "Deploy HEAD Commit"
-# 4. This .cpanel.yml automatically deploys ONLY the UI build to public_html
-# ==============================================================================
-
 deployment:
   tasks:
-    # Set deployment target path to public_html (main domain document root)
-    - export DEPLOYPATH=/home/cityline/public_html
-    - /bin/mkdir -p $DEPLOYPATH
-
-    # Copy exclusively the static UI production build into public_html
-    - /bin/cp -R frontend/out/* $DEPLOYPATH/
-
-    # Ensure production Apache configuration (.htaccess) is active
-    - /bin/cp frontend/public_html_htaccess $DEPLOYPATH/.htaccess
-
-    # Apply standard cPanel secure file permissions (755 folders, 644 files)
-    - /bin/find $DEPLOYPATH -type d -exec chmod 755 {} +
-    - /bin/find $DEPLOYPATH -type f -exec chmod 644 {} +
+    - /bin/cp -Rf backend/. /home/cityline/api.citylineconsultancy.com/
+    - /bin/cp -Rf frontend/out/. /home/cityline/public_html/
