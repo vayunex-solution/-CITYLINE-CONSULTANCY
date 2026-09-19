@@ -56,9 +56,16 @@ export class AdminJobController {
     try {
       const parseResult = adminCreateJobSchema.safeParse(req.body);
       if (!parseResult.success) {
-        throw new AppError('Validation failed for job creation.', 400, 'VALIDATION_ERROR', {
-          fieldErrors: parseResult.error.flatten().fieldErrors,
-        });
+        const errorDetails = parseResult.error.flatten().fieldErrors;
+        const formattedErrors = Object.entries(errorDetails)
+          .map(([k, v]) => `${k}: ${(v || []).join(', ')}`)
+          .join('; ');
+        throw new AppError(
+          `Validation failed for job creation: ${formattedErrors}`,
+          400,
+          'VALIDATION_ERROR',
+          { fieldErrors: errorDetails }
+        );
       }
 
       const adminId = req.admin?.id || 'system';

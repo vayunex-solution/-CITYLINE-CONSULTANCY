@@ -154,8 +154,13 @@ export default function AdminJobsPage() {
       });
       if (res.success && res.data) {
         const created = res.data;
-        setCategories((prev) => [...prev, created]);
-        setFormData((prev) => ({ ...prev, categoryId: created.id }));
+        const newCatId = Number(created.id);
+        const newCategoryObj = { ...created, id: newCatId };
+        setCategories((prev) => {
+          const exists = prev.some((c) => c.id === newCatId);
+          return exists ? prev : [...prev, newCategoryObj];
+        });
+        setFormData((prev) => ({ ...prev, categoryId: newCatId }));
         setInlineCategoryOpen(false);
         setNewCatName('');
         setNewCatSlug('');
@@ -174,7 +179,7 @@ export default function AdminJobsPage() {
     setFormData({
       title: '',
       slug: '',
-      categoryId: 1,
+      categoryId: categories[0]?.id || 1,
       location: 'Dubai, UAE',
       employmentType: 'Full-time',
       status: 'active',
@@ -203,10 +208,20 @@ export default function AdminJobsPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.slug.trim()) {
-      setError('Title and slug are required.');
+    if (!formData.title.trim()) {
+      setError('Job title is required.');
       return;
     }
+
+    const catId = Number(formData.categoryId);
+    const validCategoryId = !isNaN(catId) && catId > 0 ? catId : (categories[0]?.id || 1);
+    const cleanSlug = (formData.slug.trim() || formData.title.trim())
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'vacancy';
+
+    const desc = formData.description.trim() || `${formData.title.trim()} vacancy in ${formData.location.trim()} — operational role and employment terms.`;
+    const reqs = formData.requirements.trim() || 'Relevant commercial experience and valid legal UAE documentation.';
 
     setFormSubmitting(true);
     try {
@@ -215,13 +230,13 @@ export default function AdminJobsPage() {
           method: 'PUT',
           body: JSON.stringify({
             title: formData.title.trim(),
-            categoryId: Number(formData.categoryId),
+            categoryId: validCategoryId,
             location: formData.location.trim(),
             employmentType: formData.employmentType,
             status: formData.status,
             isFeatured: formData.isFeatured,
-            description: formData.description.trim() || 'Standard operational vacancy terms.',
-            requirements: formData.requirements.trim() || 'Relevant experience and legal UAE documentation.',
+            description: desc,
+            requirements: reqs,
           }),
         });
         setSuccess('Job vacancy updated successfully.');
@@ -230,14 +245,14 @@ export default function AdminJobsPage() {
           method: 'POST',
           body: JSON.stringify({
             title: formData.title.trim(),
-            slug: formData.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            categoryId: Number(formData.categoryId),
+            slug: cleanSlug,
+            categoryId: validCategoryId,
             location: formData.location.trim(),
             employmentType: formData.employmentType,
             status: formData.status,
             isFeatured: formData.isFeatured,
-            description: formData.description.trim() || 'Standard operational vacancy terms.',
-            requirements: formData.requirements.trim() || 'Relevant experience and legal UAE documentation.',
+            description: desc,
+            requirements: reqs,
           }),
         });
         setSuccess('New job vacancy created successfully.');
@@ -246,7 +261,14 @@ export default function AdminJobsPage() {
       setModalOpen(false);
       fetchJobs();
     } catch (err: any) {
-      setError(err.message || 'Operation failed.');
+      if (err.fieldErrors && typeof err.fieldErrors === 'object') {
+        const details = Object.entries(err.fieldErrors)
+          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+          .join(' | ');
+        setError(`${err.message || 'Validation failed'}: ${details}`);
+      } else {
+        setError(err.message || 'Operation failed.');
+      }
     } finally {
       setFormSubmitting(false);
     }
@@ -639,8 +661,9 @@ export default function AdminJobsPage() {
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Description *</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   required
+                  placeholder="Enter role responsibilities and operational expectations..."
                   className={styles.formTextarea}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -648,10 +671,10 @@ export default function AdminJobsPage() {
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Requirements *</label>
+                <label className={styles.formLabel}>Requirements</label>
                 <textarea
-                  rows={3}
-                  required
+                  rows={2}
+                  placeholder="Enter experience or legal UAE documentation (optional, standard terms apply if empty)..."
                   className={styles.formTextarea}
                   value={formData.requirements}
                   onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}

@@ -112,7 +112,7 @@ export type JobApplicationInput = z.infer<typeof jobApplicationInputSchema>;
  * Admin Job Creation Schema
  */
 export const adminCreateJobSchema = z.object({
-  categoryId: z.coerce.number().int().positive('Valid category ID is required'),
+  categoryId: z.coerce.number().int().positive('Valid category ID is required').default(1),
   title: z
     .string({ required_error: 'Job title is required' })
     .trim()
@@ -138,11 +138,20 @@ export const adminCreateJobSchema = z.object({
   description: z
     .string({ required_error: 'Job description is required' })
     .trim()
-    .min(10, 'Description must be at least 10 characters'),
+    .min(3, 'Description must be at least 3 characters')
+    .transform((val) => (val.length < 10 ? `${val} — operational role details.` : val)),
   requirements: z
-    .string({ required_error: 'Requirements are required' })
+    .string()
     .trim()
-    .min(10, 'Requirements must be at least 10 characters'),
+    .optional()
+    .nullable()
+    .transform((val) =>
+      !val || val.trim().length === 0
+        ? 'Relevant experience and legal UAE documentation.'
+        : val.trim().length < 10
+        ? `${val.trim()} — legal UAE documentation.`
+        : val.trim()
+    ),
   shortDescription: z
     .string()
     .trim()
