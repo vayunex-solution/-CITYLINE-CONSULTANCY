@@ -90,10 +90,12 @@ function verifyCsrfToken(cookieToken, headerToken) {
  * Returns standard Express cookie options for the administrative auth token.
  */
 function getAuthCookieOptions(maxAgeMs) {
+    const isProd = env_config_1.env.NODE_ENV === 'production';
     return {
         httpOnly: true,
-        secure: env_config_1.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        domain: isProd ? '.citylineconsultancy.com' : undefined,
         path: '/',
         maxAge: maxAgeMs ?? 30 * 60 * 1000, // Default 30 minutes
     };
@@ -102,10 +104,12 @@ function getAuthCookieOptions(maxAgeMs) {
  * Returns standard Express cookie options for the readable CSRF token.
  */
 function getCsrfCookieOptions(maxAgeMs) {
+    const isProd = env_config_1.env.NODE_ENV === 'production';
     return {
         httpOnly: false, // Must be readable by client JS to set X-CSRF-Token header
-        secure: env_config_1.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        domain: isProd ? '.citylineconsultancy.com' : undefined,
         path: '/',
         maxAge: maxAgeMs ?? 30 * 60 * 1000,
     };

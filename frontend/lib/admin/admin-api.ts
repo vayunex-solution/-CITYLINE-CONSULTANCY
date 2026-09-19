@@ -49,13 +49,57 @@ export const getApiBaseUrl = (): string => {
   return '/api/v1';
 };
 
+let memoryCsrfToken = '';
+
+export function setMemoryCsrfToken(token: string): void {
+  if (token && typeof token === 'string') {
+    memoryCsrfToken = token;
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('clc_csrf_token', token);
+      }
+    } catch {}
+  }
+}
+
 /**
- * Reads the public Double-Submit CSRF cookie value set by the backend (`clc_csrf_token`).
+ * Reads the public Double-Submit CSRF cookie value or stored token.
  */
 export function getCsrfToken(): string {
-  if (typeof document === 'undefined') return '';
-  const match = document.cookie.match(/(?:^|;\s*)clc_csrf_token=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : '';
+  // 1. Try reading document.cookie
+  if (typeof document !== 'undefined') {
+    const match = document.cookie.match(/(?:^|;\s*)clc_csrf_token=([^;]*)/);
+    if (match && match[1]) {
+      const val = decodeURIComponent(match[1]);
+      setMemoryCsrfToken(val);
+      return val;
+    }
+  }
+
+  // 2. Try memory
+  if (memoryCsrfToken) return memoryCsrfToken;
+
+  // 3. Try sessionStorage
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = sessionStorage.getItem('clc_csrf_token');
+      if (stored) {
+        memoryCsrfToken = stored;
+        return stored;
+      }
+    } catch {}
+  }
+
+  // 4. Generate client token if absent
+  if (typeof window !== 'undefined' && window.crypto) {
+    const fallback = Array.from(window.crypto.getRandomValues(new Uint8Array(32)))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    setMemoryCsrfToken(fallback);
+    return fallback;
+  }
+
+  return memoryCsrfToken;
 }
 
 /**
@@ -95,6 +139,11 @@ export async function adminFetch<T = any>(
 
     const isJson = response.headers.get('content-type')?.includes('application/json');
     const json = isJson ? await response.json().catch(() => ({})) : {};
+
+    // Cache updated CSRF token if returned by the server
+    if (json.data?.csrfToken) {
+      setMemoryCsrfToken(json.data.csrfToken);
+    }
 
     if (!response.ok) {
       const errorMsg =

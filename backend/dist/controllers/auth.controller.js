@@ -133,6 +133,7 @@ class AuthController {
                         fullName: user.full_name,
                         role: user.role_key,
                     },
+                    csrfToken,
                 },
                 timestamp: new Date().toISOString(),
                 requestId: req.requestId,
@@ -189,9 +190,11 @@ class AuthController {
             if (!admin) {
                 return next(new app_error_1.AppError('Authentication required.', 401, 'AUTHENTICATION_REQUIRED'));
             }
-            // If client is missing CSRF cookie, issue a fresh one
-            if (!req.cookies?.[env_config_1.env.AUTH_CSRF_COOKIE_NAME]) {
-                res.cookie(env_config_1.env.AUTH_CSRF_COOKIE_NAME, (0, token_1.generateCsrfToken)(), (0, token_1.getCsrfCookieOptions)());
+            // Ensure client has active CSRF token
+            let csrfToken = req.cookies?.[env_config_1.env.AUTH_CSRF_COOKIE_NAME];
+            if (!csrfToken) {
+                csrfToken = (0, token_1.generateCsrfToken)();
+                res.cookie(env_config_1.env.AUTH_CSRF_COOKIE_NAME, csrfToken, (0, token_1.getCsrfCookieOptions)());
             }
             res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
             res.setHeader('Pragma', 'no-cache');
@@ -205,6 +208,7 @@ class AuthController {
                         fullName: admin.fullName,
                         role: admin.role,
                     },
+                    csrfToken,
                 },
                 timestamp: new Date().toISOString(),
                 requestId: req.requestId,

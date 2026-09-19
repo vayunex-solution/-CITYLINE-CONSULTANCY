@@ -404,7 +404,7 @@ export function TestimonialsManager() {
                 <th>Client Testimonial</th>
                 <th>Rating</th>
                 <th>Status</th>
-                <th style={{ textAlign: 'right', width: '190px' }}>Actions</th>
+                <th style={{ textAlign: 'right', width: '170px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
