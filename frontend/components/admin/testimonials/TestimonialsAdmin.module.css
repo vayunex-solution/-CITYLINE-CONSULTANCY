@@ -83,8 +83,10 @@
 /* KPI Summary Cards */
 .kpiGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .kpiCard {
@@ -254,6 +256,10 @@
 
 /* Table Card */
 .tableCard {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: var(--surface-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
@@ -263,8 +269,11 @@
 }
 
 .tableWrapper {
-  overflow-x: auto;
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: auto;
   position: relative;
   scrollbar-width: thin;
   scrollbar-color: var(--accent-gold-primary) var(--surface-subtle);
@@ -285,7 +294,7 @@
 
 .table {
   width: 100%;
-  min-width: 820px;
+  min-width: 720px;
   border-collapse: collapse;
   text-align: left;
   font-size: var(--text-sm);
@@ -317,16 +326,20 @@
   position: sticky;
   right: 0;
   background: var(--surface-subtle);
-  z-index: 15;
-  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.2);
+  z-index: 20;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.25);
+  width: 170px;
+  min-width: 170px;
 }
 
 .table td:last-child {
   position: sticky;
   right: 0;
   background: var(--surface-card);
-  z-index: 8;
-  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.25);
+  width: 170px;
+  min-width: 170px;
 }
 
 .table tbody tr {
