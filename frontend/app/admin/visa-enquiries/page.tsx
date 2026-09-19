@@ -224,7 +224,7 @@ export default function AdminVisaEnquiriesPage() {
                       {item.email} • {item.phone}
                     </div>
                   </td>
-                  <td>{item.serviceTitle || 'General Visa'}</td>
+                  <td>{item.serviceTitle || 'General Consultation'}</td>
                   <td>{item.applicantCount}</td>
                   <td>{item.nationality || '—'}</td>
                   <td>
@@ -291,7 +291,7 @@ export default function AdminVisaEnquiriesPage() {
         <div className={styles.modalOverlay} onClick={() => setDetailModalOpen(false)}>
           <div className={styles.modalDialog} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Visa Application Details</h2>
+              <h2 className={styles.modalTitle}>Enquiry & Consultation Details</h2>
               <button className={styles.closeBtn} onClick={() => setDetailModalOpen(false)}>✕</button>
             </div>
 
@@ -318,8 +318,8 @@ export default function AdminVisaEnquiriesPage() {
                     <div>{detailData.enquiry.nationality || 'Unspecified'}</div>
                   </div>
                   <div>
-                    <strong>Visa Category:</strong>
-                    <div>{detailData.enquiry.serviceTitle || 'General Visa'}</div>
+                    <strong>Service / Enquiry:</strong>
+                    <div>{detailData.enquiry.serviceTitle || detailData.enquiry.subject || 'General Consultation'}</div>
                   </div>
                   <div>
                     <strong>Applicant Count:</strong>

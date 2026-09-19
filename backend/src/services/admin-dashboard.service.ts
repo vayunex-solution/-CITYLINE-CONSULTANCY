@@ -250,9 +250,8 @@ export class AdminDashboardService {
       const offset = (page - 1) * limit;
 
       let baseQuery = db('enquiries')
-        .join('visa_enquiries', 'enquiries.id', 'visa_enquiries.enquiry_id')
+        .leftJoin('visa_enquiries', 'enquiries.id', 'visa_enquiries.enquiry_id')
         .leftJoin('visa_services', 'visa_enquiries.visa_service_id', 'visa_services.id')
-        .where('enquiries.enquiry_type', 'visa_enquiry')
         .whereNull('enquiries.deleted_at');
 
       if (status && status !== 'all') {
@@ -266,7 +265,8 @@ export class AdminDashboardService {
             .where('enquiries.full_name', 'like', term)
             .orWhere('enquiries.email', 'like', term)
             .orWhere('enquiries.phone', 'like', term)
-            .orWhere('visa_services.title', 'like', term);
+            .orWhere('visa_services.title', 'like', term)
+            .orWhere('enquiries.subject', 'like', term);
         });
       }
 
@@ -285,9 +285,9 @@ export class AdminDashboardService {
           'enquiries.nationality',
           'enquiries.created_at as createdAt',
           'visa_enquiries.duration_days as durationDays',
-          'visa_enquiries.applicant_count as applicantCount',
+          db.raw('COALESCE(visa_enquiries.applicant_count, 1) as applicantCount'),
           'visa_enquiries.intended_travel_date as intendedTravelDate',
-          'visa_services.title as serviceTitle',
+          db.raw('COALESCE(visa_services.title, enquiries.subject, enquiries.enquiry_type) as serviceTitle'),
           'visa_services.slug as serviceSlug'
         )
         .orderBy('enquiries.created_at', 'desc')
@@ -336,10 +336,9 @@ export class AdminDashboardService {
       const db = this.db;
 
       const row = await db('enquiries')
-        .join('visa_enquiries', 'enquiries.id', 'visa_enquiries.enquiry_id')
+        .leftJoin('visa_enquiries', 'enquiries.id', 'visa_enquiries.enquiry_id')
         .leftJoin('visa_services', 'visa_enquiries.visa_service_id', 'visa_services.id')
         .where('enquiries.id', id)
-        .where('enquiries.enquiry_type', 'visa_enquiry')
         .whereNull('enquiries.deleted_at')
         .select(
           'enquiries.id',
@@ -351,20 +350,22 @@ export class AdminDashboardService {
           'enquiries.whatsapp',
           'enquiries.nationality',
           'enquiries.message',
+          'enquiries.subject',
+          'enquiries.enquiry_type as enquiryType',
           'enquiries.created_at as createdAt',
           'enquiries.updated_at as updatedAt',
           'visa_enquiries.duration_days as durationDays',
-          'visa_enquiries.applicant_count as applicantCount',
+          db.raw('COALESCE(visa_enquiries.applicant_count, 1) as applicantCount'),
           'visa_enquiries.intended_travel_date as intendedTravelDate',
           'visa_enquiries.notes',
           'visa_services.id as serviceId',
-          'visa_services.title as serviceTitle',
+          db.raw('COALESCE(visa_services.title, enquiries.subject, enquiries.enquiry_type) as serviceTitle'),
           'visa_services.slug as serviceSlug'
         )
         .first();
 
       if (!row) {
-        throw new AppError('Visa enquiry not found.', 404, 'VISA_ENQUIRY_NOT_FOUND');
+        throw new AppError('Enquiry not found.', 404, 'ENQUIRY_NOT_FOUND');
       }
 
       // Safe document metadata: NEVER expose storage_key or file paths!
@@ -403,12 +404,12 @@ export class AdminDashboardService {
       const db = this.db;
 
       const existing = await db('enquiries')
-        .where({ id, enquiry_type: 'visa_enquiry' })
+        .where({ id })
         .whereNull('deleted_at')
         .first();
 
       if (!existing) {
-        throw new AppError('Visa enquiry not found.', 404, 'VISA_ENQUIRY_NOT_FOUND');
+        throw new AppError('Enquiry not found.', 404, 'ENQUIRY_NOT_FOUND');
       }
 
       await db('enquiries')

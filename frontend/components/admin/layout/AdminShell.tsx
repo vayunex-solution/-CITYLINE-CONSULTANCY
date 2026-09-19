@@ -100,7 +100,7 @@ const IconMaster = () => (
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/admin', Icon: IconDashboard },
   { label: 'Analytics', href: '/admin/analytics', Icon: IconAnalytics },
-  { label: 'Visa Enquiries', href: '/admin/visa-enquiries', Icon: IconVisa },
+  { label: 'Visa & Contact Enquiries', href: '/admin/visa-enquiries', Icon: IconVisa },
   { label: 'Job Vacancies', href: '/admin/jobs', Icon: IconJobs },
   { label: 'Job Applications', href: '/admin/applications', Icon: IconApplications },
   { label: 'Manpower Requisitions', href: '/admin/manpower', Icon: IconManpower },

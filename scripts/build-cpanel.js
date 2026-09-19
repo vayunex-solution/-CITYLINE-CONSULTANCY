@@ -29,6 +29,7 @@ const env = {
   ...process.env,
   NODE_ENV: 'production',
   NEXT_EXPORT: 'true',
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.citylineconsultancy.com/api/v1',
 };
 
 console.log('⚙️  Step 1: Compiling static UI export via Next.js...');

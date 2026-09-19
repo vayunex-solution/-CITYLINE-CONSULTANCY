@@ -6,6 +6,7 @@ import { SelectField } from './SelectField';
 import { TextareaField } from './TextareaField';
 import { FormSuccess, FormError } from './FormStatus';
 import { Button } from '@/components/ui/Button';
+import { getPublicApiBaseUrl } from '@/lib/api-client';
 import styles from './Forms.module.css';
 
 const MAX_FILES_COUNT = 5;
@@ -122,7 +123,7 @@ export function ContactForm() {
         payload.append('documents', file);
       }
 
-      const res = await fetch('/api/v1/business-enquiries', {
+      const res = await fetch(`${getPublicApiBaseUrl()}/business-enquiries`, {
         method: 'POST',
         body: payload,
       });

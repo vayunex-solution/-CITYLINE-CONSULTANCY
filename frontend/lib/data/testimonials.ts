@@ -1,4 +1,5 @@
 import { TestimonialItem } from '../types/website.types';
+import { getPublicApiBaseUrl } from '../api-client';
 
 /**
  * APPROVED CLIENT TESTIMONIALS
@@ -18,8 +19,7 @@ export function getApprovedTestimonials(): TestimonialItem[] {
  */
 export async function fetchPublishedTestimonials(): Promise<TestimonialItem[]> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-    const res = await fetch(`${apiUrl}/testimonials`, {
+    const res = await fetch(`${getPublicApiBaseUrl()}/testimonials`, {
       next: { revalidate: 60 },
     });
 

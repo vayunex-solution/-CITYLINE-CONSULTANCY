@@ -1,7 +1,7 @@
-﻿import React from 'react';
+import React from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { fetchJobBySlug } from '@/lib/jobs-api';
+import { fetchJobBySlug, fetchPublishedJobs } from '@/lib/jobs-api';
 import { Badge } from '@/components/ui/Badge';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
@@ -15,9 +15,20 @@ interface JobApplyPageProps {
 }
 
 export async function generateStaticParams() {
-  return SEED_JOBS.map((job) => ({
-    slug: job.slug,
-  }));
+  try {
+    const res = await fetchPublishedJobs({ limit: 50 });
+    const liveSlugs = (res.jobs || []).map((j) => ({ slug: j.slug }));
+    const seedSlugs = SEED_JOBS.map((j) => ({ slug: j.slug }));
+    const map = new Map<string, { slug: string }>();
+    [...liveSlugs, ...seedSlugs].forEach((item) => {
+      if (item.slug) map.set(item.slug, item);
+    });
+    return Array.from(map.values());
+  } catch {
+    return SEED_JOBS.map((job) => ({
+      slug: job.slug,
+    }));
+  }
 }
 
 export async function generateMetadata({ params }: JobApplyPageProps): Promise<Metadata> {

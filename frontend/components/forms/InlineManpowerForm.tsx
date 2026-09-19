@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { getPublicApiBaseUrl } from '@/lib/api-client';
 import styles from './InlineManpowerForm.module.css';
 
 const INDUSTRY_OPTIONS = [
@@ -69,7 +70,7 @@ export function InlineManpowerForm() {
     };
 
     try {
-      const res = await fetch('/api/v1/manpower-enquiries', {
+      const res = await fetch(`${getPublicApiBaseUrl()}/manpower-enquiries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

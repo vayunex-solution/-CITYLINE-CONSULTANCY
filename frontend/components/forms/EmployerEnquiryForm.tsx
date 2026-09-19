@@ -7,6 +7,7 @@ import { TextareaField } from './TextareaField';
 import { FormSuccess, FormError } from './FormStatus';
 import { Button } from '@/components/ui/Button';
 import { MANPOWER_CATEGORIES } from '@/lib/data/recruitment';
+import { getPublicApiBaseUrl } from '@/lib/api-client';
 import styles from './Forms.module.css';
 
 interface PositionFormItem {
@@ -189,7 +190,7 @@ export function EmployerEnquiryForm() {
         })),
       };
 
-      const res = await fetch('/api/v1/manpower-enquiries', {
+      const res = await fetch(`${getPublicApiBaseUrl()}/manpower-enquiries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

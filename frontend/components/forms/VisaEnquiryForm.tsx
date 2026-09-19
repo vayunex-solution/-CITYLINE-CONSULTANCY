@@ -6,6 +6,7 @@ import { SelectField } from './SelectField';
 import { TextareaField } from './TextareaField';
 import { FormSuccess, FormError } from './FormStatus';
 import { Button } from '@/components/ui/Button';
+import { getPublicApiBaseUrl } from '@/lib/api-client';
 import styles from './Forms.module.css';
 
 interface VisaEnquiryFormProps {
@@ -49,7 +50,7 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
     let isMounted = true;
     async function loadActiveServices() {
       try {
-        const res = await fetch('/api/v1/visa-enquiries/services');
+        const res = await fetch(`${getPublicApiBaseUrl()}/visa-enquiries/services`);
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data) && json.data.length > 0) {
@@ -159,7 +160,7 @@ export function VisaEnquiryForm({ defaultVisaType = '' }: VisaEnquiryFormProps) 
         payload.append('documents', file);
       }
 
-      const response = await fetch('/api/v1/visa-enquiries', {
+      const response = await fetch(`${getPublicApiBaseUrl()}/visa-enquiries`, {
         method: 'POST',
         body: payload,
       });

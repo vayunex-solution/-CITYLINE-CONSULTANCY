@@ -23,7 +23,7 @@ export function getPublicApiBaseUrl(): string {
     }
     return '/api/v1';
   }
-  return process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api/v1` : 'http://127.0.0.1:5000/api/v1';
+  return process.env.BACKEND_URL ? `${process.env.BACKEND_URL}/api/v1` : 'https://api.citylineconsultancy.com/api/v1';
 }
 
 export class ApiClient {

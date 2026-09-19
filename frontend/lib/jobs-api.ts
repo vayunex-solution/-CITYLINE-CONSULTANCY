@@ -5,6 +5,7 @@
 
 import { SEED_JOBS, getJobBySlug as getSeedJobBySlug } from './data/jobs';
 import { JobOpportunity } from './types/website.types';
+import { getPublicApiBaseUrl } from './api-client';
 
 export interface JobsListResponse {
   jobs: JobOpportunity[];
@@ -25,16 +26,6 @@ export interface SubmitApplicationResponse {
   success: boolean;
   reference: string;
   message: string;
-}
-
-function getBaseUrl(): string {
-  if (typeof window !== 'undefined') {
-    return '';
-  }
-  if (process.env.BACKEND_URL) {
-    return process.env.BACKEND_URL.replace(/\/$/, '');
-  }
-  return 'http://127.0.0.1:5000';
 }
 
 /**
@@ -88,7 +79,7 @@ export async function fetchPublishedJobs(params: {
   if (params.limit) query.set('limit', params.limit.toString());
 
   try {
-    const res = await fetch(`${getBaseUrl()}/api/v1/jobs?${query.toString()}`, {
+    const res = await fetch(`${getPublicApiBaseUrl()}/jobs?${query.toString()}`, {
       next: { revalidate: 60 },
     });
 
@@ -153,7 +144,7 @@ export async function fetchPublishedJobs(params: {
  */
 export async function fetchJobBySlug(slug: string): Promise<JobDetailResponse | null> {
   try {
-    const res = await fetch(`${getBaseUrl()}/api/v1/jobs/${encodeURIComponent(slug)}`, {
+    const res = await fetch(`${getPublicApiBaseUrl()}/jobs/${encodeURIComponent(slug)}`, {
       next: { revalidate: 60 },
     });
 
@@ -200,7 +191,7 @@ export async function submitJobApplication(
     headers['X-Idempotency-Key'] = idempotencyKey;
   }
 
-  const res = await fetch(`${getBaseUrl()}/api/v1/jobs/${encodeURIComponent(slug)}/apply`, {
+  const res = await fetch(`${getPublicApiBaseUrl()}/jobs/${encodeURIComponent(slug)}/apply`, {
     method: 'POST',
     body: formData,
     headers,

@@ -186,9 +186,8 @@ class AdminDashboardService {
             const { page, limit, status, search } = params;
             const offset = (page - 1) * limit;
             let baseQuery = db('enquiries')
-                .join('visa_enquiries', 'enquiries.id', 'visa_enquiries.enquiry_id')
+                .leftJoin('visa_enquiries', 'enquiries.id', 'visa_enquiries.enquiry_id')
                 .leftJoin('visa_services', 'visa_enquiries.visa_service_id', 'visa_services.id')
-                .where('enquiries.enquiry_type', 'visa_enquiry')
                 .whereNull('enquiries.deleted_at');
             if (status && status !== 'all') {
                 baseQuery = baseQuery.where('enquiries.status', status);
@@ -200,14 +199,15 @@ class AdminDashboardService {
                         .where('enquiries.full_name', 'like', term)
                         .orWhere('enquiries.email', 'like', term)
                         .orWhere('enquiries.phone', 'like', term)
-                        .orWhere('visa_services.title', 'like', term);
+                        .orWhere('visa_services.title', 'like', term)
+                        .orWhere('enquiries.subject', 'like', term);
                 });
             }
             const countRow = await baseQuery.clone().count('enquiries.id as count').first();
             const total = Number(countRow?.count || 0);
             const rows = await baseQuery
                 .clone()
-                .select('enquiries.id', 'enquiries.status', 'enquiries.full_name as fullName', 'enquiries.email', 'enquiries.phone', 'enquiries.whatsapp', 'enquiries.nationality', 'enquiries.created_at as createdAt', 'visa_enquiries.duration_days as durationDays', 'visa_enquiries.applicant_count as applicantCount', 'visa_enquiries.intended_travel_date as intendedTravelDate', 'visa_services.title as serviceTitle', 'visa_services.slug as serviceSlug')
+                .select('enquiries.id', 'enquiries.status', 'enquiries.full_name as fullName', 'enquiries.email', 'enquiries.phone', 'enquiries.whatsapp', 'enquiries.nationality', 'enquiries.created_at as createdAt', 'visa_enquiries.duration_days as durationDays', db.raw('COALESCE(visa_enquiries.applicant_count, 1) as applicantCount'), 'visa_enquiries.intended_travel_date as intendedTravelDate', db.raw('COALESCE(visa_services.title, enquiries.subject, enquiries.enquiry_type) as serviceTitle'), 'visa_services.slug as serviceSlug')
                 .orderBy('enquiries.created_at', 'desc')
                 .limit(limit)
                 .offset(offset);
@@ -248,15 +248,14 @@ class AdminDashboardService {
         try {
             const db = this.db;
             const row = await db('enquiries')
-                .join('visa_enquiries', 'enquiries.id', 'visa_enquiries.enquiry_id')
+                .leftJoin('visa_enquiries', 'enquiries.id', 'visa_enquiries.enquiry_id')
                 .leftJoin('visa_services', 'visa_enquiries.visa_service_id', 'visa_services.id')
                 .where('enquiries.id', id)
-                .where('enquiries.enquiry_type', 'visa_enquiry')
                 .whereNull('enquiries.deleted_at')
-                .select('enquiries.id', 'enquiries.status', 'enquiries.assigned_admin_id as assignedAdminId', 'enquiries.full_name as fullName', 'enquiries.email', 'enquiries.phone', 'enquiries.whatsapp', 'enquiries.nationality', 'enquiries.message', 'enquiries.created_at as createdAt', 'enquiries.updated_at as updatedAt', 'visa_enquiries.duration_days as durationDays', 'visa_enquiries.applicant_count as applicantCount', 'visa_enquiries.intended_travel_date as intendedTravelDate', 'visa_enquiries.notes', 'visa_services.id as serviceId', 'visa_services.title as serviceTitle', 'visa_services.slug as serviceSlug')
+                .select('enquiries.id', 'enquiries.status', 'enquiries.assigned_admin_id as assignedAdminId', 'enquiries.full_name as fullName', 'enquiries.email', 'enquiries.phone', 'enquiries.whatsapp', 'enquiries.nationality', 'enquiries.message', 'enquiries.subject', 'enquiries.enquiry_type as enquiryType', 'enquiries.created_at as createdAt', 'enquiries.updated_at as updatedAt', 'visa_enquiries.duration_days as durationDays', db.raw('COALESCE(visa_enquiries.applicant_count, 1) as applicantCount'), 'visa_enquiries.intended_travel_date as intendedTravelDate', 'visa_enquiries.notes', 'visa_services.id as serviceId', db.raw('COALESCE(visa_services.title, enquiries.subject, enquiries.enquiry_type) as serviceTitle'), 'visa_services.slug as serviceSlug')
                 .first();
             if (!row) {
-                throw new app_error_1.AppError('Visa enquiry not found.', 404, 'VISA_ENQUIRY_NOT_FOUND');
+                throw new app_error_1.AppError('Enquiry not found.', 404, 'ENQUIRY_NOT_FOUND');
             }
             // Safe document metadata: NEVER expose storage_key or file paths!
             const documents = await db('documents')
@@ -280,11 +279,11 @@ class AdminDashboardService {
         try {
             const db = this.db;
             const existing = await db('enquiries')
-                .where({ id, enquiry_type: 'visa_enquiry' })
+                .where({ id })
                 .whereNull('deleted_at')
                 .first();
             if (!existing) {
-                throw new app_error_1.AppError('Visa enquiry not found.', 404, 'VISA_ENQUIRY_NOT_FOUND');
+                throw new app_error_1.AppError('Enquiry not found.', 404, 'ENQUIRY_NOT_FOUND');
             }
             await db('enquiries')
                 .where({ id })
