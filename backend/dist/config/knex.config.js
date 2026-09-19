@@ -31,13 +31,13 @@ const knexConfig = {
     migrations: {
         tableName: 'knex_migrations',
         directory: path_1.default.resolve(__dirname, '../database/migrations'),
-        extension: 'ts',
-        loadExtensions: ['.ts', '.js'],
+        extension: __filename.endsWith('.js') ? 'js' : 'ts',
+        loadExtensions: __filename.endsWith('.js') ? ['.js', '.ts'] : ['.ts', '.js'],
     },
     seeds: {
         directory: path_1.default.resolve(__dirname, '../database/seeds'),
-        extension: 'ts',
-        loadExtensions: ['.ts', '.js'],
+        extension: __filename.endsWith('.js') ? 'js' : 'ts',
+        loadExtensions: __filename.endsWith('.js') ? ['.js', '.ts'] : ['.ts', '.js'],
     },
 };
 exports.default = knexConfig;
