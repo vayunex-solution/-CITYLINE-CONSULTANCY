@@ -154,6 +154,8 @@ describe('Jobs & Recruitment System Integration', () => {
       t.integer('experience_years_required').nullable();
       t.string('salary_range', 100).nullable();
       t.text('benefits').nullable();
+      t.string('visa_sponsorship', 150).nullable();
+      t.string('work_shift', 150).nullable();
       t.string('status', 50).defaultTo('draft');
       t.boolean('is_featured').defaultTo(false);
       t.timestamp('published_at').nullable();

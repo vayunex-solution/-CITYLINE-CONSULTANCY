@@ -22,6 +22,16 @@ interface JobItem {
   createdAt?: string;
   description?: string;
   requirements?: string;
+  qualification?: string;
+  experience_years_required?: number | null;
+  experienceYearsRequired?: number | null;
+  salary_range?: string | null;
+  salaryRange?: string | null;
+  benefits?: string | null;
+  visa_sponsorship?: string | null;
+  visaSponsorship?: string | null;
+  work_shift?: string | null;
+  workShift?: string | null;
 }
 
 interface CategoryOption {
@@ -85,6 +95,12 @@ export default function AdminJobsPage() {
     employmentType: 'Full-time',
     status: 'active',
     isFeatured: false,
+    experienceYearsRequired: '1',
+    salaryRange: 'Competitive Market Rate',
+    visaSponsorship: '2-Year UAE Employment Visa',
+    workShift: '8 Hrs/Day + Overtime (UAE Law)',
+    qualification: '',
+    benefits: '',
     description: '',
     requirements: '',
   });
@@ -184,6 +200,12 @@ export default function AdminJobsPage() {
       employmentType: 'Full-time',
       status: 'active',
       isFeatured: false,
+      experienceYearsRequired: '1',
+      salaryRange: 'Competitive Market Rate',
+      visaSponsorship: '2-Year UAE Employment Visa',
+      workShift: '8 Hrs/Day + Overtime (UAE Law)',
+      qualification: 'Trade Certified / High School',
+      benefits: 'Camp Accommodation + Transport + Medical + Overtime',
       description: '',
       requirements: '',
     });
@@ -192,6 +214,12 @@ export default function AdminJobsPage() {
 
   const openEditModal = (job: JobItem) => {
     setEditingId(job.id);
+    const expVal = job.experience_years_required !== undefined && job.experience_years_required !== null
+      ? String(job.experience_years_required)
+      : job.experienceYearsRequired !== undefined && job.experienceYearsRequired !== null
+      ? String(job.experienceYearsRequired)
+      : '1';
+
     setFormData({
       title: job.title,
       slug: job.slug,
@@ -200,6 +228,12 @@ export default function AdminJobsPage() {
       employmentType: job.employment_type || job.employmentType || 'Full-time',
       status: job.status || 'active',
       isFeatured: Boolean(job.is_featured || job.isFeatured),
+      experienceYearsRequired: expVal,
+      salaryRange: job.salary_range || job.salaryRange || 'Competitive Market Rate',
+      visaSponsorship: job.visa_sponsorship || job.visaSponsorship || '2-Year UAE Employment Visa',
+      workShift: job.work_shift || job.workShift || '8 Hrs/Day + Overtime (UAE Law)',
+      qualification: job.qualification || '',
+      benefits: job.benefits || '',
       description: job.description || '',
       requirements: job.requirements || '',
     });
@@ -223,37 +257,40 @@ export default function AdminJobsPage() {
     const desc = formData.description.trim() || `${formData.title.trim()} vacancy in ${formData.location.trim()} — operational role and employment terms.`;
     const reqs = formData.requirements.trim() || 'Relevant commercial experience and valid legal UAE documentation.';
 
+    const expNumber = formData.experienceYearsRequired.trim() !== ''
+      ? Math.max(0, parseInt(formData.experienceYearsRequired, 10) || 0)
+      : 1;
+
+    const payload = {
+      title: formData.title.trim(),
+      slug: cleanSlug,
+      categoryId: validCategoryId,
+      location: formData.location.trim(),
+      employmentType: formData.employmentType,
+      status: formData.status,
+      isFeatured: formData.isFeatured,
+      experienceYearsRequired: expNumber,
+      salaryRange: formData.salaryRange.trim() || 'Competitive Market Rate',
+      visaSponsorship: formData.visaSponsorship.trim() || '2-Year UAE Employment Visa',
+      workShift: formData.workShift.trim() || '8 Hrs/Day + Overtime (UAE Law)',
+      qualification: formData.qualification.trim() || null,
+      benefits: formData.benefits.trim() || null,
+      description: desc,
+      requirements: reqs,
+    };
+
     setFormSubmitting(true);
     try {
       if (editingId) {
         await adminFetch(`/admin/recruitment/jobs/${editingId}`, {
           method: 'PUT',
-          body: JSON.stringify({
-            title: formData.title.trim(),
-            categoryId: validCategoryId,
-            location: formData.location.trim(),
-            employmentType: formData.employmentType,
-            status: formData.status,
-            isFeatured: formData.isFeatured,
-            description: desc,
-            requirements: reqs,
-          }),
+          body: JSON.stringify(payload),
         });
         setSuccess('Job vacancy updated successfully.');
       } else {
         await adminFetch('/admin/recruitment/jobs', {
           method: 'POST',
-          body: JSON.stringify({
-            title: formData.title.trim(),
-            slug: cleanSlug,
-            categoryId: validCategoryId,
-            location: formData.location.trim(),
-            employmentType: formData.employmentType,
-            status: formData.status,
-            isFeatured: formData.isFeatured,
-            description: desc,
-            requirements: reqs,
-          }),
+          body: JSON.stringify(payload),
         });
         setSuccess('New job vacancy created successfully.');
       }
@@ -384,7 +421,7 @@ export default function AdminJobsPage() {
                   <td>
                     <div style={{ fontWeight: 600 }}>{job.title}</div>
                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                      /jobs/{job.slug} {job.is_featured ? '• ⭐ Featured' : ''}
+                      /jobs/{job.slug} • {job.experience_years_required !== undefined && job.experience_years_required !== null ? (Number(job.experience_years_required) === 0 ? 'Fresher' : `${job.experience_years_required}+ Yrs`) : 'Trade Certified'} • {job.salary_range || 'Competitive Rate'} {job.is_featured ? '• ⭐ Featured' : ''}
                     </div>
                   </td>
                   <td>{job.categoryName || 'Operational'}</td>
@@ -655,6 +692,82 @@ export default function AdminJobsPage() {
                     />
                     Featured on Homepage
                   </label>
+                </div>
+              </div>
+
+              {/* ── Quick Specs & Ribbon Section (Direct Match with Website Header) ── */}
+              <div style={{ margin: 'var(--space-3) 0 var(--space-2) 0', borderTop: '1px solid rgba(212, 175, 55, 0.25)', paddingTop: 'var(--space-3)' }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-gold-primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 'var(--space-3)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>★</span> Website Quick Specification Cards (Shown on Job Header)
+                </div>
+                <div className={styles.formGrid2col}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Remuneration / Salary *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Competitive Market Rate or AED 2,500 - 3,500 / Month"
+                      className={styles.formInput}
+                      value={formData.salaryRange}
+                      onChange={(e) => setFormData({ ...formData, salaryRange: e.target.value })}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Min. Practical Experience (Years) *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="30"
+                      placeholder="e.g. 1 (Enter 0 for Fresher / Entry-Level)"
+                      className={styles.formInput}
+                      value={formData.experienceYearsRequired}
+                      onChange={(e) => setFormData({ ...formData, experienceYearsRequired: e.target.value })}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Visa Sponsorship Terms *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 2-Year UAE Employment Visa"
+                      className={styles.formInput}
+                      value={formData.visaSponsorship}
+                      onChange={(e) => setFormData({ ...formData, visaSponsorship: e.target.value })}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Work Shift &amp; Hours *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 8 Hrs/Day + Overtime (UAE Law)"
+                      className={styles.formInput}
+                      value={formData.workShift}
+                      onChange={(e) => setFormData({ ...formData, workShift: e.target.value })}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Qualification / Education</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Trade Certified / ITI / High School"
+                      className={styles.formInput}
+                      value={formData.qualification}
+                      onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Benefits &amp; Allowances</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Camp Accommodation + Transport + Medical"
+                      className={styles.formInput}
+                      value={formData.benefits}
+                      onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
 

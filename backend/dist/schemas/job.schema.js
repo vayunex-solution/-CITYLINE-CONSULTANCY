@@ -179,6 +179,18 @@ exports.adminCreateJobSchema = zod_1.z.object({
         .trim()
         .optional()
         .nullable(),
+    visaSponsorship: zod_1.z
+        .string()
+        .trim()
+        .max(150, 'Visa sponsorship cannot exceed 150 characters')
+        .optional()
+        .nullable(),
+    workShift: zod_1.z
+        .string()
+        .trim()
+        .max(150, 'Work shift cannot exceed 150 characters')
+        .optional()
+        .nullable(),
     status: zod_1.z
         .enum(['draft', 'active', 'published', 'paused', 'closed', 'archived'])
         .default('draft'),

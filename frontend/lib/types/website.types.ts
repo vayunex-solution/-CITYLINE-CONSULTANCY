@@ -62,6 +62,8 @@ export interface JobOpportunity {
   experienceYearsRequired?: number;
   salaryRange?: string;
   benefits?: string;
+  visaSponsorship?: string;
+  workShift?: string;
   publishedAt?: string;
   isFeatured?: boolean;
 }

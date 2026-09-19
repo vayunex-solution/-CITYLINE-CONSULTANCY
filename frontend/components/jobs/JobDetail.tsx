@@ -183,7 +183,9 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
               <div className={styles.specText}>
                 <span className={styles.specLabel}>Required Experience</span>
                 <span className={styles.specValue}>
-                  {job.experienceYearsRequired !== undefined ? `${job.experienceYearsRequired}+ Years Practical` : 'Trade Certified'}
+                  {job.experienceYearsRequired !== undefined && job.experienceYearsRequired !== null
+                    ? (Number(job.experienceYearsRequired) === 0 ? 'Fresher / Entry-Level' : `${job.experienceYearsRequired}+ Years Practical`)
+                    : 'Trade Certified'}
                 </span>
               </div>
             </div>
@@ -192,7 +194,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
               <span className={styles.specIcon} aria-hidden="true"><IconDoc /></span>
               <div className={styles.specText}>
                 <span className={styles.specLabel}>Visa Sponsorship</span>
-                <span className={styles.specValue}>2-Year UAE Employment Visa</span>
+                <span className={styles.specValue}>{job.visaSponsorship || '2-Year UAE Employment Visa'}</span>
               </div>
             </div>
 
@@ -200,7 +202,7 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
               <span className={styles.specIcon} aria-hidden="true"><IconClock /></span>
               <div className={styles.specText}>
                 <span className={styles.specLabel}>Work Shift</span>
-                <span className={styles.specValue}>8 Hrs/Day + Overtime (UAE Law)</span>
+                <span className={styles.specValue}>{job.workShift || '8 Hrs/Day + Overtime (UAE Law)'}</span>
               </div>
             </div>
           </div>
@@ -268,6 +270,11 @@ export function JobDetail({ job, relatedJobs = [] }: JobDetailProps) {
             <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>
               All benefits are provided in strict compliance with the United Arab Emirates Ministry of Human Resources &amp; Emiratisation (MOHRE) regulatory standard:
             </p>
+            {job.benefits && (
+              <div style={{ padding: '0.85rem 1.15rem', background: 'rgba(212, 175, 55, 0.08)', border: '1px solid rgba(212, 175, 55, 0.25)', borderRadius: 'var(--radius-lg)', marginBottom: 'var(--space-4)', fontSize: '0.875rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <strong style={{ color: 'var(--accent-gold-primary)' }}>Role-Specific Provisions &amp; Allowances:</strong> {job.benefits}
+              </div>
+            )}
             <div className={styles.benefitsGrid}>
               <div className={styles.benefitCard}>
                 <span className={styles.benefitIcon} aria-hidden="true"><IconHome /></span>

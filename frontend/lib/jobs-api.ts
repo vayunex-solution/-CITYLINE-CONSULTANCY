@@ -51,11 +51,13 @@ function mapBackendJobToOpportunity(dto: any): JobOpportunity {
         : dto.requirements
       : [],
     qualification: dto.qualification || undefined,
-    experienceYearsRequired: dto.experienceYearsRequired ?? undefined,
-    salaryRange: dto.salaryRange || undefined,
+    experienceYearsRequired: dto.experienceYearsRequired ?? dto.experience_years_required ?? undefined,
+    salaryRange: dto.salaryRange || dto.salary_range || undefined,
     benefits: dto.benefits || undefined,
-    isFeatured: Boolean(dto.isFeatured),
-    publishedAt: dto.publishedAt || undefined,
+    visaSponsorship: dto.visaSponsorship || dto.visa_sponsorship || undefined,
+    workShift: dto.workShift || dto.work_shift || undefined,
+    isFeatured: Boolean(dto.isFeatured || dto.is_featured),
+    publishedAt: dto.publishedAt || dto.published_at || undefined,
   };
 }
 

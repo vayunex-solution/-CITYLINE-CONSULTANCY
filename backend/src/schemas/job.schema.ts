@@ -186,6 +186,18 @@ export const adminCreateJobSchema = z.object({
     .trim()
     .optional()
     .nullable(),
+  visaSponsorship: z
+    .string()
+    .trim()
+    .max(150, 'Visa sponsorship cannot exceed 150 characters')
+    .optional()
+    .nullable(),
+  workShift: z
+    .string()
+    .trim()
+    .max(150, 'Work shift cannot exceed 150 characters')
+    .optional()
+    .nullable(),
   status: z
     .enum(['draft', 'active', 'published', 'paused', 'closed', 'archived'])
     .default('draft'),

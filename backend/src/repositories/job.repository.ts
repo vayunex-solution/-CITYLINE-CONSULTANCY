@@ -31,6 +31,8 @@ export interface JobRecord {
   experience_years_required?: number | null;
   salary_range?: string | null;
   benefits?: string | null;
+  visa_sponsorship?: string | null;
+  work_shift?: string | null;
   status: string;
   is_featured: boolean;
   published_at?: Date | null;

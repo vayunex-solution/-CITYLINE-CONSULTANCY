@@ -157,6 +157,8 @@ describe('Phase 14 — Security Audit & Hardening Test Suite', () => {
       t.string('employment_type', 50).notNullable();
       t.text('description').notNullable();
       t.text('requirements').notNullable();
+      t.string('visa_sponsorship', 150).nullable();
+      t.string('work_shift', 150).nullable();
       t.string('status', 50).defaultTo('published');
       t.boolean('is_featured').defaultTo(false);
       t.timestamp('published_at').nullable();

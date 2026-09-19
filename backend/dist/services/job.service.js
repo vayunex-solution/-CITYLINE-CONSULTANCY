@@ -44,6 +44,8 @@ class JobService {
             experienceYearsRequired: job.experience_years_required ?? null,
             salaryRange: job.salary_range || null,
             benefits: job.benefits || null,
+            visaSponsorship: job.visa_sponsorship || '2-Year UAE Employment Visa',
+            workShift: job.work_shift || '8 Hrs/Day + Overtime (UAE Law)',
             isFeatured: Boolean(job.is_featured),
             publishedAt: job.published_at ? new Date(job.published_at).toISOString() : null,
             createdAt: new Date(job.created_at).toISOString(),
@@ -115,6 +117,8 @@ class JobService {
             experience_years_required: input.experienceYearsRequired ?? null,
             salary_range: input.salaryRange || null,
             benefits: input.benefits || null,
+            visa_sponsorship: input.visaSponsorship || '2-Year UAE Employment Visa',
+            work_shift: input.workShift || '8 Hrs/Day + Overtime (UAE Law)',
             status: normalizedStatus,
             is_featured: Boolean(input.isFeatured),
             published_at: isPublic ? new Date() : null,
@@ -179,6 +183,10 @@ class JobService {
             updates.salary_range = input.salaryRange;
         if (input.benefits !== undefined)
             updates.benefits = input.benefits;
+        if (input.visaSponsorship !== undefined)
+            updates.visa_sponsorship = input.visaSponsorship;
+        if (input.workShift !== undefined)
+            updates.work_shift = input.workShift;
         if (input.isFeatured !== undefined)
             updates.is_featured = input.isFeatured;
         if (input.status !== undefined) {
