@@ -24,6 +24,7 @@ const admin_notification_routes_1 = __importDefault(require("./admin-notificatio
 const admin_audit_log_routes_1 = __importDefault(require("./admin-audit-log.routes"));
 const analytics_routes_1 = __importDefault(require("./analytics.routes"));
 const admin_analytics_routes_1 = __importDefault(require("./admin-analytics.routes"));
+const admin_master_routes_1 = __importDefault(require("./admin-master.routes"));
 const apiRouter = (0, express_1.Router)();
 // Health monitoring endpoint under API prefix: /api/v1/health
 apiRouter.use('/health', health_routes_1.default);
@@ -47,6 +48,7 @@ apiRouter.use('/admin/dashboard', admin_dashboard_routes_1.default);
 apiRouter.use('/admin/visa-enquiries', admin_visa_enquiry_routes_1.default);
 apiRouter.use('/admin/notifications', admin_notification_routes_1.default);
 apiRouter.use('/admin/audit-logs', admin_audit_log_routes_1.default);
+apiRouter.use('/admin/master', admin_master_routes_1.default);
 // Phase 12: Analytics / Visitor Intelligence
 apiRouter.use('/analytics', analytics_routes_1.default);
 apiRouter.use('/admin/analytics', admin_analytics_routes_1.default);

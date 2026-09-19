@@ -24,7 +24,14 @@ interface JobItem {
   requirements?: string;
 }
 
-const CANONICAL_CATEGORIES = [
+interface CategoryOption {
+  id: number;
+  name: string;
+  slug?: string;
+  is_active?: boolean;
+}
+
+const DEFAULT_CATEGORIES: CategoryOption[] = [
   { id: 1, name: 'Hotel Staff' },
   { id: 2, name: 'Cleaning' },
   { id: 3, name: 'Mason' },
@@ -37,9 +44,27 @@ const CANONICAL_CATEGORIES = [
 
 export default function AdminJobsPage() {
   const [jobs, setJobs] = useState<JobItem[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>(DEFAULT_CATEGORIES);
+  const [locations, setLocations] = useState<string[]>([
+    'Dubai, UAE',
+    'Abu Dhabi, UAE',
+    'Sharjah, UAE',
+    'Ajman, UAE',
+    'Ras Al Khaimah, UAE',
+    'Fujairah, UAE',
+    'Umm Al Quwain, UAE',
+  ]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Inline Quick Category Add State
+  const [inlineCategoryOpen, setInlineCategoryOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
+  const [newCatSlug, setNewCatSlug] = useState('');
+  const [newCatSubmitting, setNewCatSubmitting] = useState(false);
+  const [inlineCatError, setInlineCatError] = useState<string | null>(null);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -87,9 +112,62 @@ export default function AdminJobsPage() {
     }
   }, [page, statusFilter, search]);
 
+  const fetchReferenceData = useCallback(async () => {
+    try {
+      const catRes = await adminFetch<CategoryOption[]>('/admin/master/categories?includeInactive=false');
+      if (catRes.success && catRes.data && catRes.data.length > 0) {
+        setCategories(catRes.data);
+      }
+    } catch {
+      // Keep defaults
+    }
+
+    try {
+      const locRes = await adminFetch<any[]>('/admin/master/locations?includeInactive=false');
+      if (locRes.success && locRes.data && locRes.data.length > 0) {
+        setLocations(locRes.data.map((l: any) => l.name));
+      }
+    } catch {
+      // Keep defaults
+    }
+  }, []);
+
   useEffect(() => {
     fetchJobs();
-  }, [fetchJobs]);
+    fetchReferenceData();
+  }, [fetchJobs, fetchReferenceData]);
+
+  const handleCreateCategoryInline = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    setNewCatSubmitting(true);
+    setInlineCatError(null);
+    try {
+      const slug = newCatSlug.trim() || newCatName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const res = await adminFetch<any>('/admin/master/categories', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: newCatName.trim(),
+          slug,
+          isActive: true,
+        }),
+      });
+      if (res.success && res.data) {
+        const created = res.data;
+        setCategories((prev) => [...prev, created]);
+        setFormData((prev) => ({ ...prev, categoryId: created.id }));
+        setInlineCategoryOpen(false);
+        setNewCatName('');
+        setNewCatSlug('');
+        setSuccess(`Category "${created.name}" added and selected!`);
+        setTimeout(() => setSuccess(null), 3500);
+      }
+    } catch (err: any) {
+      setInlineCatError(err.message || 'Failed to create category.');
+    } finally {
+      setNewCatSubmitting(false);
+    }
+  };
 
   const openCreateModal = () => {
     setEditingId(null);
@@ -406,13 +484,97 @@ export default function AdminJobsPage() {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Category *</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <label className={styles.formLabel} style={{ marginBottom: 0 }}>Category *</label>
+                    <button
+                      type="button"
+                      onClick={() => setInlineCategoryOpen(!inlineCategoryOpen)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--accent-gold-primary)',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '2px 4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      {inlineCategoryOpen ? '✕ Close' : '+ Add New Category'}
+                    </button>
+                  </div>
+
+                  {inlineCategoryOpen && (
+                    <div
+                      style={{
+                        padding: 'var(--space-3)',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--surface-base)',
+                        border: '1px solid var(--accent-gold-primary)',
+                        marginBottom: 'var(--space-3)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 'var(--space-2)',
+                      }}
+                    >
+                      <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-gold-primary)' }}>
+                        Quick Create Category
+                      </div>
+                      {inlineCatError && (
+                        <div style={{ color: 'var(--status-error)', fontSize: '11px' }}>⚠️ {inlineCatError}</div>
+                      )}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)' }}>
+                        <input
+                          type="text"
+                          placeholder="Category Name"
+                          className={styles.formInput}
+                          value={newCatName}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setNewCatName(val);
+                            setNewCatSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
+                          }}
+                          style={{ fontSize: '12px', padding: '6px 8px' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Slug"
+                          className={styles.formInput}
+                          value={newCatSlug}
+                          onChange={(e) => setNewCatSlug(e.target.value)}
+                          style={{ fontSize: '12px', padding: '6px 8px' }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: '2px' }}>
+                        <button
+                          type="button"
+                          className={styles.btnSecondary}
+                          onClick={() => { setInlineCategoryOpen(false); setInlineCatError(null); }}
+                          style={{ fontSize: '11px', padding: '3px 8px' }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.btnPrimary}
+                          disabled={newCatSubmitting || !newCatName.trim()}
+                          onClick={handleCreateCategoryInline}
+                          style={{ fontSize: '11px', padding: '3px 12px' }}
+                        >
+                          {newCatSubmitting ? 'Saving...' : 'Save & Select'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <select
                     className={styles.formSelect}
                     value={formData.categoryId}
                     onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value) })}
                   >
-                    {CANONICAL_CATEGORIES.map((cat) => (
+                    {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
@@ -423,10 +585,16 @@ export default function AdminJobsPage() {
                   <input
                     type="text"
                     required
+                    list="admin-master-locations"
                     className={styles.formInput}
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   />
+                  <datalist id="admin-master-locations">
+                    {locations.map((loc) => (
+                      <option key={loc} value={loc} />
+                    ))}
+                  </datalist>
                 </div>
 
                 <div className={styles.formGroup}>

@@ -89,6 +89,13 @@ const IconBrand = () => (
     <polyline points="9 22 9 12 15 12 15 22" />
   </svg>
 );
+const IconMaster = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <ellipse cx="12" cy="5" rx="9" ry="3" />
+    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+  </svg>
+);
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/admin', Icon: IconDashboard },
@@ -98,6 +105,7 @@ const NAV_ITEMS = [
   { label: 'Job Applications', href: '/admin/applications', Icon: IconApplications },
   { label: 'Manpower Requisitions', href: '/admin/manpower', Icon: IconManpower },
   { label: 'Testimonials', href: '/admin/testimonials', Icon: IconTestimonials },
+  { label: 'Master Tables', href: '/admin/master', Icon: IconMaster },
   { label: 'Notification Queue', href: '/admin/notifications', Icon: IconNotifications },
   { label: 'Audit Logs', href: '/admin/audit-logs', Icon: IconAudit },
 ];
