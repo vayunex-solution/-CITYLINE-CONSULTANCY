@@ -73,24 +73,28 @@
 .overlay {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 3;
+  pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(179, 135, 27, 0.18) 0%, transparent 55%),
-    linear-gradient(180deg, rgba(6,11,20,0.3) 0%, rgba(6,11,20,0.65) 50%, rgba(6,11,20,0.96) 100%);
+    radial-gradient(ellipse at 28% 45%, rgba(6, 11, 20, 0.65) 0%, rgba(6, 11, 20, 0.25) 55%, transparent 85%),
+    radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.12) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(6, 11, 20, 0.4) 0%, rgba(6, 11, 20, 0.35) 45%, rgba(6, 11, 20, 0.95) 100%);
 }
 
 @media (max-width: 768px) {
   .overlay {
     background:
-      radial-gradient(ellipse at 50% 10%, rgba(179, 135, 27, 0.22) 0%, transparent 60%),
-      linear-gradient(180deg, rgba(6,11,20,0.45) 0%, rgba(6,11,20,0.72) 45%, rgba(6,11,20,0.98) 100%);
+      radial-gradient(ellipse at 50% 35%, rgba(6, 11, 20, 0.75) 0%, rgba(6, 11, 20, 0.35) 65%, transparent 90%),
+      radial-gradient(ellipse at 50% 10%, rgba(179, 135, 27, 0.18) 0%, transparent 60%),
+      linear-gradient(180deg, rgba(6, 11, 20, 0.5) 0%, rgba(6, 11, 20, 0.65) 45%, rgba(6, 11, 20, 0.98) 100%);
   }
 }
 
 [data-theme="light"] .overlay {
   background:
+    radial-gradient(ellipse at 28% 45%, rgba(6, 11, 20, 0.6) 0%, rgba(6, 11, 20, 0.2) 55%, transparent 85%),
     radial-gradient(ellipse at 50% 0%, rgba(179, 135, 27, 0.1) 0%, transparent 55%),
-    linear-gradient(180deg, rgba(6,11,20,0.25) 0%, rgba(6,11,20,0.7) 55%, rgba(6,11,20,0.95) 100%);
+    linear-gradient(180deg, rgba(6, 11, 20, 0.3) 0%, rgba(6, 11, 20, 0.5) 55%, rgba(6, 11, 20, 0.95) 100%);
 }
 
 /* Content Layer */
@@ -134,17 +138,21 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--accent-gold-primary);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(197, 155, 39, 0.35);
-  padding: 0.45rem 1.2rem;
+  color: #fef08a;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(250, 204, 21, 0.55);
+  padding: 0.45rem 1.25rem;
   border-radius: var(--radius-full);
+  box-shadow:
+    0 0 25px rgba(250, 204, 21, 0.35),
+    inset 0 0 12px rgba(250, 204, 21, 0.15);
+  text-shadow: 0 0 12px rgba(250, 204, 21, 0.6);
 }
 
 .title {
@@ -155,16 +163,56 @@
   letter-spacing: -0.02em;
   color: #ffffff;
   margin: 0;
-  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+.titleWhite {
+  color: #ffffff;
+  display: inline-block;
+  text-shadow:
+    0 0 30px rgba(255, 255, 255, 0.65),
+    0 0 60px rgba(253, 224, 71, 0.25),
+    0 4px 20px rgba(0, 0, 0, 0.95),
+    0 2px 4px rgba(0, 0, 0, 1);
+}
+
+.titleGold {
+  background: linear-gradient(135deg, #ffffff 0%, #fef08a 22%, #facc15 50%, #d4af37 80%, #fde047 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  text-shadow: none !important;
+  filter:
+    drop-shadow(0 0 18px rgba(250, 204, 21, 0.85))
+    drop-shadow(0 0 38px rgba(212, 175, 55, 0.65))
+    drop-shadow(0 3px 6px rgba(0, 0, 0, 0.95));
+  animation: goldPulse 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes goldPulse {
+  0% {
+    filter:
+      drop-shadow(0 0 14px rgba(250, 204, 21, 0.75))
+      drop-shadow(0 0 32px rgba(212, 175, 55, 0.55))
+      drop-shadow(0 3px 6px rgba(0, 0, 0, 0.95));
+  }
+  100% {
+    filter:
+      drop-shadow(0 0 24px rgba(250, 204, 21, 1))
+      drop-shadow(0 0 55px rgba(212, 175, 55, 0.85))
+      drop-shadow(0 3px 6px rgba(0, 0, 0, 0.95));
+  }
 }
 
 .subtitle {
-  font-size: clamp(0.95rem, 3.6vw, 1.125rem);
-  line-height: 1.65;
-  color: rgba(255, 255, 255, 0.9);
-  max-width: 540px;
+  font-size: clamp(0.95rem, 3.6vw, 1.15rem);
+  line-height: 1.7;
+  color: #f8fafc;
+  max-width: 550px;
   margin: 0;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+  text-shadow:
+    0 0 25px rgba(0, 0, 0, 0.95),
+    0 2px 8px rgba(0, 0, 0, 1),
+    0 0 45px rgba(6, 11, 20, 0.95);
 }
 
 @media (min-width: 768px) {

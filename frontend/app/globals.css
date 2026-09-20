@@ -360,10 +360,14 @@ body {
 /* Typography Gradient Utilities */
 .text-gradient-gold,
 .gold-gradient-text {
-  background: linear-gradient(135deg, var(--accent-gold-light) 0%, var(--accent-gold-primary) 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #fef08a 22%, #facc15 50%, #d4af37 80%, #fde047 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
+  text-shadow: none;
+  filter:
+    drop-shadow(0 0 16px rgba(250, 204, 21, 0.8))
+    drop-shadow(0 0 35px rgba(212, 175, 55, 0.55));
 }
 
 .text-gradient-white {

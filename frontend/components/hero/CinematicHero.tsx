@@ -115,12 +115,12 @@ export function CinematicHero({
               <h1 className={styles.title}>
                 {headline.includes('STARTS HERE') ? (
                   <>
-                    YOUR JOURNEY<br />
-                    TO THE UAE<br />
-                    <span className="text-gradient-gold">STARTS HERE.</span>
+                    <span className={styles.titleWhite}>YOUR JOURNEY</span><br />
+                    <span className={styles.titleWhite}>TO THE UAE</span><br />
+                    <span className={styles.titleGold}>STARTS HERE.</span>
                   </>
                 ) : (
-                  <span className="text-gradient-gold">{headline}</span>
+                  <span className={styles.titleGold}>{headline}</span>
                 )}
               </h1>
 
