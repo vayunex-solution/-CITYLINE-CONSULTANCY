@@ -44,4 +44,7 @@ router.get('/applications/:id', (req, res, next) => {
 router.patch('/applications/:id/status', (req, res, next) => {
     void admin_job_controller_1.adminJobController.updateApplicationStatus(req, res, next);
 });
+router.delete('/applications/:id', (req, res, next) => {
+    void admin_job_controller_1.adminJobController.moveApplicationToTrash(req, res, next);
+});
 exports.default = router;

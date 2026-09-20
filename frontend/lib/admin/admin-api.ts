@@ -177,3 +177,111 @@ export async function adminFetch<T = any>(
     throw err;
   }
 }
+
+/**
+ * Fetches binary blob data (PDF, documents, images) with administrative session credentials.
+ */
+export async function adminFetchBlob(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<{ blob: Blob; filename?: string; contentType?: string }> {
+  const baseUrl = getApiBaseUrl();
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${normalizedEndpoint}`;
+
+  const headers = new Headers(options.headers || {});
+  const method = (options.method || 'GET').toUpperCase();
+
+  const mutatingMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+  if (mutatingMethods.includes(method) && !headers.has('X-CSRF-Token')) {
+    const csrf = getCsrfToken();
+    if (csrf) {
+      headers.set('X-CSRF-Token', csrf);
+    }
+  }
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      let errorMsg = `Request failed with status ${response.status}`;
+      try {
+        const json = await response.json();
+        errorMsg = json.error?.message || json.message || errorMsg;
+      } catch {}
+
+      const err = new Error(errorMsg) as NormalizedApiError;
+      err.status = response.status;
+      err.code = response.status === 401 ? 'UNAUTHORIZED' : response.status === 403 ? 'FORBIDDEN' : 'API_ERROR';
+      throw err;
+    }
+
+    const contentDisposition = response.headers.get('content-disposition');
+    let filename: string | undefined;
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
+      if (match && match[1]) {
+        filename = decodeURIComponent(match[1]);
+      }
+    }
+
+    const contentType = response.headers.get('content-type') || undefined;
+    const blob = await response.blob();
+    return { blob, filename, contentType };
+  } catch (err: any) {
+    if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      const networkErr = new Error('Network error: Unable to connect to Cityline Admin API.') as NormalizedApiError;
+      networkErr.status = 0;
+      networkErr.code = 'NETWORK_ERROR';
+      throw networkErr;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Previews an admin document in a new browser tab or popup.
+ */
+export async function adminPreviewDocument(documentId: string): Promise<void> {
+  const { blob } = await adminFetchBlob(`/admin/documents/${documentId}/preview`);
+  const blobUrl = URL.createObjectURL(blob);
+  
+  const newWindow = window.open(blobUrl, '_blank');
+  if (!newWindow) {
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.target = '_blank';
+    link.rel = 'noopener,noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  setTimeout(() => {
+    URL.revokeObjectURL(blobUrl);
+  }, 60000);
+}
+
+/**
+ * Downloads an admin document directly to the client disk.
+ */
+export async function adminDownloadDocument(documentId: string, fallbackFilename: string = 'document.pdf'): Promise<void> {
+  const { blob, filename } = await adminFetchBlob(`/admin/documents/${documentId}/download`);
+  const blobUrl = URL.createObjectURL(blob);
+  const saveName = filename || fallbackFilename;
+
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = saveName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  setTimeout(() => {
+    URL.revokeObjectURL(blobUrl);
+  }, 15000);
+}

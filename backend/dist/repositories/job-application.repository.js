@@ -168,6 +168,7 @@ class JobApplicationRepository extends base_repository_1.AbstractKnexRepository 
     }
     /**
      * Updates application triage status.
+     * If status is 'rejected', automatically soft-deletes into 30-day trash retention.
      */
     async updateStatus(id, status, adminNotes, trx) {
         try {
@@ -178,6 +179,9 @@ class JobApplicationRepository extends base_repository_1.AbstractKnexRepository 
             if (adminNotes !== undefined) {
                 updatePayload.admin_notes = adminNotes;
             }
+            if (status === 'rejected') {
+                updatePayload.deleted_at = new Date();
+            }
             await this.getQuery(trx)
                 .from('job_applications')
                 .where({ id })
@@ -185,6 +189,24 @@ class JobApplicationRepository extends base_repository_1.AbstractKnexRepository 
         }
         catch (err) {
             throw (0, database_error_1.normalizeDatabaseError)(err, 'JobApplicationRepository.updateStatus');
+        }
+    }
+    /**
+     * Explicitly moves a job application to the 30-day trash bin.
+     */
+    async softDelete(id, trx) {
+        try {
+            await this.getQuery(trx)
+                .from('job_applications')
+                .where({ id })
+                .update({
+                deleted_at: new Date(),
+                status: 'rejected',
+                updated_at: new Date(),
+            });
+        }
+        catch (err) {
+            throw (0, database_error_1.normalizeDatabaseError)(err, 'JobApplicationRepository.softDelete');
         }
     }
 }

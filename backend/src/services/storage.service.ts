@@ -54,6 +54,16 @@ export class StorageService {
   }
 
   /**
+   * Resolves a relative storage key to an absolute filesystem path and verifies it stays inside storageRoot.
+   */
+  public getAbsolutePath(storageKey: string): string {
+    const safeKey = storageKey.replace(/\\/g, '/');
+    const absolutePath = path.resolve(this.storageRoot, safeKey);
+    this.assertPathWithinStorageRoot(absolutePath);
+    return absolutePath;
+  }
+
+  /**
    * Writes a document buffer to the private storage directory for an enquiry.
    */
   public async writeEnquiryFile(

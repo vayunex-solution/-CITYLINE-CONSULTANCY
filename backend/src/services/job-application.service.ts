@@ -338,6 +338,34 @@ export class JobApplicationService {
       }),
     });
   }
+
+  /**
+   * Moves a job application to the 30-day trash bin.
+   */
+  public async moveApplicationToTrash(
+    id: string,
+    adminId: string,
+    context: { clientIp?: string; requestId?: string } = {}
+  ): Promise<void> {
+    const existing = await this.jobAppRepo.findById(id);
+    if (!existing || existing.deleted_at) {
+      throw new AppError('Candidate application not found.', 404, 'APPLICATION_NOT_FOUND');
+    }
+
+    await this.jobAppRepo.softDelete(id);
+
+    await this.auditRepo.logEvent({
+      actor_admin_id: adminId,
+      action: 'job_application_moved_to_trash',
+      resource_type: 'job_application',
+      resource_id: id,
+      client_ip: context.clientIp,
+      request_id: context.requestId,
+      details_json: JSON.stringify({
+        previousStatus: existing.status,
+      }),
+    });
+  }
 }
 
 export const jobApplicationService = new JobApplicationService();

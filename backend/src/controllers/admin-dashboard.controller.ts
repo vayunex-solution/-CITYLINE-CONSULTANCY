@@ -133,6 +133,28 @@ export class AdminDashboardController {
   };
 
   /**
+   * DELETE /api/v1/admin/visa-enquiries/:id
+   * Moves a visa enquiry to the 30-day trash bin.
+   */
+  public moveVisaEnquiryToTrash = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const existing = await this.service.getVisaEnquiryById(id);
+      if (req.admin && !assertAdminResourceAccess(req.admin, (existing.enquiry as any)?.assignedAdminId)) {
+        throw new AppError('Access denied: Insufficient privileges for this enquiry.', 403, 'FORBIDDEN');
+      }
+
+      const result = await this.service.moveVisaEnquiryToTrash(id, this.getActor(req));
+      res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  /**
    * GET /api/v1/admin/notifications
    * Paginated list of outbox notification queue items.
    */

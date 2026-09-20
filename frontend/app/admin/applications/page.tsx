@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { adminFetch } from '@/lib/admin/admin-api';
+import { adminFetch, adminPreviewDocument, adminDownloadDocument } from '@/lib/admin/admin-api';
 import styles from '@/components/admin/common/AdminCommon.module.css';
 
 interface ApplicationItem {
@@ -59,6 +59,8 @@ export default function AdminApplicationsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailData, setDetailData] = useState<ApplicationDetail | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [movingToTrash, setMovingToTrash] = useState(false);
+  const [activeDocAction, setActiveDocAction] = useState<string | null>(null);
 
   const fetchApplications = useCallback(async () => {
     setLoading(true);
@@ -111,6 +113,15 @@ export default function AdminApplicationsPage() {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       });
+
+      if (newStatus === 'rejected') {
+        setSuccess('Application marked as rejected and moved to 30-Day Trash retention.');
+        setTimeout(() => setSuccess(null), 4000);
+        setDetailModalOpen(false);
+        fetchApplications();
+        return;
+      }
+
       setSuccess(`Application status changed to ${newStatus}.`);
       setTimeout(() => setSuccess(null), 3000);
       setDetailData({
@@ -125,6 +136,47 @@ export default function AdminApplicationsPage() {
       setError(err.message || 'Failed to update application status.');
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handlePreviewDoc = async (docId: string) => {
+    setActiveDocAction(`preview-${docId}`);
+    try {
+      await adminPreviewDocument(docId);
+    } catch (err: any) {
+      setError(err.message || 'Failed to open document preview.');
+    } finally {
+      setActiveDocAction(null);
+    }
+  };
+
+  const handleDownloadDoc = async (docId: string, filename: string) => {
+    setActiveDocAction(`download-${docId}`);
+    try {
+      await adminDownloadDocument(docId, filename);
+    } catch (err: any) {
+      setError(err.message || 'Failed to download document.');
+    } finally {
+      setActiveDocAction(null);
+    }
+  };
+
+  const handleMoveToTrash = async () => {
+    if (!detailData?.application?.id) return;
+    if (!window.confirm('Move this candidate application to the Trash Bin? It will remain stored for 30 days before permanent deletion.')) {
+      return;
+    }
+    setMovingToTrash(true);
+    try {
+      await adminFetch(`/admin/recruitment/applications/${detailData.application.id}`, { method: 'DELETE' });
+      setSuccess('Application moved to 30-Day Trash retention.');
+      setTimeout(() => setSuccess(null), 4000);
+      setDetailModalOpen(false);
+      fetchApplications();
+    } catch (err: any) {
+      setError(err.message || 'Failed to move application to trash.');
+    } finally {
+      setMovingToTrash(false);
     }
   };
 
@@ -349,33 +401,73 @@ export default function AdminApplicationsPage() {
                               display: 'flex',
                               justifyContent: 'space-between',
                               alignItems: 'center',
+                              flexWrap: 'wrap',
+                              gap: 'var(--space-2)',
                               padding: 'var(--space-2) var(--space-3)',
                               background: 'var(--surface-subtle)',
+                              border: '1px solid var(--border-subtle)',
                               borderRadius: 'var(--radius-md)',
                               fontSize: 'var(--text-xs)',
                             }}
                           >
                             <div>
-                              <span style={{ fontWeight: 600 }}>📄 {filename}</span>
-                              <span style={{ color: 'var(--text-muted)', marginLeft: 'var(--space-2)' }}>
-                                ({Math.round(size / 1024)} KB)
-                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span>📄</span>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{filename}</span>
+                              </div>
+                              <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px', display: 'flex', gap: '6px' }}>
+                                <span>{Math.round(size / 1024)} KB</span>
+                                <span>•</span>
+                                <span className={`${styles.badge} ${scanStatus === 'clean' ? styles.badgeSuccess : styles.badgeWarning}`} style={{ fontSize: '10px', padding: '1px 6px' }}>
+                                  Scan: {scanStatus}
+                                </span>
+                                <span className={`${styles.badge} ${valStatus === 'valid' ? styles.badgeSuccess : styles.badgeNeutral}`} style={{ fontSize: '10px', padding: '1px 6px' }}>
+                                  {valStatus}
+                                </span>
+                              </div>
                             </div>
                             <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                              <span className={`${styles.badge} ${scanStatus === 'clean' ? styles.badgeSuccess : styles.badgeWarning}`}>
-                                Scan: {scanStatus}
-                              </span>
-                              <span className={`${styles.badge} ${valStatus === 'valid' ? styles.badgeSuccess : styles.badgeNeutral}`}>
-                                {valStatus}
-                              </span>
+                              <button
+                                type="button"
+                                className={styles.btnSecondary}
+                                style={{ fontSize: '11px', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                onClick={() => handlePreviewDoc(doc.id)}
+                                disabled={activeDocAction === `preview-${doc.id}`}
+                                title="Preview CV in browser"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                {activeDocAction === `preview-${doc.id}` ? 'Opening...' : 'View'}
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.btnSecondary}
+                                style={{ fontSize: '11px', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                onClick={() => handleDownloadDoc(doc.id, filename)}
+                                disabled={activeDocAction === `download-${doc.id}`}
+                                title="Download CV document"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                  <polyline points="7 10 12 15 17 10" />
+                                  <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                                {activeDocAction === `download-${doc.id}` ? 'Downloading...' : 'Download'}
+                              </button>
                             </div>
                           </div>
                         );
                       })}
                     </div>
                   )}
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: 'var(--space-2)' }}>
-                    🔒 Document filesystem keys are protected in accordance with privacy and storage policies. Public download access is prohibited.
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: 'var(--space-2)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0 }}>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span>Streamed securely through authenticated administrator tunnel with session isolation.</span>
                   </p>
                 </div>
 
@@ -400,7 +492,16 @@ export default function AdminApplicationsPage() {
               </div>
             ) : null}
 
-            <div className={styles.modalFooter}>
+            <div className={styles.modalFooter} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                type="button"
+                className={styles.btnDanger}
+                onClick={handleMoveToTrash}
+                disabled={movingToTrash}
+                title="Move this application to the 30-day trash retention bin"
+              >
+                {movingToTrash ? 'Moving to Trash...' : '🗑️ Move to Trash'}
+              </button>
               <button className={styles.btnSecondary} onClick={() => setDetailModalOpen(false)}>
                 Close
               </button>

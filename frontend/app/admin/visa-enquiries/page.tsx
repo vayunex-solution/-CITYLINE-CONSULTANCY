@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { adminFetch } from '@/lib/admin/admin-api';
+import { adminFetch, adminPreviewDocument, adminDownloadDocument } from '@/lib/admin/admin-api';
 import styles from '@/components/admin/common/AdminCommon.module.css';
 
 interface VisaEnquiryItem {
@@ -54,6 +54,8 @@ export default function AdminVisaEnquiriesPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailData, setDetailData] = useState<DetailState | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [movingToTrash, setMovingToTrash] = useState(false);
+  const [activeDocAction, setActiveDocAction] = useState<string | null>(null);
 
   const fetchEnquiries = useCallback(async () => {
     setLoading(true);
@@ -106,6 +108,15 @@ export default function AdminVisaEnquiriesPage() {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       });
+
+      if (newStatus === 'rejected') {
+        setSuccess('Enquiry marked as rejected and moved to 30-Day Trash retention.');
+        setTimeout(() => setSuccess(null), 4000);
+        setDetailModalOpen(false);
+        fetchEnquiries();
+        return;
+      }
+
       setSuccess(`Status successfully changed to ${newStatus}.`);
       setTimeout(() => setSuccess(null), 3000);
       // Refresh modal state
@@ -121,6 +132,47 @@ export default function AdminVisaEnquiriesPage() {
       setError(err.message || 'Failed to update status.');
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const handlePreviewDoc = async (docId: string) => {
+    setActiveDocAction(`preview-${docId}`);
+    try {
+      await adminPreviewDocument(docId);
+    } catch (err: any) {
+      setError(err.message || 'Failed to open document preview.');
+    } finally {
+      setActiveDocAction(null);
+    }
+  };
+
+  const handleDownloadDoc = async (docId: string, filename: string) => {
+    setActiveDocAction(`download-${docId}`);
+    try {
+      await adminDownloadDocument(docId, filename);
+    } catch (err: any) {
+      setError(err.message || 'Failed to download document.');
+    } finally {
+      setActiveDocAction(null);
+    }
+  };
+
+  const handleMoveToTrash = async () => {
+    if (!detailData?.enquiry?.id) return;
+    if (!window.confirm('Move this visa enquiry to the Trash Bin? It will remain stored for 30 days before permanent deletion.')) {
+      return;
+    }
+    setMovingToTrash(true);
+    try {
+      await adminFetch(`/admin/visa-enquiries/${detailData.enquiry.id}`, { method: 'DELETE' });
+      setSuccess('Visa enquiry moved to 30-Day Trash retention.');
+      setTimeout(() => setSuccess(null), 4000);
+      setDetailModalOpen(false);
+      fetchEnquiries();
+    } catch (err: any) {
+      setError(err.message || 'Failed to move enquiry to trash.');
+    } finally {
+      setMovingToTrash(false);
     }
   };
 
@@ -368,25 +420,63 @@ export default function AdminVisaEnquiriesPage() {
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 'var(--space-2)',
                             padding: 'var(--space-2) var(--space-3)',
                             background: 'var(--surface-subtle)',
+                            border: '1px solid var(--border-subtle)',
                             borderRadius: 'var(--radius-md)',
                             fontSize: 'var(--text-xs)',
                           }}
                         >
                           <div>
-                            <span style={{ fontWeight: 600 }}>{doc.filename}</span>
-                            <span style={{ color: 'var(--text-muted)', marginLeft: 'var(--space-2)' }}>
-                              ({Math.round(doc.sizeBytes / 1024)} KB • {doc.category})
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span>📄</span>
+                              <span style={{ fontWeight: 600 }}>{doc.filename}</span>
+                            </div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '2px', display: 'flex', gap: '6px' }}>
+                              <span>{Math.round(doc.sizeBytes / 1024)} KB</span>
+                              <span>•</span>
+                              <span style={{ textTransform: 'capitalize' }}>{doc.category}</span>
+                              <span>•</span>
+                              <span className={`${styles.badge} ${doc.malwareScanStatus === 'clean' ? styles.badgeSuccess : styles.badgeWarning}`} style={{ fontSize: '10px', padding: '1px 6px' }}>
+                                Scan: {doc.malwareScanStatus}
+                              </span>
+                              <span className={`${styles.badge} ${doc.validationStatus === 'valid' ? styles.badgeSuccess : styles.badgeNeutral}`} style={{ fontSize: '10px', padding: '1px 6px' }}>
+                                {doc.validationStatus}
+                              </span>
+                            </div>
                           </div>
                           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                            <span className={`${styles.badge} ${doc.malwareScanStatus === 'clean' ? styles.badgeSuccess : styles.badgeWarning}`}>
-                              Scan: {doc.malwareScanStatus}
-                            </span>
-                            <span className={`${styles.badge} ${doc.validationStatus === 'valid' ? styles.badgeSuccess : styles.badgeNeutral}`}>
-                              {doc.validationStatus}
-                            </span>
+                            <button
+                              type="button"
+                              className={styles.btnSecondary}
+                              style={{ fontSize: '11px', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              onClick={() => handlePreviewDoc(doc.id)}
+                              disabled={activeDocAction === `preview-${doc.id}`}
+                              title="Preview document in browser"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                              {activeDocAction === `preview-${doc.id}` ? 'Opening...' : 'View'}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.btnSecondary}
+                              style={{ fontSize: '11px', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                              onClick={() => handleDownloadDoc(doc.id, doc.filename)}
+                              disabled={activeDocAction === `download-${doc.id}`}
+                              title="Download original file"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                              </svg>
+                              {activeDocAction === `download-${doc.id}` ? 'Downloading...' : 'Download'}
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -397,7 +487,7 @@ export default function AdminVisaEnquiriesPage() {
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
-                    <span>Document filesystem keys are protected in accordance with privacy and storage policies. Public download access is prohibited.</span>
+                    <span>Streamed securely through authenticated administrator tunnel with session isolation.</span>
                   </p>
                 </div>
 
@@ -422,7 +512,16 @@ export default function AdminVisaEnquiriesPage() {
               </div>
             ) : null}
 
-            <div className={styles.modalFooter}>
+            <div className={styles.modalFooter} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                type="button"
+                className={styles.btnDanger}
+                onClick={handleMoveToTrash}
+                disabled={movingToTrash}
+                title="Move this enquiry to the 30-day trash retention bin"
+              >
+                {movingToTrash ? 'Moving to Trash...' : '🗑️ Move to Trash'}
+              </button>
               <button className={styles.btnSecondary} onClick={() => setDetailModalOpen(false)}>
                 Close
               </button>
