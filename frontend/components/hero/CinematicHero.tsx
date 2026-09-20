@@ -38,6 +38,19 @@ export function CinematicHero({
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  React.useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.defaultMuted = true;
+      videoRef.current.muted = true;
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay prevented by browser power/data saver policy
+        });
+      }
+    }
+  }, []);
+
   const toggleSound = () => {
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
@@ -68,8 +81,7 @@ export function CinematicHero({
             loop
             muted
             playsInline
-            poster={posterSrc}
-            preload="metadata"
+            preload="auto"
             onError={() => setVideoError(true)}
           >
             <source src={videoSrc} type="video/mp4" />
