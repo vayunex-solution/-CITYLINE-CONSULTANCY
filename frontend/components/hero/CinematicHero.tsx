@@ -127,6 +127,16 @@ export function CinematicHero({
                   {secondaryCtaText} →
                 </Button>
               </div>
+
+              {/* Mobile Micro Journey Strip (Sleek Glass Capsules) */}
+              <div className={styles.mobileStepsStrip} aria-hidden="true">
+                {HERO_JOURNEY_STEPS.map((step) => (
+                  <span key={step.num} className={styles.mobileStepPill}>
+                    <strong className={styles.mobileStepNum}>{step.num}</strong>
+                    <span>{step.title}</span>
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Right Column: Reference-Matching Vertical Journey Card */}
