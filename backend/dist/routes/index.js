@@ -27,7 +27,6 @@ const admin_analytics_routes_1 = __importDefault(require("./admin-analytics.rout
 const admin_master_routes_1 = __importDefault(require("./admin-master.routes"));
 const admin_setting_routes_1 = __importDefault(require("./admin-setting.routes"));
 const admin_document_routes_1 = __importDefault(require("./admin-document.routes"));
-const admin_trash_routes_1 = __importDefault(require("./admin-trash.routes"));
 const apiRouter = (0, express_1.Router)();
 // Health monitoring endpoint under API prefix: /api/v1/health
 apiRouter.use('/health', health_routes_1.default);
@@ -50,7 +49,6 @@ apiRouter.use('/admin/testimonials', admin_testimonial_routes_1.default);
 apiRouter.use('/admin/dashboard', admin_dashboard_routes_1.default);
 apiRouter.use('/admin/visa-enquiries', admin_visa_enquiry_routes_1.default);
 apiRouter.use('/admin/documents', admin_document_routes_1.default);
-apiRouter.use('/admin/trash', admin_trash_routes_1.default);
 apiRouter.use('/admin/notifications', admin_notification_routes_1.default);
 apiRouter.use('/admin/audit-logs', admin_audit_log_routes_1.default);
 apiRouter.use('/admin/master', admin_master_routes_1.default);

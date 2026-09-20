@@ -412,12 +412,10 @@ export class AdminDashboardService {
         throw new AppError('Enquiry not found.', 404, 'ENQUIRY_NOT_FOUND');
       }
 
-      const isRejecting = input.status === 'rejected';
       await db('enquiries')
         .where({ id })
         .update({
           status: input.status,
-          ...(isRejecting ? { deleted_at: db.fn.now() } : {}),
           updated_at: db.fn.now(),
         });
 
@@ -441,40 +439,6 @@ export class AdminDashboardService {
     } catch (err) {
       if (err instanceof AppError) throw err;
       throw normalizeDatabaseError(err, 'AdminDashboardService.updateVisaEnquiryStatus');
-    }
-  }
-
-  /**
-   * Explicitly moves a visa enquiry to trash.
-   */
-  public async moveVisaEnquiryToTrash(
-    id: string,
-    actor: { adminId: string; adminEmail?: string; ip?: string }
-  ) {
-    try {
-      const db = this.db;
-      const existing = await db('enquiries').where({ id }).whereNull('deleted_at').first();
-      if (!existing) throw new AppError('Enquiry not found.', 404, 'ENQUIRY_NOT_FOUND');
-
-      await db('enquiries').where({ id }).update({
-        deleted_at: db.fn.now(),
-        status: 'rejected',
-        updated_at: db.fn.now(),
-      });
-
-      await auditLogRepository.logEvent({
-        actor_admin_id: actor.adminId,
-        action: 'visa_enquiry_moved_to_trash',
-        resource_type: 'visa_enquiry',
-        resource_id: id,
-        client_ip: actor.ip,
-        details_json: JSON.stringify({ previousStatus: existing.status }),
-      });
-
-      return { success: true, message: 'Enquiry moved to Trash.' };
-    } catch (err) {
-      if (err instanceof AppError) throw err;
-      throw normalizeDatabaseError(err, 'AdminDashboardService.moveVisaEnquiryToTrash');
     }
   }
 

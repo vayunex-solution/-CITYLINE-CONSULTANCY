@@ -54,7 +54,6 @@ export default function AdminVisaEnquiriesPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailData, setDetailData] = useState<DetailState | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [movingToTrash, setMovingToTrash] = useState(false);
   const [activeDocAction, setActiveDocAction] = useState<string | null>(null);
 
   const fetchEnquiries = useCallback(async () => {
@@ -109,14 +108,6 @@ export default function AdminVisaEnquiriesPage() {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (newStatus === 'rejected') {
-        setSuccess('Enquiry marked as rejected and moved to 30-Day Trash retention.');
-        setTimeout(() => setSuccess(null), 4000);
-        setDetailModalOpen(false);
-        fetchEnquiries();
-        return;
-      }
-
       setSuccess(`Status successfully changed to ${newStatus}.`);
       setTimeout(() => setSuccess(null), 3000);
       // Refresh modal state
@@ -154,25 +145,6 @@ export default function AdminVisaEnquiriesPage() {
       setError(err.message || 'Failed to download document.');
     } finally {
       setActiveDocAction(null);
-    }
-  };
-
-  const handleMoveToTrash = async () => {
-    if (!detailData?.enquiry?.id) return;
-    if (!window.confirm('Move this visa enquiry to the Trash Bin? It will remain stored for 30 days before permanent deletion.')) {
-      return;
-    }
-    setMovingToTrash(true);
-    try {
-      await adminFetch(`/admin/visa-enquiries/${detailData.enquiry.id}`, { method: 'DELETE' });
-      setSuccess('Visa enquiry moved to 30-Day Trash retention.');
-      setTimeout(() => setSuccess(null), 4000);
-      setDetailModalOpen(false);
-      fetchEnquiries();
-    } catch (err: any) {
-      setError(err.message || 'Failed to move enquiry to trash.');
-    } finally {
-      setMovingToTrash(false);
     }
   };
 
@@ -512,16 +484,7 @@ export default function AdminVisaEnquiriesPage() {
               </div>
             ) : null}
 
-            <div className={styles.modalFooter} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button
-                type="button"
-                className={styles.btnDanger}
-                onClick={handleMoveToTrash}
-                disabled={movingToTrash}
-                title="Move this enquiry to the 30-day trash retention bin"
-              >
-                {movingToTrash ? 'Moving to Trash...' : '🗑️ Move to Trash'}
-              </button>
+            <div className={styles.modalFooter}>
               <button className={styles.btnSecondary} onClick={() => setDetailModalOpen(false)}>
                 Close
               </button>

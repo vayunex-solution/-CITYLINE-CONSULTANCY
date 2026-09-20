@@ -21,7 +21,4 @@ router.get('/:id', (req, res, next) => {
 router.patch('/:id/status', (req, res, next) => {
     void admin_dashboard_controller_1.adminDashboardController.updateVisaEnquiryStatus(req, res, next);
 });
-router.delete('/:id', (req, res, next) => {
-    void admin_dashboard_controller_1.adminDashboardController.moveVisaEnquiryToTrash(req, res, next);
-});
 exports.default = router;

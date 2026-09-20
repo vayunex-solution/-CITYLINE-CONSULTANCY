@@ -26,8 +26,4 @@ router.patch('/:id/status', (req, res, next) => {
   void adminDashboardController.updateVisaEnquiryStatus(req, res, next);
 });
 
-router.delete('/:id', (req, res, next) => {
-  void adminDashboardController.moveVisaEnquiryToTrash(req, res, next);
-});
-
 export default router;

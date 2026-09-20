@@ -217,26 +217,6 @@ class AdminJobController {
             next(err);
         }
     }
-    /**
-     * DELETE /api/v1/admin/recruitment/applications/:id
-     */
-    async moveApplicationToTrash(req, res, next) {
-        try {
-            const id = req.params.id;
-            const adminId = req.admin?.id || 'system';
-            await this.applications.moveApplicationToTrash(id, adminId, {
-                clientIp: req.ip,
-                requestId: req.requestId,
-            });
-            res.status(200).json({
-                success: true,
-                message: 'Application moved to trash successfully.',
-            });
-        }
-        catch (err) {
-            next(err);
-        }
-    }
 }
 exports.AdminJobController = AdminJobController;
 exports.adminJobController = new AdminJobController();

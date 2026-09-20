@@ -285,12 +285,10 @@ class AdminDashboardService {
             if (!existing) {
                 throw new app_error_1.AppError('Enquiry not found.', 404, 'ENQUIRY_NOT_FOUND');
             }
-            const isRejecting = input.status === 'rejected';
             await db('enquiries')
                 .where({ id })
                 .update({
                 status: input.status,
-                ...(isRejecting ? { deleted_at: db.fn.now() } : {}),
                 updated_at: db.fn.now(),
             });
             logger_1.logger.info(`Visa Enquiry ${id} status updated to '${input.status}' by ${actor.adminEmail || 'admin'}`);
@@ -313,36 +311,6 @@ class AdminDashboardService {
             if (err instanceof app_error_1.AppError)
                 throw err;
             throw (0, database_error_1.normalizeDatabaseError)(err, 'AdminDashboardService.updateVisaEnquiryStatus');
-        }
-    }
-    /**
-     * Explicitly moves a visa enquiry to trash.
-     */
-    async moveVisaEnquiryToTrash(id, actor) {
-        try {
-            const db = this.db;
-            const existing = await db('enquiries').where({ id }).whereNull('deleted_at').first();
-            if (!existing)
-                throw new app_error_1.AppError('Enquiry not found.', 404, 'ENQUIRY_NOT_FOUND');
-            await db('enquiries').where({ id }).update({
-                deleted_at: db.fn.now(),
-                status: 'rejected',
-                updated_at: db.fn.now(),
-            });
-            await audit_log_repository_1.auditLogRepository.logEvent({
-                actor_admin_id: actor.adminId,
-                action: 'visa_enquiry_moved_to_trash',
-                resource_type: 'visa_enquiry',
-                resource_id: id,
-                client_ip: actor.ip,
-                details_json: JSON.stringify({ previousStatus: existing.status }),
-            });
-            return { success: true, message: 'Enquiry moved to Trash.' };
-        }
-        catch (err) {
-            if (err instanceof app_error_1.AppError)
-                throw err;
-            throw (0, database_error_1.normalizeDatabaseError)(err, 'AdminDashboardService.moveVisaEnquiryToTrash');
         }
     }
     /**

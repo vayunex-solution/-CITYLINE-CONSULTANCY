@@ -23,7 +23,6 @@ import adminAnalyticsRoutes from './admin-analytics.routes';
 import adminMasterRoutes from './admin-master.routes';
 import adminSettingRoutes from './admin-setting.routes';
 import adminDocumentRoutes from './admin-document.routes';
-import adminTrashRoutes from './admin-trash.routes';
 
 const apiRouter = Router();
 
@@ -55,7 +54,6 @@ apiRouter.use('/admin/testimonials', adminTestimonialRoutes);
 apiRouter.use('/admin/dashboard', adminDashboardRoutes);
 apiRouter.use('/admin/visa-enquiries', adminVisaEnquiryRoutes);
 apiRouter.use('/admin/documents', adminDocumentRoutes);
-apiRouter.use('/admin/trash', adminTrashRoutes);
 apiRouter.use('/admin/notifications', adminNotificationRoutes);
 apiRouter.use('/admin/audit-logs', adminAuditLogRoutes);
 apiRouter.use('/admin/master', adminMasterRoutes);

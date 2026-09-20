@@ -261,7 +261,6 @@ export class JobApplicationRepository extends AbstractKnexRepository<JobApplicat
 
   /**
    * Updates application triage status.
-   * If status is 'rejected', automatically soft-deletes into 30-day trash retention.
    */
   public async updateStatus(
     id: string,
@@ -277,9 +276,6 @@ export class JobApplicationRepository extends AbstractKnexRepository<JobApplicat
       if (adminNotes !== undefined) {
         updatePayload.admin_notes = adminNotes;
       }
-      if (status === 'rejected') {
-        updatePayload.deleted_at = new Date();
-      }
 
       await this.getQuery(trx)
         .from('job_applications')
@@ -287,24 +283,6 @@ export class JobApplicationRepository extends AbstractKnexRepository<JobApplicat
         .update(updatePayload);
     } catch (err: unknown) {
       throw normalizeDatabaseError(err, 'JobApplicationRepository.updateStatus');
-    }
-  }
-
-  /**
-   * Explicitly moves a job application to the 30-day trash bin.
-   */
-  public async softDelete(id: string, trx?: Knex.Transaction): Promise<void> {
-    try {
-      await this.getQuery(trx)
-        .from('job_applications')
-        .where({ id })
-        .update({
-          deleted_at: new Date(),
-          status: 'rejected',
-          updated_at: new Date(),
-        });
-    } catch (err: unknown) {
-      throw normalizeDatabaseError(err, 'JobApplicationRepository.softDelete');
     }
   }
 }

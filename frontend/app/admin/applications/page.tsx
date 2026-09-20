@@ -59,7 +59,6 @@ export default function AdminApplicationsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailData, setDetailData] = useState<ApplicationDetail | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [movingToTrash, setMovingToTrash] = useState(false);
   const [activeDocAction, setActiveDocAction] = useState<string | null>(null);
 
   const fetchApplications = useCallback(async () => {
@@ -114,14 +113,6 @@ export default function AdminApplicationsPage() {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      if (newStatus === 'rejected') {
-        setSuccess('Application marked as rejected and moved to 30-Day Trash retention.');
-        setTimeout(() => setSuccess(null), 4000);
-        setDetailModalOpen(false);
-        fetchApplications();
-        return;
-      }
-
       setSuccess(`Application status changed to ${newStatus}.`);
       setTimeout(() => setSuccess(null), 3000);
       setDetailData({
@@ -158,25 +149,6 @@ export default function AdminApplicationsPage() {
       setError(err.message || 'Failed to download document.');
     } finally {
       setActiveDocAction(null);
-    }
-  };
-
-  const handleMoveToTrash = async () => {
-    if (!detailData?.application?.id) return;
-    if (!window.confirm('Move this candidate application to the Trash Bin? It will remain stored for 30 days before permanent deletion.')) {
-      return;
-    }
-    setMovingToTrash(true);
-    try {
-      await adminFetch(`/admin/recruitment/applications/${detailData.application.id}`, { method: 'DELETE' });
-      setSuccess('Application moved to 30-Day Trash retention.');
-      setTimeout(() => setSuccess(null), 4000);
-      setDetailModalOpen(false);
-      fetchApplications();
-    } catch (err: any) {
-      setError(err.message || 'Failed to move application to trash.');
-    } finally {
-      setMovingToTrash(false);
     }
   };
 
@@ -492,16 +464,7 @@ export default function AdminApplicationsPage() {
               </div>
             ) : null}
 
-            <div className={styles.modalFooter} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button
-                type="button"
-                className={styles.btnDanger}
-                onClick={handleMoveToTrash}
-                disabled={movingToTrash}
-                title="Move this application to the 30-day trash retention bin"
-              >
-                {movingToTrash ? 'Moving to Trash...' : '🗑️ Move to Trash'}
-              </button>
+            <div className={styles.modalFooter}>
               <button className={styles.btnSecondary} onClick={() => setDetailModalOpen(false)}>
                 Close
               </button>
