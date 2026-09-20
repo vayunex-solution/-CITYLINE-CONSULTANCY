@@ -157,7 +157,7 @@ export default function HomePage() {
           1. CINEMATIC HERO (video-ready)
       ═══════════════════════════════ */}
       <CinematicHero
-        posterSrc="/media/landing/hero-dubai.jpg"
+        videoSrc="/media/hero/enter-dubai.mp4"
         eyebrow="FROM INDIA TO THE UAE"
         headline="YOUR JOURNEY TO THE UAE STARTS HERE."
         supportingText="Visa solutions, recruitment support and business setup services for individuals, entrepreneurs and businesses."

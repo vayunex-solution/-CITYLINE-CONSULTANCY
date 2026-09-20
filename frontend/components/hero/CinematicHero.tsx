@@ -34,6 +34,7 @@ export function CinematicHero({
   secondaryCtaText = 'Explore Services',
   secondaryCtaHref = '#services',
 }: CinematicHeroProps) {
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -44,9 +45,11 @@ export function CinematicHero({
       videoRef.current.muted = true;
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Autoplay prevented by browser power/data saver policy
-        });
+        playPromise
+          .then(() => setVideoLoaded(true))
+          .catch(() => {
+            // Autoplay prevented by browser policy
+          });
       }
     }
   }, []);
@@ -62,26 +65,30 @@ export function CinematicHero({
     <section className={styles.hero} aria-label="Hero: Your Journey to the UAE">
       {/* Background Media Architecture */}
       <div className={styles.mediaLayer} aria-hidden="true">
-        {/* Poster Fallback / Abstract Mesh Base */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={posterSrc}
-          alt=""
-          className={styles.posterFallback}
-          loading="eager"
-          fetchPriority="high"
-        />
+        {/* Poster Fallback (Visible only before video plays or if video fails) */}
+        {(!videoLoaded || videoError) && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={posterSrc}
+            alt=""
+            className={styles.posterFallback}
+            loading="eager"
+            fetchPriority="high"
+          />
+        )}
 
-        {/* Video Element (Loads gracefully without blocking page interaction) */}
+        {/* Video Element (Direct background video) */}
         {!videoError && (
           <video
             ref={videoRef}
-            className={styles.video}
+            className={`${styles.video} ${videoLoaded ? styles.videoLoaded : ''}`}
             autoPlay
             loop
             muted
             playsInline
             preload="auto"
+            onCanPlay={() => setVideoLoaded(true)}
+            onPlaying={() => setVideoLoaded(true)}
             onError={() => setVideoError(true)}
           >
             <source src={videoSrc} type="video/mp4" />
