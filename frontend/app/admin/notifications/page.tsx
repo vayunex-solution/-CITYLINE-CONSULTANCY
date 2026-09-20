@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { adminFetch } from '@/lib/admin/admin-api';
 import styles from '@/components/admin/common/AdminCommon.module.css';
 
@@ -86,6 +87,9 @@ export default function AdminNotificationsPage() {
           </p>
         </div>
         <div className={styles.headerActions}>
+          <Link href="/admin/settings" className={styles.btnSecondary} style={{ textDecoration: 'none' }}>
+            ⚙️ Email Settings
+          </Link>
           <button className={styles.btnSecondary} onClick={fetchNotifications} disabled={loading}>
             {loading ? 'Refreshing...' : '↻ Refresh Queue'}
           </button>

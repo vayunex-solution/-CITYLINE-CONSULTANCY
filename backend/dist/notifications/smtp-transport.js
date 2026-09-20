@@ -152,6 +152,7 @@ class SmtpTransportManager {
                 html: options.html,
                 text: options.text,
                 replyTo: options.replyTo ? this.sanitizeHeader(options.replyTo) : undefined,
+                attachments: options.attachments,
             });
             return {
                 messageId: info.messageId || 'unknown',

@@ -24,3 +24,5 @@ __exportStar(require("./job-application-admin"), exports);
 __exportStar(require("./job-application-confirmation"), exports);
 __exportStar(require("./manpower-enquiry-admin"), exports);
 __exportStar(require("./manpower-enquiry-confirmation"), exports);
+__exportStar(require("./business-enquiry-admin"), exports);
+__exportStar(require("./business-enquiry-confirmation"), exports);

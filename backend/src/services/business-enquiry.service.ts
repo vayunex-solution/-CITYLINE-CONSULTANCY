@@ -14,6 +14,7 @@ import { BusinessEnquiryInput } from '../schemas/business-enquiry.schema';
 import { auditLogRepository, AuditLogRepository } from '../repositories/audit-log.repository';
 import { documentRepository, DocumentRepository, DocumentRecord } from '../repositories/document.repository';
 import { storageService, StorageService } from './storage.service';
+import { notificationService, NotificationService } from './notification.service';
 import { validateUploadedDocument, ValidatedFile } from '../utils/file-security';
 import { normalizeDatabaseError } from '../database/database-error';
 
@@ -28,7 +29,8 @@ export class BusinessEnquiryService {
   constructor(
     private auditRepo: AuditLogRepository = auditLogRepository,
     private docRepo: DocumentRepository = documentRepository,
-    private storage: StorageService = storageService
+    private storage: StorageService = storageService,
+    private notification: NotificationService = notificationService
   ) {}
 
   public async submitEnquiry(
@@ -135,6 +137,27 @@ export class BusinessEnquiryService {
         if (documentRecords.length > 0) {
           await this.docRepo.insertBatch(documentRecords, trx);
         }
+
+        // Phase 7 Outbox: Enqueue transactional email notifications for admin and customer
+        await this.notification.enqueueBusinessEnquiryNotifications(
+          {
+            enquiryId,
+            publicReference,
+            fullName: input.fullName,
+            email: input.email,
+            phone: input.phone,
+            whatsapp: input.whatsapp || null,
+            service: input.service,
+            message: input.message,
+            documentsCount: documentRecords.length,
+            documents: createdPhysicalPaths.map((p, idx) => ({
+              filename: String(documentRecords[idx].original_filename),
+              path: p,
+              contentType: String(documentRecords[idx].mime_type),
+            })),
+          },
+          trx
+        );
       });
     } catch (err: unknown) {
       // Rollback compensation: remove any orphan files if DB transaction failed

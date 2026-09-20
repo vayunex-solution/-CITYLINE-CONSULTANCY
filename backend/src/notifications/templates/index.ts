@@ -9,4 +9,6 @@ export * from './job-application-admin';
 export * from './job-application-confirmation';
 export * from './manpower-enquiry-admin';
 export * from './manpower-enquiry-confirmation';
+export * from './business-enquiry-admin';
+export * from './business-enquiry-confirmation';
 

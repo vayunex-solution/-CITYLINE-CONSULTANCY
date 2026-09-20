@@ -18,16 +18,19 @@ const transaction_1 = require("../database/transaction");
 const audit_log_repository_1 = require("../repositories/audit-log.repository");
 const document_repository_1 = require("../repositories/document.repository");
 const storage_service_1 = require("./storage.service");
+const notification_service_1 = require("./notification.service");
 const file_security_1 = require("../utils/file-security");
 const database_error_1 = require("../database/database-error");
 class BusinessEnquiryService {
     auditRepo;
     docRepo;
     storage;
-    constructor(auditRepo = audit_log_repository_1.auditLogRepository, docRepo = document_repository_1.documentRepository, storage = storage_service_1.storageService) {
+    notification;
+    constructor(auditRepo = audit_log_repository_1.auditLogRepository, docRepo = document_repository_1.documentRepository, storage = storage_service_1.storageService, notification = notification_service_1.notificationService) {
         this.auditRepo = auditRepo;
         this.docRepo = docRepo;
         this.storage = storage;
+        this.notification = notification;
     }
     async submitEnquiry(input, rawFiles = [], context = {}) {
         // 1. Enforce aggregate file limits if files are attached
@@ -108,6 +111,23 @@ class BusinessEnquiryService {
                 if (documentRecords.length > 0) {
                     await this.docRepo.insertBatch(documentRecords, trx);
                 }
+                // Phase 7 Outbox: Enqueue transactional email notifications for admin and customer
+                await this.notification.enqueueBusinessEnquiryNotifications({
+                    enquiryId,
+                    publicReference,
+                    fullName: input.fullName,
+                    email: input.email,
+                    phone: input.phone,
+                    whatsapp: input.whatsapp || null,
+                    service: input.service,
+                    message: input.message,
+                    documentsCount: documentRecords.length,
+                    documents: createdPhysicalPaths.map((p, idx) => ({
+                        filename: String(documentRecords[idx].original_filename),
+                        path: p,
+                        contentType: String(documentRecords[idx].mime_type),
+                    })),
+                }, trx);
             });
         }
         catch (err) {

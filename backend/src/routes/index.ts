@@ -21,6 +21,7 @@ import adminAuditLogRoutes from './admin-audit-log.routes';
 import analyticsRoutes from './analytics.routes';
 import adminAnalyticsRoutes from './admin-analytics.routes';
 import adminMasterRoutes from './admin-master.routes';
+import adminSettingRoutes from './admin-setting.routes';
 
 const apiRouter = Router();
 
@@ -54,6 +55,7 @@ apiRouter.use('/admin/visa-enquiries', adminVisaEnquiryRoutes);
 apiRouter.use('/admin/notifications', adminNotificationRoutes);
 apiRouter.use('/admin/audit-logs', adminAuditLogRoutes);
 apiRouter.use('/admin/master', adminMasterRoutes);
+apiRouter.use('/admin/settings', adminSettingRoutes);
 
 // Phase 12: Analytics / Visitor Intelligence
 apiRouter.use('/analytics', analyticsRoutes);

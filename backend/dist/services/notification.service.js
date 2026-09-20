@@ -21,13 +21,22 @@ const env_config_1 = require("../config/env.config");
 const logger_1 = require("../utils/logger");
 const notification_queue_repository_1 = require("../repositories/notification-queue.repository");
 const smtp_transport_1 = require("../notifications/smtp-transport");
+const app_setting_service_1 = require("./app-setting.service");
 const templates_1 = require("../notifications/templates");
 class NotificationService {
     queueRepo;
     transport;
-    constructor(queueRepo = notification_queue_repository_1.notificationQueueRepository, transport = smtp_transport_1.smtpTransportManager) {
+    appSettings;
+    constructor(queueRepo = notification_queue_repository_1.notificationQueueRepository, transport = smtp_transport_1.smtpTransportManager, appSettings = app_setting_service_1.appSettingService) {
         this.queueRepo = queueRepo;
         this.transport = transport;
+        this.appSettings = appSettings;
+    }
+    /**
+     * Resolves the primary administrative notification recipient email dynamically from DB settings.
+     */
+    async getAdminRecipientEmail() {
+        return await this.appSettings.getAdminNotificationEmail();
     }
     /**
      * Generates a deterministic SHA-256 idempotency hash for an event.
@@ -75,13 +84,14 @@ class NotificationService {
             documentsCount: params.documentsCount,
         };
         const confirmationSubject = `Enquiry Acknowledged: Visa Application Reference ${params.publicReference} — Cityline Consultancy`;
+        const adminRecipient = await this.getAdminRecipientEmail();
         // 3. Batch enqueue to outbox table inside the same transaction
         await this.queueRepo.enqueueBatch([
             {
                 id: adminId,
                 notification_type: 'visa_enquiry_admin',
                 reference_id: params.enquiryId,
-                recipient_email: env_config_1.env.NOTIFICATION_ADMIN_EMAIL || 'dev-admin@example.test',
+                recipient_email: adminRecipient,
                 subject: adminSubject,
                 payload_json: JSON.stringify(adminPayload),
                 idempotency_hash: adminHash,
@@ -138,13 +148,14 @@ class NotificationService {
             hasCv: params.hasCv,
         };
         const confirmationSubject = `Application Acknowledged: ${params.jobTitle} (Ref: ${params.publicReference}) — Cityline Consultancy`;
+        const adminRecipient = await this.getAdminRecipientEmail();
         // 3. Batch enqueue into notification_queue
         await this.queueRepo.enqueueBatch([
             {
                 id: adminId,
                 notification_type: 'job_application_admin',
                 reference_id: params.applicationId,
-                recipient_email: env_config_1.env.NOTIFICATION_ADMIN_EMAIL || 'dev-admin@example.test',
+                recipient_email: adminRecipient,
                 subject: adminSubject,
                 payload_json: JSON.stringify(adminPayload),
                 idempotency_hash: adminHash,
@@ -204,13 +215,14 @@ class NotificationService {
             submittedAt: submittedAtStr,
         };
         const confirmationSubject = `Manpower Requirement Received — ${params.publicReference}`;
+        const adminRecipient = await this.getAdminRecipientEmail();
         // 3. Batch enqueue in outbox table
         await this.queueRepo.enqueueBatch([
             {
                 id: adminId,
                 notification_type: 'manpower_enquiry_admin',
                 reference_id: params.enquiryId,
-                recipient_email: env_config_1.env.NOTIFICATION_ADMIN_EMAIL,
+                recipient_email: adminRecipient,
                 subject: adminSubject,
                 payload_json: JSON.stringify(adminPayload),
                 idempotency_hash: adminHash,
@@ -218,6 +230,71 @@ class NotificationService {
             {
                 id: confirmationId,
                 notification_type: 'manpower_enquiry_confirmation',
+                reference_id: params.enquiryId,
+                recipient_email: params.email,
+                subject: confirmationSubject,
+                payload_json: JSON.stringify(confirmationPayload),
+                idempotency_hash: confirmationHash,
+            },
+        ], trx);
+        return {
+            adminNotificationId: adminId,
+            confirmationNotificationId: confirmationId,
+        };
+    }
+    /**
+     * Transactionally enqueues both admin alert and customer confirmation notifications
+     * for a website contact / business consultation enquiry within an existing database transaction.
+     * If any supporting files (PDF, DOCX) were uploaded, they are passed into the outbox payload for attachment.
+     */
+    async enqueueBusinessEnquiryNotifications(params, trx) {
+        const adminId = crypto_1.default.randomUUID();
+        const confirmationId = crypto_1.default.randomUUID();
+        const submittedAtStr = new Date().toUTCString();
+        const adminHash = this.generateIdempotencyHash('business-enquiry', params.enquiryId, 'admin');
+        const confirmationHash = this.generateIdempotencyHash('business-enquiry', params.enquiryId, 'confirmation');
+        const adminRecipient = await this.getAdminRecipientEmail();
+        // 1. Admin notification payload & subject
+        const adminPayload = {
+            reference: params.publicReference,
+            fullName: params.fullName,
+            email: params.email,
+            phone: params.phone,
+            whatsapp: params.whatsapp,
+            service: params.service,
+            message: params.message,
+            documentsCount: params.documentsCount,
+            documentNames: params.documents?.map((d) => d.filename) || [],
+            submittedAt: submittedAtStr,
+            attachments: params.documents?.map((d) => ({
+                filename: d.filename,
+                path: d.path,
+                contentType: d.contentType,
+            })),
+        };
+        const adminSubject = `[Website Enquiry] New Consultation Request — ${params.publicReference} (${params.service})`;
+        // 2. Customer confirmation payload & subject
+        const confirmationPayload = {
+            reference: params.publicReference,
+            fullName: params.fullName,
+            service: params.service,
+            documentsCount: params.documentsCount,
+        };
+        const confirmationSubject = `Enquiry Acknowledged: Consultation Reference ${params.publicReference} — Cityline Consultancy`;
+        // 3. Batch enqueue to outbox table inside the same transaction
+        await this.queueRepo.enqueueBatch([
+            {
+                id: adminId,
+                notification_type: 'business_enquiry_admin',
+                reference_id: params.enquiryId,
+                recipient_email: adminRecipient,
+                subject: adminSubject,
+                payload_json: JSON.stringify(adminPayload),
+                idempotency_hash: adminHash,
+            },
+            {
+                id: confirmationId,
+                notification_type: 'business_enquiry_confirmation',
                 reference_id: params.enquiryId,
                 recipient_email: params.email,
                 subject: confirmationSubject,
@@ -259,12 +336,24 @@ class NotificationService {
             const startTime = Date.now();
             try {
                 const { html, text, subject } = this.renderNotificationContent(record);
+                // Parse optional attachments from payload
+                let attachments = undefined;
+                try {
+                    const parsedPayload = JSON.parse(record.payload_json);
+                    if (Array.isArray(parsedPayload.attachments) && parsedPayload.attachments.length > 0) {
+                        attachments = parsedPayload.attachments;
+                    }
+                }
+                catch {
+                    // ignore payload parse error here; renderNotificationContent already handles validation
+                }
                 // Send through SMTP transport
                 const result = await this.transport.sendMail({
                     to: record.recipient_email,
                     subject: record.subject || subject,
                     html,
                     text,
+                    attachments,
                 });
                 // Mark as sent in DB
                 await this.queueRepo.markSent(record.id, new Date());
@@ -366,6 +455,10 @@ class NotificationService {
                 return (0, templates_1.renderManpowerEnquiryAdminNotification)(payload);
             case 'manpower_enquiry_confirmation':
                 return (0, templates_1.renderManpowerEnquiryConfirmation)(payload);
+            case 'business_enquiry_admin':
+                return (0, templates_1.renderBusinessEnquiryAdminNotification)(payload);
+            case 'business_enquiry_confirmation':
+                return (0, templates_1.renderBusinessEnquiryConfirmation)(payload);
             default:
                 throw new Error(`Unsupported notification type: ${record.notification_type}`);
         }

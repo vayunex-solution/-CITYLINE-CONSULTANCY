@@ -16,12 +16,20 @@ import nodemailer, { Transporter } from 'nodemailer';
 import { env } from '../config/env.config';
 import { logger } from '../utils/logger';
 
+export interface EmailAttachment {
+  filename: string;
+  path?: string;
+  content?: Buffer | string;
+  contentType?: string;
+}
+
 export interface SendMailOptions {
   to: string;
   subject: string;
   html: string;
   text: string;
   replyTo?: string;
+  attachments?: EmailAttachment[];
 }
 
 export interface SendMailResult {
@@ -182,6 +190,7 @@ export class SmtpTransportManager {
         html: options.html,
         text: options.text,
         replyTo: options.replyTo ? this.sanitizeHeader(options.replyTo) : undefined,
+        attachments: options.attachments,
       });
 
       return {
