@@ -2,4 +2,5 @@
 deployment:
   tasks:
     - /bin/cp -Rf backend/. /home/cityline/api.citylineconsultancy.com/
+    - /bin/mkdir -p /home/cityline/api.citylineconsultancy.com/tmp && /bin/touch /home/cityline/api.citylineconsultancy.com/tmp/restart.txt
     - /bin/cp -Rf frontend/out/. /home/cityline/public_html/

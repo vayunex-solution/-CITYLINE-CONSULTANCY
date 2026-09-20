@@ -19,6 +19,7 @@ export interface DocumentRecord {
   mime_type: string;
   file_extension: string;
   file_size_bytes: number;
+  file_data?: Buffer | null;
   sha256_hash: string;
   validation_status: string;
   malware_scan_status: string;

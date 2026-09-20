@@ -247,23 +247,44 @@ export async function adminFetchBlob(
  * Previews an admin document in a new browser tab or popup.
  */
 export async function adminPreviewDocument(documentId: string): Promise<void> {
-  const { blob } = await adminFetchBlob(`/admin/documents/${documentId}/preview`);
-  const blobUrl = URL.createObjectURL(blob);
-  
-  const newWindow = window.open(blobUrl, '_blank');
-  if (!newWindow) {
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.target = '_blank';
-    link.rel = 'noopener,noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Pre-open new tab synchronously to bypass modern browser popup blockers
+  let previewWindow: Window | null = null;
+  try {
+    previewWindow = window.open('about:blank', '_blank');
+    if (previewWindow) {
+      previewWindow.document.write(
+        '<!DOCTYPE html><html><head><title>Opening Document...</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#f8fafc;}</style></head><body><div style="text-align:center;padding:24px;"><div style="font-size:16px;font-weight:600;margin-bottom:8px;">Securing & Loading Document...</div><div style="font-size:12px;color:#94a3b8;">Cityline Consultancy Document Gateway</div></div></body></html>'
+      );
+    }
+  } catch {
+    // Window open blocked or restricted; link fallback will activate below
   }
 
-  setTimeout(() => {
-    URL.revokeObjectURL(blobUrl);
-  }, 60000);
+  try {
+    const { blob } = await adminFetchBlob(`/admin/documents/${documentId}/preview`);
+    const blobUrl = URL.createObjectURL(blob);
+
+    if (previewWindow && !previewWindow.closed) {
+      previewWindow.location.href = blobUrl;
+    } else {
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.target = '_blank';
+      link.rel = 'noopener,noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    setTimeout(() => {
+      URL.revokeObjectURL(blobUrl);
+    }, 120000);
+  } catch (err) {
+    if (previewWindow && !previewWindow.closed) {
+      previewWindow.close();
+    }
+    throw err;
+  }
 }
 
 /**

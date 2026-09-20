@@ -170,6 +170,7 @@ export class VisaEnquiryService {
           mime_type: file.detectedMimeType,
           file_extension: file.extension,
           file_size_bytes: file.sizeBytes,
+          file_data: file.buffer,
           sha256_hash: file.sha256Hash,
           validation_status: validationStatus,
           malware_scan_status: malwareScanStatus,

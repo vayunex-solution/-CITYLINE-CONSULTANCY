@@ -169,6 +169,7 @@ class JobApplicationService {
                     mime_type: validatedCv.detectedMimeType,
                     file_extension: validatedCv.extension,
                     file_size_bytes: validatedCv.sizeBytes,
+                    file_data: validatedCv.buffer,
                     sha256_hash: validatedCv.sha256Hash,
                     validation_status: validationStatus,
                     malware_scan_status: malwareScanStatus,
