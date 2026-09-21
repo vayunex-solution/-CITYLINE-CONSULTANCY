@@ -97,45 +97,27 @@
 }
 
 .logoIcon {
-  width: 40px;
+  width: 46px;
   height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-gold-primary) 0%, #7a5c0e 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
-  font-weight: 800;
-  font-size: 1.15rem;
-  letter-spacing: -0.05em;
-  box-shadow:
-    0 4px 14px rgba(179, 135, 27, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
   position: relative;
-  overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  filter: drop-shadow(0 2px 8px rgba(179, 135, 27, 0.35));
 }
 
-/* Shimmer sweep */
-.logoIcon::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -60%;
-  width: 40%;
+.logoMarkImg {
+  width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  transform: skewX(-20deg);
-  transition: left 0.55s ease;
-}
-
-.brand:hover .logoIcon::before {
-  left: 140%;
+  object-fit: contain;
+  display: block;
 }
 
 .brand:hover .logoIcon {
-  transform: scale(1.06);
-  box-shadow: 0 6px 22px rgba(179, 135, 27, 0.55);
+  transform: scale(1.08);
+  filter: drop-shadow(0 4px 14px rgba(212, 175, 55, 0.65));
 }
 
 .brandText {

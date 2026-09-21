@@ -83,12 +83,7 @@ const IconMenu = () => (
     <line x1="3" y1="18" x2="21" y2="18" />
   </svg>
 );
-const IconBrand = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    <polyline points="9 22 9 12 15 12 15 22" />
-  </svg>
-);
+
 const IconMaster = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <ellipse cx="12" cy="5" rx="9" ry="3" />
@@ -147,7 +142,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       <aside className={`${styles.sidebar} ${mobileOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sidebarHeader}>
           <div className={styles.brandLogoIcon} aria-hidden="true">
-            <IconBrand />
+            <img
+              src="/logo-mark.png"
+              alt="Cityline Admin Logo"
+              className={styles.adminLogoMark}
+              width={44}
+              height={36}
+            />
           </div>
           <div className={styles.brandText}>
             <span className={styles.brandTitle}>Cityline Admin</span>

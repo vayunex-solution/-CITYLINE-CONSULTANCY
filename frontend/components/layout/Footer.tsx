@@ -21,7 +21,15 @@ export function Footer() {
         <div className={styles.topGrid}>
           {/* Brand Column */}
           <div className={styles.brandCol}>
-            <span className={styles.brandName}>CITYLINE CONSULTANCY</span>
+            <Link href="/" className={styles.footerLogoLink} aria-label="Cityline Consultancy Home">
+              <img
+                src="/logo-light.png"
+                alt="Cityline Consultancy"
+                className={styles.footerLogoImg}
+                width={190}
+                height={137}
+              />
+            </Link>
             <p className={styles.brandDesc}>
               Your strategic partner for UAE visas, business setup advisory, and manpower recruitment solutions.
             </p>

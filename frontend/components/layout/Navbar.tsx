@@ -85,7 +85,13 @@ export function Navbar() {
             {/* Brand Logo & Wordmark */}
             <Link href="/" className={styles.brand} aria-label="Cityline Consultancy Home">
               <div className={styles.logoIcon} aria-hidden="true">
-                <span>C</span>
+                <img
+                  src="/logo-mark.png"
+                  alt="Cityline Consultancy Logo Mark"
+                  className={styles.logoMarkImg}
+                  width={46}
+                  height={40}
+                />
               </div>
               <div className={styles.brandText}>
                 <span className={styles.brandName}>CITYLINE</span>

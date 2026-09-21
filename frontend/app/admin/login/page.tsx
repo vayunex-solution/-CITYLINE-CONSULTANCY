@@ -51,7 +51,18 @@ export default function AdminLoginPage() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
-          <span style={{ fontSize: '2.5rem' }} aria-hidden="true">🏛️</span>
+          <img
+            src="/logo-light.png"
+            alt="Cityline Consultancy"
+            style={{
+              width: '180px',
+              maxWidth: '100%',
+              height: 'auto',
+              margin: '0 auto var(--space-3)',
+              display: 'block',
+              filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4))',
+            }}
+          />
           <h1
             style={{
               fontFamily: 'var(--font-family-display)',
